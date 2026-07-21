@@ -62,7 +62,7 @@ describe('AppRouter', () => {
     renderRouter('/');
 
     expect(screen.getByText('Restoring session…')).toBeDefined();
-    expect(screen.queryByText('Authenticated application shell')).toBeNull();
+    expect(screen.queryByText('Users & access')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Sign in' })).toBeNull();
     expect(screen.getByTestId('location-display').textContent).toBe('/');
   });
@@ -93,7 +93,8 @@ describe('AppRouter', () => {
       resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
     });
 
-    await waitFor(() => expect(screen.getByText('Authenticated application shell')).toBeDefined());
+    await waitFor(() => expect(screen.getAllByText('Users & access').length).toBeGreaterThan(0));
+    expect(screen.getByTestId('location-display').textContent).toBe('/users');
   });
 
   it('4. authenticated on /login: redirects to /', async () => {
@@ -106,8 +107,8 @@ describe('AppRouter', () => {
       resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
     });
 
-    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/'));
-    expect(screen.getByText('Authenticated application shell')).toBeDefined();
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/users'));
+    expect(screen.getAllByText('Users & access').length).toBeGreaterThan(0);
   });
 
   it('5. unauthenticated on /login: shows Login', async () => {
@@ -198,7 +199,7 @@ describe('AppRouter', () => {
     await act(async () => {
       resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
     });
-    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/'));
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/users'));
   });
 
   it('9. logout button: calls authApi.logout exactly once and navigates to Login via AuthState change', async () => {
@@ -211,7 +212,7 @@ describe('AppRouter', () => {
       resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
     });
 
-    await waitFor(() => expect(screen.getByText('Authenticated application shell')).toBeDefined());
+    await waitFor(() => expect(screen.getAllByText('Users & access').length).toBeGreaterThan(0));
 
     (mockAuthApi.logout as any).mockResolvedValueOnce(undefined);
 
@@ -230,7 +231,7 @@ describe('AppRouter', () => {
 
     renderRouter('/');
 
-    expect(screen.queryByText('Authenticated application shell')).toBeNull();
+    expect(screen.queryByText('Users & access')).toBeNull();
     expect(screen.getByText('Restoring session…')).toBeDefined();
   });
 
@@ -244,7 +245,7 @@ describe('AppRouter', () => {
       resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
     });
 
-    await waitFor(() => expect(screen.getByText('Authenticated application shell')).toBeDefined());
+    await waitFor(() => expect(screen.getAllByText('Users & access').length).toBeGreaterThan(0));
 
     expect(mockAuthApi.refresh).toHaveBeenCalledTimes(1);
   });
