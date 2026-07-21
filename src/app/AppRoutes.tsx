@@ -9,6 +9,7 @@ import { AuthBootstrapScreen } from '../auth/AuthBootstrapScreen';
 import { ForgotPasswordPage } from '../auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../auth/ResetPasswordPage';
 import { demoAuthApi } from '../demo/demoAuthApi';
+import { UsersAccessPage } from '../users/UsersAccessPage';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -18,7 +19,7 @@ function NotFoundFallback() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/users" replace />;
   }
 
   return <Navigate to="/login" replace />;
@@ -28,7 +29,10 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<AuthenticatedShell />} />
+        <Route element={<AuthenticatedShell />}>
+          <Route path="/" element={<Navigate to="/users" replace />} />
+          <Route path="/users" element={<UsersAccessPage />} />
+        </Route>
       </Route>
 
       <Route element={<PublicOnlyRoute />}>

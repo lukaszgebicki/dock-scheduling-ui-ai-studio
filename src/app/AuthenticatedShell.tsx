@@ -1,22 +1,180 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import {
+  Menu, X, LayoutDashboard, Calendar, CalendarClock,
+  Users, Building, Bell, ChevronDown, LogOut
+} from 'lucide-react';
 
 export function AuthenticatedShell() {
   const { logout } = useAuth();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm text-center">
-        <h1 className="text-2xl font-bold mb-4">Authenticated application shell</h1>
-        <p className="text-gray-600 mb-6">
-          You have successfully authenticated to access the protected features of the application.
-        </p>
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col md:flex-row">
+      {/* Mobile header */}
+      <div className="md:hidden bg-[#000A32] text-white p-4 flex items-center justify-between z-20 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded bg-[#7FA5D0] flex items-center justify-center font-bold">D</div>
+          <span className="font-semibold tracking-wide">Dock Scheduling</span>
+        </div>
         <button
-          onClick={() => void logout()}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          className="p-1 hover:bg-[#023466] rounded transition-colors"
         >
-          Log out
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
+      </div>
+
+      {/* Sidebar Navigation */}
+      <nav
+        aria-label="Primary navigation"
+        className={`${
+          mobileMenuOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
+        } md:visible md:translate-x-0 fixed md:sticky top-0 left-0 w-64 h-full bg-[#000A32] text-[#D9D9C4] flex flex-col z-30 transition-transform duration-300 ease-in-out`}
+      >
+        <div className="p-6 hidden md:flex flex-col gap-1 border-b border-[#023466]">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded bg-[#7FA5D0] flex items-center justify-center text-[#000A32] font-bold">D</div>
+            <span className="font-bold text-white tracking-wide text-lg">Dock Scheduling</span>
+          </div>
+          <span className="text-sm text-[#7FA5D0]">Operations Portal</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-6 flex flex-col gap-6 px-4">
+          <div>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Overview</h2>
+            <ul>
+              <li>
+                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                  <div className="flex items-center gap-3">
+                    <LayoutDashboard size={18} />
+                    <span>Dashboard</span>
+                  </div>
+                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Scheduling</h2>
+            <ul className="flex flex-col gap-1">
+              <li>
+                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                  <div className="flex items-center gap-3">
+                    <CalendarClock size={18} />
+                    <span>Appointments</span>
+                  </div>
+                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                  <div className="flex items-center gap-3">
+                    <Calendar size={18} />
+                    <span>Slot calendar</span>
+                  </div>
+                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Administration</h2>
+            <ul className="flex flex-col gap-1">
+              <li>
+                <Link
+                  to="/users"
+                  onClick={closeMobileMenu}
+                  aria-current={location.pathname === '/users' ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/users'
+                      ? 'bg-[#023466] text-white font-medium'
+                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                  }`}
+                >
+                  <Users size={18} />
+                  <span>Users & access</span>
+                </Link>
+              </li>
+              <li>
+                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                  <div className="flex items-center gap-3">
+                    <Building size={18} />
+                    <span>Warehouses</span>
+                  </div>
+                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-[#023466] bg-[#000620]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-[#7FA5D0] text-[#000A32] flex items-center justify-center font-bold">DA</div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-white leading-tight">Demo administrator</span>
+              <span className="text-xs text-gray-400">System administrator</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-transparent hover:bg-white/10 text-white rounded-lg transition-colors border border-white/20 text-sm font-medium"
+          >
+            <LogOut size={16} />
+            Log out
+          </button>
+        </div>
+      </nav>
+
+      {/* Overlay for mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={closeMobileMenu}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-0 md:min-h-screen max-w-full overflow-hidden">
+        {/* Top Header */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-8 shrink-0 shadow-sm z-10">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500 hidden sm:inline">Administration</span>
+            <span className="text-gray-400 hidden sm:inline">/</span>
+            <span className="font-medium text-[#000A32]">Users & access</span>
+          </div>
+
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="hidden sm:flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-sm">
+              <Building size={16} className="text-gray-500" />
+              <span className="font-medium text-gray-700">All warehouses</span>
+              <ChevronDown size={14} className="text-gray-500 ml-1" />
+            </div>
+            <button type="button" className="text-gray-500 hover:text-[#000A32] transition-colors relative" aria-label="Notifications">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-[#FF9166] rounded-full border border-white"></span>
+            </button>
+            <div className="w-8 h-8 rounded-full bg-[#7FA5D0] text-[#000A32] hidden sm:flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm">
+              DA
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
