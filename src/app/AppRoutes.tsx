@@ -8,6 +8,7 @@ import { useAuth } from '../auth/useAuth';
 import { AuthBootstrapScreen } from '../auth/AuthBootstrapScreen';
 import { ForgotPasswordPage } from '../auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../auth/ResetPasswordPage';
+import { demoAuthApi } from '../demo/demoAuthApi';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -34,8 +35,8 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage api={demoAuthApi} />} />
+      <Route path="/reset-password" element={<ResetPasswordPage api={demoAuthApi} />} />
 
       <Route path="*" element={<NotFoundFallback />} />
     </Routes>
