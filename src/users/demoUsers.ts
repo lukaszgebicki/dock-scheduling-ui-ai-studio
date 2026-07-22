@@ -32,7 +32,7 @@ export const demoUsers: DemoUser[] = [
     email: 'alice.smith@pr.com',
     organization: 'Pernod Ricard Poland',
     role: 'Warehouse manager',
-    warehouseAccess: 'Poznań Distribution Centre',
+    warehouseAccess: 'Nowy Kisielin Distribution Center',
     status: 'Active',
     lastActive: '2 hours ago',
     accountType: 'Internal'
@@ -54,7 +54,7 @@ export const demoUsers: DemoUser[] = [
     email: 'cdavis@security.local',
     organization: 'Pernod Ricard Poland',
     role: 'Security',
-    warehouseAccess: 'Poznań Distribution Centre',
+    warehouseAccess: 'Nowy Kisielin Distribution Center',
     status: 'Inactive',
     lastActive: '2 weeks ago',
     accountType: 'Internal'
@@ -65,7 +65,7 @@ export const demoUsers: DemoUser[] = [
     email: 'eve@northstar-packaging.com',
     organization: 'Northstar Packaging',
     role: 'Supplier',
-    warehouseAccess: 'Supplier organization only',
+    warehouseAccess: 'Nowy Kisielin Distribution Center',
     status: 'Active',
     lastActive: '5 hours ago',
     accountType: 'Supplier'
@@ -76,7 +76,7 @@ export const demoUsers: DemoUser[] = [
     email: 'frank@balticfreight.com',
     organization: 'Baltic Freight',
     role: 'Supplier',
-    warehouseAccess: 'Supplier organization only',
+    warehouseAccess: 'Zielona Góra Plant',
     status: 'Active',
     lastActive: '3 days ago',
     accountType: 'Supplier'
@@ -87,7 +87,7 @@ export const demoUsers: DemoUser[] = [
     email: 'grace@vistulamaterials.com',
     organization: 'Vistula Materials',
     role: 'Supplier',
-    warehouseAccess: 'Supplier organization only',
+    warehouseAccess: 'Nowy Kisielin Distribution Center, Zielona Góra Plant',
     status: 'Inactive',
     lastActive: '1 month ago',
     accountType: 'Supplier'

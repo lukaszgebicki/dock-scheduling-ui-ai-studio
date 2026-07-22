@@ -10,6 +10,7 @@ import { ForgotPasswordPage } from '../auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../auth/ResetPasswordPage';
 import { demoAuthApi } from '../demo/demoAuthApi';
 import { UsersAccessPage } from '../users/UsersAccessPage';
+import { InviteUserPage } from '../users/InviteUserPage';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -32,6 +33,7 @@ export function AppRoutes() {
         <Route element={<AuthenticatedShell />}>
           <Route path="/" element={<Navigate to="/users" replace />} />
           <Route path="/users" element={<UsersAccessPage />} />
+          <Route path="/users/invite" element={<InviteUserPage />} />
         </Route>
       </Route>
 

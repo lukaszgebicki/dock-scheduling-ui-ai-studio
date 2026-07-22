@@ -93,9 +93,9 @@ export function AuthenticatedShell() {
                 <Link
                   to="/users"
                   onClick={closeMobileMenu}
-                  aria-current={location.pathname === '/users' ? 'page' : undefined}
+                  aria-current={location.pathname.startsWith('/users') ? 'page' : undefined}
                   className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
-                    location.pathname === '/users'
+                    location.pathname.startsWith('/users')
                       ? 'bg-[#023466] text-white font-medium'
                       : 'text-[#D9D9C4] hover:bg-[#023466]/50'
                   }`}
@@ -149,11 +149,19 @@ export function AuthenticatedShell() {
       <div className="flex-1 flex flex-col min-h-0 md:min-h-screen max-w-full overflow-hidden">
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-8 shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-2 text-sm">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
             <span className="text-gray-500 hidden sm:inline">Administration</span>
             <span className="text-gray-400 hidden sm:inline">/</span>
-            <span className="font-medium text-[#000A32]">Users & access</span>
-          </div>
+            {location.pathname === '/users/invite' ? (
+              <>
+                <Link to="/users" className="text-gray-500 hover:text-[#000A32] hidden sm:inline transition-colors">Users & access</Link>
+                <span className="text-gray-400 hidden sm:inline">/</span>
+                <span className="font-medium text-[#000A32]">Invite user</span>
+              </>
+            ) : (
+              <span className="font-medium text-[#000A32]">Users & access</span>
+            )}
+          </nav>
 
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden sm:flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-sm">
