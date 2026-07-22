@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Users, UserCheck, UserX, Truck, Search, X } from 'lucide-react';
+import { Users, UserCheck, UserX, Truck, Search, X, UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { demoUsers, UserRole, UserStatus } from './demoUsers';
 
 export function UsersAccessPage() {
@@ -46,15 +47,13 @@ export function UsersAccessPage() {
           <h1 className="text-2xl font-bold text-[#000A32]">Users & access</h1>
           <p className="text-[#023466] mt-1">Manage accounts, roles, organizations and warehouse access.</p>
         </div>
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          title="Available in the next implementation slice"
-          className="bg-[#023466] text-white px-4 py-2 rounded-lg font-medium opacity-50 cursor-not-allowed whitespace-nowrap self-start sm:self-auto"
+        <Link
+          to="/users/invite"
+          className="bg-[#023466] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#000A32] transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-[#023466] outline-none"
         >
+          <UserPlus size={20} />
           Invite user
-        </button>
+        </Link>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

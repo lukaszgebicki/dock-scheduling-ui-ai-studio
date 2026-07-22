@@ -126,11 +126,10 @@ describe('UsersAccessPage', () => {
     expect(screen.queryByRole('heading', { name: 'No users found' })).toBeNull();
   });
 
-  it('12. disabled Invite user does not create an action', () => {
+  it('12. Invite user link is enabled and opens the invite route', () => {
     renderPage();
-    const inviteBtn = screen.getByRole('button', { name: 'Invite user' });
-    expect(inviteBtn.hasAttribute('disabled')).toBe(true);
-    // aria-disabled check
-    expect(inviteBtn.getAttribute('aria-disabled')).toBe('true');
+    const inviteLink = screen.getByRole('link', { name: /Invite user/i });
+    expect(inviteLink.getAttribute('aria-disabled')).not.toBe('true');
+    expect(inviteLink.getAttribute('href')).toBe('/users/invite');
   });
 });
