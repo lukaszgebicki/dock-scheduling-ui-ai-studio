@@ -11,6 +11,8 @@ import { ResetPasswordPage } from '../auth/ResetPasswordPage';
 import { demoAuthApi } from '../demo/demoAuthApi';
 import { UsersAccessPage } from '../users/UsersAccessPage';
 import { InviteUserPage } from '../users/InviteUserPage';
+import { WarehousesPage } from '../warehouses/WarehousesPage';
+import { AddWarehousePage } from '../warehouses/AddWarehousePage';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -34,6 +36,8 @@ export function AppRoutes() {
           <Route path="/" element={<Navigate to="/users" replace />} />
           <Route path="/users" element={<UsersAccessPage />} />
           <Route path="/users/invite" element={<InviteUserPage />} />
+          <Route path="/warehouses" element={<WarehousesPage />} />
+          <Route path="/warehouses/new" element={<AddWarehousePage />} />
         </Route>
       </Route>
 

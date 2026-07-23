@@ -105,13 +105,19 @@ export function AuthenticatedShell() {
                 </Link>
               </li>
               <li>
-                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
-                  <div className="flex items-center gap-3">
-                    <Building size={18} />
-                    <span>Warehouses</span>
-                  </div>
-                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
-                </div>
+                <Link
+                  to="/warehouses"
+                  onClick={closeMobileMenu}
+                  aria-current={location.pathname.startsWith('/warehouses') ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                    location.pathname.startsWith('/warehouses')
+                      ? 'bg-[#023466] text-white font-medium'
+                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                  }`}
+                >
+                  <Building size={18} />
+                  <span>Warehouses</span>
+                </Link>
               </li>
             </ul>
           </div>
@@ -158,6 +164,14 @@ export function AuthenticatedShell() {
                 <span className="text-gray-400 hidden sm:inline">/</span>
                 <span className="font-medium text-[#000A32]">Invite user</span>
               </>
+            ) : location.pathname === '/warehouses/new' ? (
+              <>
+                <Link to="/warehouses" className="text-gray-500 hover:text-[#000A32] hidden sm:inline transition-colors">Warehouses</Link>
+                <span className="text-gray-400 hidden sm:inline">/</span>
+                <span className="font-medium text-[#000A32]">Add warehouse</span>
+              </>
+            ) : location.pathname === '/warehouses' ? (
+              <span className="font-medium text-[#000A32]">Warehouses</span>
             ) : (
               <span className="font-medium text-[#000A32]">Users & access</span>
             )}
