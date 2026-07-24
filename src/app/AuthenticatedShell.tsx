@@ -3,8 +3,30 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import {
   Menu, X, LayoutDashboard, Calendar, CalendarClock,
-  Users, Building, Bell, ChevronDown, LogOut
+  Users, Building, Bell, ChevronDown, LogOut, Truck
 } from 'lucide-react';
+
+interface BreadcrumbInfo {
+  parent?: { label: string; to: string };
+  current: string;
+}
+
+function getBreadcrumb(pathname: string): BreadcrumbInfo {
+  switch (pathname) {
+    case '/users/invite':
+      return { parent: { label: 'Users & access', to: '/users' }, current: 'Invite user' };
+    case '/warehouses/new':
+      return { parent: { label: 'Warehouses', to: '/warehouses' }, current: 'Add warehouse' };
+    case '/warehouses':
+      return { current: 'Warehouses' };
+    case '/supplier-organizations/new':
+      return { parent: { label: 'Supplier organizations', to: '/supplier-organizations' }, current: 'Add supplier organization' };
+    case '/supplier-organizations':
+      return { current: 'Supplier organizations' };
+    default:
+      return { current: 'Users & access' };
+  }
+}
 
 export function AuthenticatedShell() {
   const { logout } = useAuth();
@@ -119,6 +141,21 @@ export function AuthenticatedShell() {
                   <span>Warehouses</span>
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/supplier-organizations"
+                  onClick={closeMobileMenu}
+                  aria-current={location.pathname.startsWith('/supplier-organizations') ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                    location.pathname.startsWith('/supplier-organizations')
+                      ? 'bg-[#023466] text-white font-medium'
+                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                  }`}
+                >
+                  <Truck size={18} aria-hidden="true" />
+                  <span>Supplier organizations</span>
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -158,23 +195,20 @@ export function AuthenticatedShell() {
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
             <span className="text-gray-500 hidden sm:inline">Administration</span>
             <span className="text-gray-400 hidden sm:inline">/</span>
-            {location.pathname === '/users/invite' ? (
-              <>
-                <Link to="/users" className="text-gray-500 hover:text-[#000A32] hidden sm:inline transition-colors">Users & access</Link>
-                <span className="text-gray-400 hidden sm:inline">/</span>
-                <span className="font-medium text-[#000A32]">Invite user</span>
-              </>
-            ) : location.pathname === '/warehouses/new' ? (
-              <>
-                <Link to="/warehouses" className="text-gray-500 hover:text-[#000A32] hidden sm:inline transition-colors">Warehouses</Link>
-                <span className="text-gray-400 hidden sm:inline">/</span>
-                <span className="font-medium text-[#000A32]">Add warehouse</span>
-              </>
-            ) : location.pathname === '/warehouses' ? (
-              <span className="font-medium text-[#000A32]">Warehouses</span>
-            ) : (
-              <span className="font-medium text-[#000A32]">Users & access</span>
-            )}
+            {(() => {
+              const breadcrumb = getBreadcrumb(location.pathname);
+              return breadcrumb.parent ? (
+                <>
+                  <Link to={breadcrumb.parent.to} className="text-gray-500 hover:text-[#000A32] hidden sm:inline transition-colors">
+                    {breadcrumb.parent.label}
+                  </Link>
+                  <span className="text-gray-400 hidden sm:inline">/</span>
+                  <span className="font-medium text-[#000A32]">{breadcrumb.current}</span>
+                </>
+              ) : (
+                <span className="font-medium text-[#000A32]">{breadcrumb.current}</span>
+              );
+            })()}
           </nav>
 
           <div className="flex items-center gap-4 sm:gap-6">

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthenticatedShell } from './AuthenticatedShell';
 import { useAuth } from '../auth/useAuth';
@@ -23,8 +23,8 @@ describe('AuthenticatedShell', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
     cleanup();
+    vi.restoreAllMocks();
   });
 
   it('1. logout invokes the existing auth logout function', () => {
@@ -66,5 +66,64 @@ describe('AuthenticatedShell', () => {
 
     fireEvent.click(closeMenuBtn);
     expect(screen.getByRole('button', { name: 'Open menu' })).toBeDefined();
+  });
+
+  it('4. Supplier organizations link has exact href and is active on the overview route while Users and Warehouses are not active', () => {
+    render(
+      <MemoryRouter initialEntries={['/supplier-organizations']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
+    const supplierLink = within(primaryNav).getByRole('link', { name: 'Supplier organizations' });
+    const usersLink = within(primaryNav).getByRole('link', { name: 'Users & access' });
+    const warehousesLink = within(primaryNav).getByRole('link', { name: 'Warehouses' });
+
+    expect(supplierLink.getAttribute('href')).toBe('/supplier-organizations');
+    expect(supplierLink.getAttribute('aria-current')).toBe('page');
+    expect(usersLink.getAttribute('aria-current')).toBeNull();
+    expect(warehousesLink.getAttribute('aria-current')).toBeNull();
+
+    const supplierLinkIcon = supplierLink.querySelector('svg');
+    if (!supplierLinkIcon) {
+      throw new Error('Expected the Supplier organizations link to contain a decorative icon.');
+    }
+    expect(supplierLinkIcon.getAttribute('aria-hidden')).toBe('true');
+    expect(supplierLink.textContent).toBe('Supplier organizations');
+  });
+
+  it('5. Supplier organizations remains active on the add route and the breadcrumb contains the overview link plus current Add supplier organization item', () => {
+    render(
+      <MemoryRouter initialEntries={['/supplier-organizations/new']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
+    const supplierLink = within(primaryNav).getByRole('link', { name: 'Supplier organizations' });
+    expect(supplierLink.getAttribute('aria-current')).toBe('page');
+
+    const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const overviewLink = within(breadcrumb).getByRole('link', { name: 'Supplier organizations' });
+    expect(overviewLink.getAttribute('href')).toBe('/supplier-organizations');
+    expect(within(breadcrumb).getByText('Add supplier organization').textContent).toBe('Add supplier organization');
+  });
+
+  it('6. selecting Supplier organizations from an open mobile menu closes the menu', () => {
+    render(
+      <MemoryRouter initialEntries={['/users']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('button', { name: 'Close menu' }).getAttribute('aria-label')).toBe('Close menu');
+
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
+    const supplierLink = within(primaryNav).getByRole('link', { name: 'Supplier organizations' });
+    fireEvent.click(supplierLink);
+
+    expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-label')).toBe('Open menu');
   });
 });

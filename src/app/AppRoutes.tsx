@@ -13,6 +13,8 @@ import { UsersAccessPage } from '../users/UsersAccessPage';
 import { InviteUserPage } from '../users/InviteUserPage';
 import { WarehousesPage } from '../warehouses/WarehousesPage';
 import { AddWarehousePage } from '../warehouses/AddWarehousePage';
+import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrganizationsPage';
+import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -38,6 +40,8 @@ export function AppRoutes() {
           <Route path="/users/invite" element={<InviteUserPage />} />
           <Route path="/warehouses" element={<WarehousesPage />} />
           <Route path="/warehouses/new" element={<AddWarehousePage />} />
+          <Route path="/supplier-organizations" element={<SupplierOrganizationsPage />} />
+          <Route path="/supplier-organizations/new" element={<AddSupplierOrganizationPage />} />
         </Route>
       </Route>
 
