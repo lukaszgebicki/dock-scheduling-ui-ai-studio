@@ -249,4 +249,46 @@ describe('AppRouter', () => {
 
     expect(mockAuthApi.refresh).toHaveBeenCalledTimes(1);
   });
+
+  it('12. unauthenticated access to /supplier-organizations is protected and redirects to /login', async () => {
+    const { promise, reject } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/supplier-organizations');
+
+    await act(async () => {
+      reject(new ApiError({ status: 401, errorCode: 'AUTH_FAILED', message: 'Unauthorized' }));
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/login'));
+    expect(screen.getByRole('heading', { name: 'Sign in' }).textContent).toBe('Sign in');
+  });
+
+  it('13. authenticated access to /supplier-organizations renders the Supplier organizations overview and retains the exact path', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/supplier-organizations');
+
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/supplier-organizations'));
+    expect(screen.getByRole('heading', { name: 'Supplier organizations', level: 1 }).textContent).toBe('Supplier organizations');
+  });
+
+  it('14. authenticated access to /supplier-organizations/new renders Add supplier organization and retains the exact path', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/supplier-organizations/new');
+
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/supplier-organizations/new'));
+    expect(screen.getByRole('heading', { name: 'Add supplier organization', level: 1 }).textContent).toBe('Add supplier organization');
+  });
 });
