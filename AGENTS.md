@@ -1,0 +1,144 @@
+# Dock Scheduling UI sandbox operating guide
+
+## Contents
+
+- [Repository boundary](#repository-boundary)
+- [Governance sources](#governance-sources)
+- [Required commands](#required-commands)
+- [Delivery rules](#delivery-rules)
+- [Task execution](#task-execution)
+- [Human gates](#human-gates)
+- [Stop conditions](#stop-conditions)
+
+## Repository boundary
+
+Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
+
+This is the frontend-only Dock Scheduling UI sandbox. It is not a
+production system and does not provide production persistence.
+
+The production repository
+`lukaszgebicki/dock-scheduling-app-ai-studio1707` is prohibited. Do not
+open, fetch, clone, inspect, modify, or use it as a source for this
+repository unless a separate explicit task authorizes that repository.
+
+All task writes must occur in an external worktree. Never create a
+worktree inside the canonical repository.
+
+## Governance sources
+
+- [Project charter](docs/codex/PROJECT_CHARTER.md)
+- [Verified current state](docs/codex/CURRENT_STATE.md)
+- [Roadmap](docs/codex/ROADMAP.md)
+- [Autonomy and risk policy](docs/codex/AUTONOMY_POLICY.md)
+- [Task protocol](docs/codex/TASK_PROTOCOL.md)
+- [Quality gates](docs/codex/QUALITY_GATES.md)
+- [Security boundaries](docs/codex/SECURITY_BOUNDARIES.md)
+- [Engineering quality](docs/codex/ENGINEERING_QUALITY.md)
+- [Decision log](docs/codex/DECISION_LOG.md)
+- [Technical debt](docs/codex/TECH_DEBT.md)
+
+Detailed definitions live in those documents. Link to the canonical
+policy instead of copying it into task notes or pull requests.
+
+## Required commands
+
+Use the repository's locked dependency graph and existing scripts:
+
+```bash
+npm ci
+npm run typecheck
+npm test -- --reporter=verbose
+npm run build
+npm audit --omit=dev
+```
+
+Also run `git diff --check`. Record each exact command and its actual
+result. Never infer, round, omit, or fabricate validation evidence.
+
+CI currently runs `npm ci`, typecheck, tests, build, and the runtime
+audit on Node.js 24. CI is evidence, not merge authorization.
+Locked `npm ci` preparation is permitted under the conditions in
+[SECURITY_BOUNDARIES.md](docs/codex/SECURITY_BOUNDARIES.md); it does not
+authorize dependency changes.
+
+## Delivery rules
+
+- One task has one branch, one external worktree, and one implementation
+  owner.
+- The implementation owner is the Codex Builder.
+- A separate Codex Reviewer session performs independent read-only
+  review. The Builder cannot issue its own independent-review verdict.
+- Never write directly to `main`.
+- Never merge autonomously.
+- Do not stage before the publication phase defined by the task
+  contract.
+- Change only paths expressly allowed by the task contract.
+- Treat authentication, authorization, dependencies, CI, repository
+  configuration, network, persistence, backend contracts, databases,
+  deployment, and secrets as protected concerns.
+- Apply the risk class and authorization rules in
+  [AUTONOMY_POLICY.md](docs/codex/AUTONOMY_POLICY.md).
+- Preserve demo-only behavior unless approved business scope says
+  otherwise. Do not present local UI success as persisted state.
+
+## Task execution
+
+Start only from a `READY` roadmap item and a complete task contract.
+Follow [TASK_PROTOCOL.md](docs/codex/TASK_PROTOCOL.md).
+
+Before editing, perform a Pattern Study:
+
+1. inspect comparable routes, components, schemas, tests, and data
+   sources for every affected concern;
+2. record the patterns to reuse;
+3. justify any new pattern architecturally.
+
+Plan the smallest coherent diff. Avoid unrelated refactors, rename or
+formatting churn, and speculative infrastructure.
+
+After initial validation, perform the mandatory Simplification Pass in
+[ENGINEERING_QUALITY.md](docs/codex/ENGINEERING_QUALITY.md), then rerun
+complete validation.
+
+Every implementation and review must include the Engineering Quality
+Score. PASS requires at least 8/10, no category scored 0, and no
+unresolved task-specific finding at any severity.
+
+When durable governance or state changes are required, include the
+relevant documentation in the implementation diff before final
+independent review. Do not update state documents merely to predict
+future work.
+
+## Human gates
+
+Łukasz is the business owner and final product authority. ChatGPT is the
+Project Lead. Human approval is required for business behavior,
+acceptance criteria, access rules, architecture, security-sensitive
+scope, external contracts, and persistence.
+
+Codex autonomy ends at a verified open pull request. Merge is performed
+only by ChatGPT under Łukasz's standing or task-specific authorization,
+or directly by Łukasz. Reviewer PASS, green CI, or an automated score
+never overrides that decision.
+
+## Stop conditions
+
+Stop without guessing when:
+
+- repository identity, remote, baseline SHA, branch, merge base, or
+  worktree boundary differs from the task contract;
+- the working tree is not clean before branch creation;
+- the roadmap item is not `READY`, required authorization is absent, or
+  another implementation task is already active;
+- requested work crosses an allowed path, repository, risk class, or
+  security boundary;
+- business behavior, access rules, architecture, persistence, security,
+  external contracts, or acceptance criteria are ambiguous;
+- validation cannot be completed or evidence conflicts;
+- an unexpected file is modified, staged, generated, or untracked;
+- independent review cannot be obtained or has unresolved findings.
+
+Explicit task instructions take precedence over general guidance only
+when they do not weaken repository, production, security, Git, review,
+merge, or human-approval prohibitions.
