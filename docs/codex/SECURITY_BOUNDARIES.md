@@ -52,6 +52,57 @@ lifecycle script, or making any dependency or configuration change.
 Stop when `npm ci` would modify a tracked file, reports a manifest and
 lockfile mismatch, or requires an exception not authorized by the task.
 
+## Local runner boundary
+
+The local autonomy runner is an enforcement layer, not new authority.
+It accepts only strict JSON task contracts from a local file or one
+literal `autonomy-task` block in an open GitHub issue. GitHub issue
+execution additionally requires `READY`, roadmap `READY`, and, for
+Class C, `class-c-approved` plus concern-specific authorization. Local
+Class C contracts require an explicit approved ChatGPT Project Lead
+record. Class D always stops.
+
+Contracts select only fixed IDs from the repository-owned
+`.ai/orchestrator-policy.json`. Raw model IDs, reasoning values,
+executables, arguments, sandboxes, approval modes and environment
+profile overrides are prohibited. The runner fails before agent
+execution when the policy is invalid, a profile is unavailable, or a
+role or permission exceeds its ceiling.
+
+The trusted `.ai/**` policy boundary is Class C-sensitive. A lower-risk
+contract cannot authorize it directly or through a broader path pattern.
+
+One exclusive lock is held per canonical repository. Locks, prompts,
+process output, Reviewer results, and final reports live under the
+user's external Dock Scheduling autonomy-runs directory and must not be
+written to Git. Logs are sanitized and environment variables are not
+dumped.
+
+All child processes receive executable and argument arrays with the
+shell disabled. Git, GitHub CLI, and Codex are reachable only through
+operation-specific builders with exact argument shapes; contracts,
+issues, and prompts cannot supply executables, flags, sandboxes,
+approval modes, working directories, output paths, or trailing
+arguments. The runner applies bounded timeouts and retries, stops
+immediately on HTTP 4xx authorization failures, and stops after three
+consecutive transient failures.
+
+Every Builder, repair, and Reviewer process is enclosed by deterministic
+local and remote snapshots. They compare HEAD, current branch, staged
+inventory, feature-branch reflog, local `main`, `origin/main`, remote
+`main`, the remote feature ref, and the count and identities of every
+matching open or closed PR. Reviewer snapshots additionally require the
+changed working-tree content fingerprint to remain identical. Any
+commit, staging, push, PR creation, PR update, or PR reopen stops the run
+without rollback and preserves both observed snapshots in the external
+failure report.
+
+The Reviewer is a fresh Codex process whose only permitted invocation
+uses the read-only repository sandbox. Publication is implemented only
+after verified Reviewer PASS. GitHub CLI has no merge-capable builder.
+E2 and E3 prohibit publication; E4 may publish the verified feature
+branch but still contains no merge path.
+
 ## Git and filesystem prohibitions
 
 Never:

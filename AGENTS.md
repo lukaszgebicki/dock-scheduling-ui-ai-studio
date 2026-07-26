@@ -5,6 +5,7 @@
 - [Repository boundary](#repository-boundary)
 - [Governance sources](#governance-sources)
 - [Required commands](#required-commands)
+- [Local autonomy runner](#local-autonomy-runner)
 - [Delivery rules](#delivery-rules)
 - [Task execution](#task-execution)
 - [Human gates](#human-gates)
@@ -37,6 +38,10 @@ worktree inside the canonical repository.
 - [Engineering quality](docs/codex/ENGINEERING_QUALITY.md)
 - [Decision log](docs/codex/DECISION_LOG.md)
 - [Technical debt](docs/codex/TECH_DEBT.md)
+- [Dock AI Playbook v2](docs/codex/DOCK_AI_PLAYBOOK_V2.md)
+- [Model routing](docs/codex/MODEL_ROUTING.md)
+- [Prompt standard](docs/codex/PROMPT_STANDARD.md)
+- [Orchestrator](docs/codex/ORCHESTRATOR.md)
 
 Detailed definitions live in those documents. Link to the canonical
 policy instead of copying it into task notes or pull requests.
@@ -61,6 +66,23 @@ audit on Node.js 24. CI is evidence, not merge authorization.
 Locked `npm ci` preparation is permitted under the conditions in
 [SECURITY_BOUNDARIES.md](docs/codex/SECURITY_BOUNDARIES.md); it does not
 authorize dependency changes.
+
+## Local autonomy runner
+
+`tools/autonomy/run-task.mjs` defines the repository's local bounded
+orchestration entry point. Use `npm run autonomy -- doctor` for
+non-mutating capability checks and `plan` to validate an approved task
+without creating a branch or worktree. `execute` is permitted only by a
+complete task contract and the gates in
+[TASK_PROTOCOL.md](docs/codex/TASK_PROTOCOL.md).
+Model, reasoning, context, validation and execution permissions are
+resolved only through
+[`.ai/orchestrator-policy.json`](.ai/orchestrator-policy.json) and the
+[Dock AI Playbook v2](docs/codex/DOCK_AI_PLAYBOOK_V2.md).
+
+The runner is not operational governance until its implementation is
+independently reviewed, merged, and successfully piloted. It never
+authorizes merge.
 
 ## Delivery rules
 

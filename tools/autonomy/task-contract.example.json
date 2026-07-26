@@ -1,0 +1,38 @@
+{
+  "taskId": "AUTONOMY-PILOT-1",
+  "objective": "Complete one separately approved low-risk UI sandbox pilot task",
+  "repository": "lukaszgebicki/dock-scheduling-ui-ai-studio",
+  "baseBranch": "main",
+  "baseSha": "17e1c0d67a13f4df2f4917cfdbea937aa5fc044a",
+  "riskClass": "Class A",
+  "executionLevel": "E4",
+  "builderProfile": "build_medium",
+  "reviewerProfile": "review_high",
+  "contextBudget": "standard",
+  "tokenPosture": "balanced",
+  "validationDepth": "complete",
+  "gitPermission": "publish_feature",
+  "branch": "feat/autonomy-pilot-example",
+  "externalWorktree": "C:\\Users\\example\\Documents\\CodexWorktrees\\dock-scheduling-ui\\autonomy-pilot-example",
+  "allowedPaths": [
+    "src/example/**"
+  ],
+  "protectedPaths": [
+    "package.json",
+    "package-lock.json",
+    ".github/**",
+    "docs/codex/**"
+  ],
+  "acceptanceCriteria": [
+    "Implement only the separately approved pilot behavior.",
+    "Preserve the frontend-only demo boundary."
+  ],
+  "classCAuthorizations": [],
+  "focusedTestArgs": [
+    "src/example/ExamplePage.test.tsx"
+  ],
+  "commitMessage": "feat: complete autonomy pilot",
+  "prTitle": "AUTONOMY-PILOT-1: complete approved pilot",
+  "prBody": "Implements the separately approved AUTONOMY-PILOT-1 contract. Stops before merge.",
+  "maxRepairCycles": 2
+}

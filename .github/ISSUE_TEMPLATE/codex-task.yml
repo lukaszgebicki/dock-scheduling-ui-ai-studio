@@ -1,0 +1,171 @@
+name: Codex autonomy task
+description: Propose one bounded task for the local autonomy runner
+title: "[CODEX TASK] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The runner accepts only an approved repository task contract.
+
+        `READY` does not override required Class C approval. Production
+        repository access is prohibited, and every runner execution stops
+        before merge.
+
+        Labels are managed separately. This form does not claim that `READY`
+        or `class-c-approved` currently exists.
+
+  - type: input
+    id: task-id
+    attributes:
+      label: Task ID
+      description: Use the exact stable ID from docs/codex/ROADMAP.md.
+      placeholder: AUTONOMY-PILOT-1
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: State one bounded outcome without implementation ambiguity.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk-class
+    attributes:
+      label: Risk class
+      description: Class D is prohibited and is intentionally unavailable.
+      options:
+        - Class A
+        - Class B
+        - Class C
+    validations:
+      required: true
+
+  - type: dropdown
+    id: execution-level
+    attributes:
+      label: Execution autonomy
+      description: Risk class controls scope; E0-E4 controls how far execution may proceed.
+      options:
+        - E0
+        - E1
+        - E2
+        - E3
+        - E4
+    validations:
+      required: true
+
+  - type: dropdown
+    id: builder-profile
+    attributes:
+      label: Builder profile
+      description: Select only a trusted profile from .ai/orchestrator-policy.json.
+      options:
+        - scan_low
+        - mechanical_low
+        - build_medium
+        - build_high
+    validations:
+      required: true
+
+  - type: dropdown
+    id: context-budget
+    attributes:
+      label: Context budget
+      options:
+        - minimal
+        - standard
+        - extended
+    validations:
+      required: true
+
+  - type: dropdown
+    id: token-posture
+    attributes:
+      label: Token posture
+      options:
+        - economy
+        - balanced
+        - quality_first
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: List exact, observable acceptance criteria.
+    validations:
+      required: true
+
+  - type: textarea
+    id: allowed-paths
+    attributes:
+      label: Allowed paths
+      description: List normalized repository-relative paths, one per line.
+      placeholder: |
+        src/example/**
+        src/example/ExamplePage.test.tsx
+    validations:
+      required: true
+
+  - type: textarea
+    id: protected-paths
+    attributes:
+      label: Protected paths
+      description: List normalized repository-relative paths that must not change.
+      placeholder: |
+        package.json
+        package-lock.json
+        .github/**
+    validations:
+      required: true
+
+  - type: textarea
+    id: class-c-authorization
+    attributes:
+      label: Explicit Class C authorization
+      description: |
+        For Class C, identify the approved concern and affected paths. A READY
+        label alone is insufficient. For Class A or B, enter "Not applicable".
+    validations:
+      required: true
+
+  - type: textarea
+    id: autonomy-contract
+    attributes:
+      label: Machine-readable autonomy-task JSON contract
+      description: |
+        Provide the complete strict JSON contract. The rendered issue body must
+        contain exactly this one autonomy-task fenced block.
+      render: autonomy-task
+      value: |
+        {
+          "taskId": "AUTONOMY-PILOT-1",
+          "objective": "Complete the approved pilot task",
+          "repository": "lukaszgebicki/dock-scheduling-ui-ai-studio",
+          "baseBranch": "main",
+          "baseSha": "REPLACE_WITH_APPROVED_40_CHARACTER_SHA",
+          "riskClass": "Class A",
+          "executionLevel": "E4",
+          "builderProfile": "build_medium",
+          "reviewerProfile": "review_high",
+          "contextBudget": "standard",
+          "tokenPosture": "balanced",
+          "validationDepth": "complete",
+          "gitPermission": "publish_feature",
+          "branch": "feat/replace-with-task-branch",
+          "externalWorktree": "REPLACE_WITH_ABSOLUTE_EXTERNAL_WORKTREE",
+          "allowedPaths": ["src/example/**"],
+          "protectedPaths": ["package.json", "package-lock.json", ".github/**"],
+          "acceptanceCriteria": ["Replace with approved acceptance criteria."],
+          "classCAuthorizations": [],
+          "focusedTestArgs": ["src/example/ExamplePage.test.tsx"],
+          "commitMessage": "feat: replace with approved message",
+          "prTitle": "Replace with approved PR title",
+          "prBody": "Replace with the approved PR body."
+        }
+    validations:
+      required: true

@@ -1,18 +1,17 @@
 # Verified current state
 
 Verified on 2026-07-26 at
-`51f677725f172515efae39c7e085fa24e290f167`.
+`17e1c0d67a13f4df2f4917cfdbea937aa5fc044a`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- `main`, `origin/main`, the `SPR-SEC-2` baseline, and its merge base are
-  all `51f677725f172515efae39c7e085fa24e290f167`.
-- `SPR-SEC-2` uses the authorized external worktree and branch
-  `security/spr-sec-2-react-router-8-3`.
-- `AUTONOMY-GOV-1` has a separately preserved local implementation and
-  is paused; its mandatory runtime audit is blocked by the React Router
-  advisory described below.
+- `main` and `origin/main` are
+  `17e1c0d67a13f4df2f4917cfdbea937aa5fc044a` after human merge of
+  `SPR-SEC-2` pull request #9.
+- `AUTONOMY-GOV-1` is in progress in its authorized external worktree
+  `chore/autonomy-gov-runner`; its preserved implementation is being
+  reconciled with this baseline.
 
 ## Merged milestones
 
@@ -26,6 +25,7 @@ Verified on 2026-07-26 at
 | SPR-SEC-1 — React Router security migration | PR #7, merged |
 | SPR-2D — Supplier organizations administration | PR #6, merged |
 | AUTONOMY-FOUNDATION-1 — repository governance foundation | PR #8, merged |
+| SPR-SEC-2 — React Router 8.3 security migration | PR #9, human-merged |
 
 ## Routes
 
@@ -83,13 +83,27 @@ Commands were run in the authorized external worktree on 2026-07-26.
 | JavaScript | 426.71 kB; 119.49 kB gzip |
 
 GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
-dependency. The isolated Class C `SPR-SEC-2` task now resolves React
-Router to 8.3.0, and its initial `npm audit --omit=dev` validation
-reports zero vulnerabilities. `AUTONOMY-GOV-1` remains paused until the
-security task completes its remaining quality gates.
+dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
+8.3.0; its runtime audit reported zero vulnerabilities.
+
+## Local runner status
+
+`AUTONOMY-GOV-1` is implementing a local Node.js orchestration runner
+and GitHub task issue form, extended by Dock AI Playbook v2 policy. The
+design uses strict contracts, fixed model and reasoning profiles,
+two-dimensional risk and execution controls, external locks and run
+state, executable-plus-argument process invocation,
+separate workspace-write Builder and read-only Reviewer processes,
+bounded repair loops, exact-path publication, and a hard stop before
+merge.
+
+This runner is not active automation. It remains unavailable for task
+execution until its implementation is independently reviewed, merged,
+and successfully piloted through separately approved setup.
 
 ## Next controlled task
 
-`SPR-SEC-2` is `IN_PROGRESS` under its task-specific Class C
-authorization. `AUTONOMY-GOV-1` remains blocked and paused until the
-runtime dependency audit passes.
+`SPR-SEC-2` is `DONE`; PR #9 was human-merged. `AUTONOMY-GOV-1` is
+`IN_PROGRESS` under its explicitly approved Class C implementation
+contract. `AUTONOMY-PILOT-1` remains blocked until the runner is
+independently reviewed, merged, and prepared through controlled setup.

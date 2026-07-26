@@ -20,6 +20,8 @@ Every task contract must state:
 - repository;
 - baseline branch and exact SHA;
 - risk class;
+- execution level, fixed Builder and Reviewer profiles, context budget,
+  token posture, validation depth, and Git permission ID;
 - feature branch and external worktree;
 - implementation owner and separate independent Reviewer;
 - allowed scope and protected paths;
@@ -102,3 +104,51 @@ Routine questions are answered from repository, Git, GitHub, test, and
 command evidence. Stop rather than guess when ambiguity affects
 business behavior, access rules, architecture, persistence, security,
 external contracts, or scope boundaries.
+
+## Local runner protocol
+
+The repository runner is invoked through `npm run autonomy --`:
+
+- `doctor` verifies supported Node and npm versions, Git and GitHub CLI,
+  authenticated read-only GitHub access, repository identity, and the
+  installed Codex non-interactive Builder and read-only Reviewer
+  controls without mutating the repository;
+- `plan --contract <file>` and `plan --issue <number>` validate the
+  contract, roadmap state, and authorization, then print the lifecycle
+  without creating a branch, worktree, or GitHub object;
+- `execute` performs the lifecycle only after acquiring the external
+  repository lock and rechecking every gate.
+
+Before any agent execution, the runner validates
+`.ai/orchestrator-policy.json`, verifies installed model and reasoning
+capabilities, and resolves contract profile IDs to immutable arguments.
+E0 and E1 remain non-mutating; E2 and E3 stop before publication; E4
+alone may reach the existing publication phase. Every level whose
+trusted validation depth includes focused tests must name at least one
+focused test argument.
+
+The runner accepts no contract-supplied command. Operation-specific
+builders produce exact Git, GitHub CLI, and Codex executable-plus-
+argument arrays with the shell disabled; unknown fields and appended
+arguments are rejected. State and sanitized evidence stay outside the
+repository.
+
+Builder, repair, and Reviewer work use fresh Codex processes. Before and
+after each one, the runner compares local refs and index state, branch
+reflog, remote `main` and feature refs, and all matching open or closed
+PRs. It stops without rollback and preserves the exact snapshots when a
+process commits, stages, pushes, creates a PR, updates a PR, or reopens a
+PR. Reviewers run with a technically enforced read-only sandbox, must
+leave working-tree content unchanged, and must return the marked
+machine-readable verdict defined by the runner.
+
+Two repair cycles are permitted by default. A missing or malformed
+Reviewer result, unresolved finding, three consecutive process or
+transient network failures, or an HTTP 4xx authorization failure stops
+execution. Publication starts only after valid Reviewer PASS, stages
+the exact verified inventory, creates one commit and non-draft PR,
+observes CI for a bounded period, and stops before merge.
+
+All generated prompts follow [PROMPT_STANDARD.md](PROMPT_STANDARD.md).
+Routing and failure behavior are canonical in
+[ORCHESTRATOR.md](ORCHESTRATOR.md).

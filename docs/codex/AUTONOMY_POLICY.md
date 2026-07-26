@@ -53,6 +53,26 @@ The following are never autonomous:
 - silent scope broadening;
 - inventing business behavior to resolve ambiguity.
 
+## Execution autonomy
+
+Execution autonomy is separate from risk class. Risk controls what may
+change; E0-E4 controls how far the runner may proceed:
+
+- E0 reads and reports only.
+- E1 analyzes and plans without edits.
+- E2 may implement and run focused validation, without publication.
+- E3 may implement, simplify and run complete validation, without
+  publication.
+- E4 may complete the approved lifecycle through one verified open pull
+  request and always stops before merge.
+
+The trusted mappings, profile ceilings and Git permissions are defined
+in [the orchestrator policy](../../.ai/orchestrator-policy.json).
+[Dock AI Playbook v2](DOCK_AI_PLAYBOOK_V2.md) and
+[MODEL_ROUTING.md](MODEL_ROUTING.md) define their human-readable use.
+A higher execution level never reduces risk or supplies Class C
+authorization.
+
 ## Human control
 
 Łukasz retains final product authority. Business rules, acceptance
