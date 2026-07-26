@@ -77,3 +77,36 @@ entry, denied filesystem read, or unavailable external service.
 Record the failed invocation and symptom, correct only the environmental
 condition within task authority, and rerun the exact underlying check.
 If a controlled rerun cannot complete, mark validation blocked and stop.
+
+## Local runner gates
+
+Runner implementation and future runner changes also require:
+
+- focused native tests for contract, authorization, path, process,
+  Reviewer, repair-loop, lock, publication-order, and prohibited-
+  operation behavior;
+- default help, `doctor`, and `plan` to remain non-mutating;
+- supported Node 24.x and npm 11.x;
+- actual `doctor` PASS in the intended local environment;
+- separate workspace-write Builder and read-only Reviewer Codex
+  invocations derived from inspected local CLI help;
+- deterministic pre/post-Codex snapshots covering HEAD, branch, index,
+  reflog, local and remote `main`, remote feature state, all matching
+  PRs, and unchanged Reviewer working-tree content;
+- operation-specific Git, GitHub CLI, and Codex builders with exact
+  argument shapes and rejection tests for overrides and trailing flags;
+- no real Codex task, GitHub issue, branch, push, or PR during runner
+  implementation tests;
+- external run-state and lock verification, with no state, log, report,
+  `dist`, or coverage artifact left inside the repository;
+- `package-lock.json` byte-for-byte unchanged;
+- source inspection confirming no generic protected-command argument
+  path, no merge invocation path, and builder rejection of merge, force,
+  destructive cleanup, rebase, amend, and direct `main` publication.
+- valid Playbook v2 policy with exact schema and version;
+- installed-model evidence for every configured profile and reasoning
+  effort, with unavailable profiles failing closed;
+- contract tests for role, execution, validation and Git-permission
+  ceilings, including broad Class C-sensitive path overlap;
+- external reports that distinguish requested settings from settings
+  verified by runtime evidence.

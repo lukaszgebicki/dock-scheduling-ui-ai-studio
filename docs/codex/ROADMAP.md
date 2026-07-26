@@ -16,59 +16,34 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | SPR-2D — Supplier organizations administration | DONE |
 | SPR-SEC-1 — React Router security migration | DONE |
 | AUTONOMY-FOUNDATION-1 — repository governance foundation | DONE |
+| SPR-SEC-2 — React Router 8.3 security migration | DONE; PR #9 human-merged |
 
 ## Active and queued
 
-### SPR-SEC-2 — React Router 8.3 security migration
+### AUTONOMY-GOV-1 — local autonomy runner MVP
 
-- Objective: remediate GHSA-qwww-vcr4-c8h2 with the smallest safe
-  React Router 8.3.0 and React 19 compatibility migration.
+- Objective: implement the repository-native local runner and GitHub
+  task issue form for bounded Builder, validation, Reviewer, repair,
+  publication, CI-observation orchestration, and Dock AI Playbook v2
+  model and execution policy.
 - State: `IN_PROGRESS`.
-- Risk class: Class C with explicit Project Lead authorization for the
-  dependency, lockfile, compatibility-source, test, and governance paths
-  named in the task contract and recovery amendment.
-- Allowed repository:
-  `lukaszgebicki/dock-scheduling-ui-ai-studio` only.
-- Dependency authorization: remove React Router DOM 7.18.0, add React
-  Router 8.3.0, and update React, React DOM, and their type packages to
-  the minimum coherent compatible React 19 versions. Update Lucide React
-  from 0.394.0 to 0.397.0 only to satisfy its React 19 peer contract.
-- Prohibited dependency behavior: no audit suppression, overrides,
-  `npm audit fix`, force, or legacy-peer resolution.
-- Expected quality gates: focused routing tests, complete validation,
-  zero runtime audit vulnerabilities, documentation consistency,
-  Simplification Pass, independent Reviewer PASS, and an Engineering
-  Quality Score of at least 8/10.
-- Completion criteria: the authorized migration preserves route,
-  access, UI, and business behavior and passes every task-contract
-  validation check.
-- Required human gate: merge remains human-controlled.
-
-### AUTONOMY-GOV-1 — GitHub governance and task template
-
-- Objective: define and implement separately approved GitHub governance
-  and a repository task template.
-- State: `BLOCKED`.
 - Risk class: Class C.
 - Allowed repository:
   `lukaszgebicki/dock-scheduling-ui-ai-studio` only.
-- Dependency/configuration authorization: dependencies are not
-  authorized; GitHub governance or configuration changes require
-  explicit Project Lead authorization in the task contract and are not
-  authorized by this roadmap entry alone. Locked `npm ci` validation is
-  not a dependency change.
-- Required human gates: exact governance design, protected paths,
-  permissions, and Class C implementation authorization.
-- Expected quality gates: repository and GitHub baseline, exact
-  configuration diff, independent Reviewer PASS before publication,
-  green CI, and human merge decision.
-- Completion criteria: approved governance behavior and template are
-  implemented in allowed paths, validated, independently reviewed, and
-  available in one verified open PR.
-- Blocking reason: its mandatory runtime audit is blocked by
-  GHSA-qwww-vcr4-c8h2 and depends on successful completion of
-  `SPR-SEC-2`; its separate local implementation remains preserved and
-  paused.
+- Dependency/configuration authorization: one `package.json` runner
+  script is authorized; dependencies and `package-lock.json` changes
+  are not. Locked `npm ci` validation is not a dependency change.
+- Required human gates: the exact runner contract and Class C paths are
+  approved; independent review and the human merge decision remain
+  mandatory.
+- Expected quality gates: runner and policy-focused security tests, the
+  complete repository validation baseline, installed-profile evidence,
+  actual non-mutating doctor PASS, exact scope, independent Reviewer
+  PASS, green CI, and human merge decision.
+- Completion criteria: the runner and issue form are implemented in
+  approved paths, validated, independently reviewed, and made available
+  in one verified open PR. Operational use still requires a successful
+  pilot.
 
 ### AUTONOMY-PILOT-1 — first bounded autonomous delivery task
 
@@ -87,8 +62,9 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
   Reviewer PASS, score at least 8/10, green CI, and human merge gate.
 - Completion criteria: approved behavior is delivered in one verified
   open PR with complete evidence and no unresolved findings.
-- Blocking reason: governance foundation review and
-  `AUTONOMY-GOV-1` completion are required before the pilot can start.
+- Blocking reason: `AUTONOMY-GOV-1` must be independently reviewed and
+  merged, then controlled local setup and a separate pilot contract
+  must be approved.
 
 ### SPR-2E — next product capability
 
@@ -111,5 +87,5 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 - Blocking reason: pending ChatGPT Project Lead scope and approved
   business acceptance criteria.
 
-Only `SPR-SEC-2` is currently `IN_PROGRESS`. `AUTONOMY-GOV-1` remains
-preserved and paused until the runtime audit blocker is remediated.
+Only `AUTONOMY-GOV-1` is currently `IN_PROGRESS`. No ambiguous product
+task is `READY`.

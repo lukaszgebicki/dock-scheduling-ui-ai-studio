@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "autonomy": "node tools/autonomy/run-task.mjs",
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",

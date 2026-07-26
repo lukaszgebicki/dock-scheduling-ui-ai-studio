@@ -22,6 +22,11 @@ acceptance criteria. Do not include unrelated refactors, rename churn,
 formatting churn, opportunistic cleanup, or speculative
 future-proofing.
 
+Use the senior-engineer implementation ladder in
+[DOCK_AI_PLAYBOOK_V2.md](DOCK_AI_PLAYBOOK_V2.md#implementation-ladder).
+Simplicity never weakens security, validation, error handling, business
+correctness, accessibility, architecture, or tests.
+
 ## Abstraction discipline
 
 A new abstraction must remove meaningful duplication, represent a

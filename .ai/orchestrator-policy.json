@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "playbookVersion": "2.0",
+  "defaultProfiles": {
+    "scan": "scan_low",
+    "repair": "repair_medium"
+  },
+  "executionLevels": {
+    "E0": {
+      "mayEdit": false,
+      "mayPublish": false,
+      "mayMerge": false,
+      "validationDepth": "none",
+      "gitPermission": "read_only",
+      "allowedBuilderProfiles": ["scan_low"]
+    },
+    "E1": {
+      "mayEdit": false,
+      "mayPublish": false,
+      "mayMerge": false,
+      "validationDepth": "none",
+      "gitPermission": "read_only",
+      "allowedBuilderProfiles": ["scan_low"]
+    },
+    "E2": {
+      "mayEdit": true,
+      "mayPublish": false,
+      "mayMerge": false,
+      "validationDepth": "focused",
+      "gitPermission": "worktree_write",
+      "allowedBuilderProfiles": ["mechanical_low", "build_medium", "build_high"]
+    },
+    "E3": {
+      "mayEdit": true,
+      "mayPublish": false,
+      "mayMerge": false,
+      "validationDepth": "complete",
+      "gitPermission": "worktree_write",
+      "allowedBuilderProfiles": ["mechanical_low", "build_medium", "build_high"]
+    },
+    "E4": {
+      "mayEdit": true,
+      "mayPublish": true,
+      "mayMerge": false,
+      "validationDepth": "complete",
+      "gitPermission": "publish_feature",
+      "allowedBuilderProfiles": ["mechanical_low", "build_medium", "build_high"]
+    }
+  },
+  "profiles": {
+    "scan_low": {
+      "role": "scan",
+      "model": "gpt-5.6-luna",
+      "reasoningEffort": "low",
+      "sandbox": "read-only",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "read_only",
+      "maxExecutionLevel": "E1",
+      "mayMerge": false
+    },
+    "mechanical_low": {
+      "role": "builder",
+      "model": "gpt-5.6-luna",
+      "reasoningEffort": "low",
+      "sandbox": "workspace-write",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "worktree_write",
+      "maxExecutionLevel": "E4",
+      "mayMerge": false
+    },
+    "build_medium": {
+      "role": "builder",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "medium",
+      "sandbox": "workspace-write",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "worktree_write",
+      "maxExecutionLevel": "E4",
+      "mayMerge": false
+    },
+    "repair_medium": {
+      "role": "repair",
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "medium",
+      "sandbox": "workspace-write",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "worktree_write",
+      "maxExecutionLevel": "E4",
+      "mayMerge": false
+    },
+    "build_high": {
+      "role": "builder",
+      "model": "gpt-5.6-sol",
+      "reasoningEffort": "high",
+      "sandbox": "workspace-write",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "worktree_write",
+      "maxExecutionLevel": "E4",
+      "mayMerge": false
+    },
+    "review_high": {
+      "role": "reviewer",
+      "model": "gpt-5.6-sol",
+      "reasoningEffort": "high",
+      "sandbox": "read-only",
+      "approvalMode": "never",
+      "gitPermissionCeiling": "read_only",
+      "maxExecutionLevel": "E4",
+      "mayMerge": false
+    }
+  },
+  "contextBudgets": {
+    "minimal": "Only the contract, governing boundary, target files and focused evidence.",
+    "standard": "Relevant governance, patterns, direct consumers, tests and final diff.",
+    "extended": "Targeted architecture, security and cross-boundary evidence required by the task."
+  },
+  "tokenPostures": {
+    "economy": "Prefer concise evidence and the cheapest profile expected to pass.",
+    "balanced": "Balance implementation confidence with bounded context and output.",
+    "quality_first": "Spend additional reasoning only where risk or ambiguity requires it."
+  },
+  "validationDepths": {
+    "none": [],
+    "focused": ["focused-tests", "scope-check"],
+    "complete": ["focused-tests", "typecheck", "tests", "build", "runtime-audit", "scope-check"]
+  },
+  "gitPermissions": {
+    "read_only": {
+      "worktreeWrite": false,
+      "stage": false,
+      "commit": false,
+      "push": false,
+      "pullRequest": false,
+      "merge": false
+    },
+    "worktree_write": {
+      "worktreeWrite": true,
+      "stage": false,
+      "commit": false,
+      "push": false,
+      "pullRequest": false,
+      "merge": false
+    },
+    "publish_feature": {
+      "worktreeWrite": true,
+      "stage": true,
+      "commit": true,
+      "push": true,
+      "pullRequest": true,
+      "merge": false
+    }
+  },
+  "hardStopConditions": [
+    "policy or contract validation fails",
+    "requested model or reasoning effort is unavailable",
+    "risk class or Class C authorization conflicts",
+    "profile role, sandbox or Git permission exceeds its ceiling",
+    "protected local or remote state changes prematurely",
+    "validation or independent review fails",
+    "any operation would merge"
+  ],
+  "prohibitions": {
+    "merge": true,
+    "rawModelOverride": true,
+    "rawReasoningOverride": true,
+    "arbitraryArguments": true,
+    "executableOverride": true,
+    "sandboxOverride": true,
+    "approvalOverride": true,
+    "environmentProfileOverride": true
+  }
+}
