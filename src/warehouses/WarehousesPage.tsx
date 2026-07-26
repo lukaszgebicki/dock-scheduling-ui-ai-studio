@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Building2, Plus, Search, Building } from 'lucide-react';
 import { demoWarehouses, demoSupplierOrganizations, demoSupplierAssignments } from '../users/demoAccessScope';
 

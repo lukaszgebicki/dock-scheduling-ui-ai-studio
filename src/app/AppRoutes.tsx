@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { PublicOnlyRoute } from '../auth/PublicOnlyRoute';
 import { AuthenticatedShell } from './AuthenticatedShell';

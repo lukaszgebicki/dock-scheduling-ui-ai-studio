@@ -1,21 +1,18 @@
 # Verified current state
 
-Verified on 2026-07-24 at
-`44a6dd26ad49eb4056d890d86bcdb25c1640bcd6`.
+Verified on 2026-07-26 at
+`51f677725f172515efae39c7e085fa24e290f167`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- `main`, `origin/main`, the canonical `HEAD`, and the foundation merge
-  base are all `44a6dd26ad49eb4056d890d86bcdb25c1640bcd6`.
-- The canonical `main` worktree is clean and unstaged.
-- Current registered worktrees: canonical `main` plus the authorized
-  external `chore/codex-autonomy-foundation` worktree.
-- Current local branches: `main` and
-  `chore/codex-autonomy-foundation`.
-- Current relevant remote branch: `origin/main`; no remote foundation
-  branch exists.
-- GitHub inspection found no open pull requests.
+- `main`, `origin/main`, the `SPR-SEC-2` baseline, and its merge base are
+  all `51f677725f172515efae39c7e085fa24e290f167`.
+- `SPR-SEC-2` uses the authorized external worktree and branch
+  `security/spr-sec-2-react-router-8-3`.
+- `AUTONOMY-GOV-1` has a separately preserved local implementation and
+  is paused; its mandatory runtime audit is blocked by the React Router
+  advisory described below.
 
 ## Merged milestones
 
@@ -28,6 +25,7 @@ Verified on 2026-07-24 at
 | SPR-2C — Warehouses administration | PR #5, merged |
 | SPR-SEC-1 — React Router security migration | PR #7, merged |
 | SPR-2D — Supplier organizations administration | PR #6, merged |
+| AUTONOMY-FOUNDATION-1 — repository governance foundation | PR #8, merged |
 
 ## Routes
 
@@ -51,8 +49,8 @@ authentication state.
 
 ## Architecture and features
 
-- React 18.3.1 and React Router DOM 7.18.0; the transitive
-  `react-router` package is also 7.18.0.
+- React and React DOM 19.2.7, React Router 8.3.0, and Lucide React
+  0.397.0. React Router DOM is no longer installed.
 - Vite 5.4.21, TypeScript 5.9.3, Vitest 1.6.1, React Hook Form 7.82.0,
   and Zod 4.4.3 are resolved in the lockfile.
 - Frontend-only, demo-injected authentication; no production persistence
@@ -67,11 +65,11 @@ authentication state.
 
 ## Validation baseline
 
-Commands were run in the authorized external worktree on 2026-07-24.
+Commands were run in the authorized external worktree on 2026-07-26.
 
 | Check | Verified result |
 | --- | --- |
-| `npm ci` | PASS; 229 packages added |
+| `npm ci` | PASS; 225 packages added |
 | `npm run typecheck` | PASS |
 | `npm test -- --reporter=verbose` | PASS; 16 files, 280 tests, 0 failed, 0 skipped |
 | `npm run build` | PASS; no warnings |
@@ -79,19 +77,19 @@ Commands were run in the authorized external worktree on 2026-07-24.
 | Node.js | 24.14.0 |
 | npm | 11.18.0 |
 | Vite | 5.4.21 |
-| Modules transformed | 1,631 |
+| Modules transformed | 1,685 |
 | HTML | 0.41 kB; 0.28 kB gzip |
 | CSS | 30.68 kB; 6.48 kB gzip |
-| JavaScript | 374.47 kB; 105.47 kB gzip |
+| JavaScript | 426.71 kB; 119.49 kB gzip |
 
-The full development-tree audit reports four findings across the
-Vite/esbuild and Vitest/vite-node development paths: 2 moderate, 1 high,
-and 1 critical. They are development-only and tracked in
-[TECH_DEBT.md](TECH_DEBT.md); the runtime tree remains clean.
+GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
+dependency. The isolated Class C `SPR-SEC-2` task now resolves React
+Router to 8.3.0, and its initial `npm audit --omit=dev` validation
+reports zero vulnerabilities. `AUTONOMY-GOV-1` remains paused until the
+security task completes its remaining quality gates.
 
 ## Next controlled task
 
-`AUTONOMY-FOUNDATION-1` remains `IN_PROGRESS` until independent review.
-The next queued governance task is `AUTONOMY-GOV-1`; its Class C
-repository-governance changes require a separate explicitly authorized
-task contract.
+`SPR-SEC-2` is `IN_PROGRESS` under its task-specific Class C
+authorization. `AUTONOMY-GOV-1` remains blocked and paused until the
+runtime dependency audit passes.
