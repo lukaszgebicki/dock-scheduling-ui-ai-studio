@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router';
 import { useAuth } from '../auth/useAuth';
 import {
   Menu, X, LayoutDashboard, Calendar, CalendarClock,

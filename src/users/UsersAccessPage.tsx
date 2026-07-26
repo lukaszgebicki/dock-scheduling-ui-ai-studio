@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Users, UserCheck, UserX, Truck, Search, X, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { demoUsers, UserRole, UserStatus } from './demoUsers';
 
 export function UsersAccessPage() {

@@ -6,7 +6,7 @@ import {
   Routes,
   useLocation,
   useNavigationType,
-} from 'react-router-dom';
+} from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
 import { ApiError } from '../api/ApiError';
 import {

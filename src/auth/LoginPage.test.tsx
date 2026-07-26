@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { vi, describe, it, expect, beforeEach, afterEach, type Mocked } from 'vitest';
 import { LoginPage } from './LoginPage';
 import { AuthProvider, AuthApiPort } from './AuthProvider';

@@ -2,7 +2,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, act, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router';
 import { AppRoutes } from './AppRoutes';
 import { AuthProvider, AuthApiPort } from '../auth/AuthProvider';
 import { ApiError } from '../api/ApiError';

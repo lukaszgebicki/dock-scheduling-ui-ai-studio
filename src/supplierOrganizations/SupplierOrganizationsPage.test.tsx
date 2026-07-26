@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { SupplierOrganizationsPage } from './SupplierOrganizationsPage';
 

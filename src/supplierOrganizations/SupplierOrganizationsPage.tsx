@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Building2, Warehouse, Layers, AlertCircle, Plus, Search } from 'lucide-react';
 import { demoSupplierOrganizations, demoSupplierAssignments, getWarehouseDisplayNames } from '../users/demoAccessScope';
 

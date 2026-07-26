@@ -2,7 +2,7 @@
 import React from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { InviteUserPage } from './InviteUserPage';
 import { UsersAccessPage } from './UsersAccessPage';
 import { AuthenticatedShell } from '../app/AuthenticatedShell';

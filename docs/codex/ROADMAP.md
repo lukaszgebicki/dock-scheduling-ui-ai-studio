@@ -15,34 +15,40 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | SPR-2C — Warehouses administration | DONE |
 | SPR-2D — Supplier organizations administration | DONE |
 | SPR-SEC-1 — React Router security migration | DONE |
+| AUTONOMY-FOUNDATION-1 — repository governance foundation | DONE |
 
 ## Active and queued
 
-### AUTONOMY-FOUNDATION-1 — repository governance foundation
+### SPR-SEC-2 — React Router 8.3 security migration
 
-- Objective: add the repository-native bounded-autonomy documentation
-  set without changing existing files.
+- Objective: remediate GHSA-qwww-vcr4-c8h2 with the smallest safe
+  React Router 8.3.0 and React 19 compatibility migration.
 - State: `IN_PROGRESS`.
-- Risk class: Class A.
+- Risk class: Class C with explicit Project Lead authorization for the
+  dependency, lockfile, compatibility-source, test, and governance paths
+  named in the task contract and recovery amendment.
 - Allowed repository:
   `lukaszgebicki/dock-scheduling-ui-ai-studio` only.
-- Dependency/configuration authorization: no dependency or
-  configuration change; locked `npm ci` validation is permitted under
-  [SECURITY_BOUNDARIES.md](SECURITY_BOUNDARIES.md#locked-dependency-preparation).
-- Required human gates: approved task scope and human decision after
-  independent Reviewer assessment.
-- Expected quality gates: every applicable gate in
-  [QUALITY_GATES.md](QUALITY_GATES.md), including exact eleven-file
-  scope, link validation, consistency review, and score at least 8/10.
-- Completion criteria: eleven approved files only; all validation
-  passes; independent Reviewer PASS; no commit, push, or PR under the
-  foundation task's restricted Git permissions.
+- Dependency authorization: remove React Router DOM 7.18.0, add React
+  Router 8.3.0, and update React, React DOM, and their type packages to
+  the minimum coherent compatible React 19 versions. Update Lucide React
+  from 0.394.0 to 0.397.0 only to satisfy its React 19 peer contract.
+- Prohibited dependency behavior: no audit suppression, overrides,
+  `npm audit fix`, force, or legacy-peer resolution.
+- Expected quality gates: focused routing tests, complete validation,
+  zero runtime audit vulnerabilities, documentation consistency,
+  Simplification Pass, independent Reviewer PASS, and an Engineering
+  Quality Score of at least 8/10.
+- Completion criteria: the authorized migration preserves route,
+  access, UI, and business behavior and passes every task-contract
+  validation check.
+- Required human gate: merge remains human-controlled.
 
 ### AUTONOMY-GOV-1 — GitHub governance and task template
 
 - Objective: define and implement separately approved GitHub governance
   and a repository task template.
-- State: `READY`.
+- State: `BLOCKED`.
 - Risk class: Class C.
 - Allowed repository:
   `lukaszgebicki/dock-scheduling-ui-ai-studio` only.
@@ -59,6 +65,10 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 - Completion criteria: approved governance behavior and template are
   implemented in allowed paths, validated, independently reviewed, and
   available in one verified open PR.
+- Blocking reason: its mandatory runtime audit is blocked by
+  GHSA-qwww-vcr4-c8h2 and depends on successful completion of
+  `SPR-SEC-2`; its separate local implementation remains preserved and
+  paused.
 
 ### AUTONOMY-PILOT-1 — first bounded autonomous delivery task
 
@@ -101,5 +111,5 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 - Blocking reason: pending ChatGPT Project Lead scope and approved
   business acceptance criteria.
 
-Only `AUTONOMY-FOUNDATION-1` is currently `IN_PROGRESS`. No ambiguous
-product task is `READY`.
+Only `SPR-SEC-2` is currently `IN_PROGRESS`. `AUTONOMY-GOV-1` remains
+preserved and paused until the runtime audit blocker is remediated.
