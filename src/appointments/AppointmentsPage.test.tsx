@@ -56,7 +56,10 @@ describe('AppointmentsPage', () => {
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'not-found' } });
     expect(screen.getByRole('heading', { name: 'No appointments found' })).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    const clearFiltersButtons = screen.getAllByRole('button', { name: 'Clear filters' });
+    expect(clearFiltersButtons).toHaveLength(2);
+    fireEvent.click(clearFiltersButtons[1]);
+
     expectResultCount('Showing 8 of 8 appointments');
   });
 
