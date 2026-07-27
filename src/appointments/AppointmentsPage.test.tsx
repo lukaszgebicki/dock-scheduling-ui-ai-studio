@@ -6,12 +6,16 @@ import { AppointmentsPage } from './AppointmentsPage';
 
 afterEach(() => cleanup());
 
+function expectResultCount(text: string) {
+  expect(screen.getByRole('status').textContent).toBe(text);
+}
+
 describe('AppointmentsPage', () => {
   it('renders the complete appointment overview', () => {
     render(<AppointmentsPage />);
 
     expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
-    expect(screen.getByText('Showing 8 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 8 of 8 appointments');
     expect(screen.getAllByText('APT-2026-001').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Northstar Packaging').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Confirmed').length).toBeGreaterThan(0);
@@ -24,7 +28,7 @@ describe('AppointmentsPage', () => {
     fireEvent.change(screen.getByLabelText('Warehouse'), { target: { value: 'zielona-gora-plant' } });
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'vistula-materials' } });
 
-    expect(screen.getByText('Showing 2 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 2 of 8 appointments');
     expect(screen.getAllByText('APT-2026-005').length).toBeGreaterThan(0);
     expect(screen.getAllByText('APT-2026-008').length).toBeGreaterThan(0);
     expect(screen.queryByText('APT-2026-001')).toBeNull();
@@ -35,14 +39,14 @@ describe('AppointmentsPage', () => {
 
     const search = screen.getByLabelText('Search');
     fireEvent.change(search, { target: { value: 'APT-2026-006' } });
-    expect(screen.getByText('Showing 1 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 1 of 8 appointments');
     expect(screen.getAllByText('APT-2026-006').length).toBeGreaterThan(0);
 
     fireEvent.change(search, { target: { value: 'Northstar Packaging' } });
-    expect(screen.getByText('Showing 3 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 3 of 8 appointments');
 
     fireEvent.change(search, { target: { value: 'Nowy Kisielin' } });
-    expect(screen.getByText('Showing 4 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 4 of 8 appointments');
   });
 
   it('shows an empty state and clears all filters', () => {
@@ -52,7 +56,7 @@ describe('AppointmentsPage', () => {
     expect(screen.getByRole('heading', { name: 'No appointments found' })).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    expect(screen.getByText('Showing 8 of 8 appointments')).toBeDefined();
+    expectResultCount('Showing 8 of 8 appointments');
   });
 
   it('uses accessible table headings and labeled controls', () => {
