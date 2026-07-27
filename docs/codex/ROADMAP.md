@@ -27,7 +27,30 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ## Active and queued
 
-No subsequent product, governance, security, or infrastructure
-implementation task is currently approved as `READY` or active. Any
-such work requires a separate approved task contract and the applicable
-human gates.
+### DEV-SEC-001-REMEDIATE — development toolchain remediation
+
+- State: `READY`.
+- Risk class: Class C.
+- Objective: remove the current development-only Vite, Vitest,
+  Vite-node, and esbuild audit findings while preserving the verified
+  runtime and application behavior.
+- Authorized paths: `package.json` and `package-lock.json`.
+- Protected paths: source code, tests, Vite/Vitest configuration,
+  workflows, repository configuration, and all other files.
+- Class C authorization: Łukasz explicitly approved dependency and
+  lockfile changes for this remediation on 2026-07-27.
+- Delivery: E4, `build_high`, separate `review_high` Reviewer, complete
+  validation, `publish_feature`, and mandatory stop before merge.
+- Contract gate: after this activation change is human-merged, create a
+  machine-readable GitHub issue contract bound to the resulting exact
+  `main` SHA before implementation.
+- Acceptance: `npm audit` and `npm audit --omit=dev` report zero
+  vulnerabilities; locked install, typecheck, all 17 test files and 287
+  tests, and build pass; no test is weakened; no configuration,
+  workflow, source, or runtime behavior changes.
+- Prohibited shortcuts: no `npm audit fix`, `npm audit fix --force`,
+  overrides, audit suppression, force push, direct `main` write, or
+  autonomous merge.
+
+No other product, governance, security, or infrastructure
+implementation task is currently approved as `READY` or active.

@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-27 at
-`1f039502a8cc290a75bde4e35babd17622446f2f`.
+`0f1c7524fca765a13e7653d25c75b79009b2fd9d`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `1f039502a8cc290a75bde4e35babd17622446f2f`, after human merge of
-  `MAIN-BRANCH-GOVERNANCE-1` pull request #17.
+  `0f1c7524fca765a13e7653d25c75b79009b2fd9d`, after human merge of
+  the post-governance state-update pull request #18.
 
 ## Merged milestones
 
@@ -125,8 +125,16 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`MAIN-BRANCH-GOVERNANCE-1` is `DONE`; PR #17 was human-merged and
-active ruleset `19850347` protects `main`. No subsequent product,
-governance, security, or infrastructure implementation task is
-documented as `READY`; further scope requires a separate approved task
-contract.
+`DEV-SEC-001-REMEDIATE` is the next approved task and is documented as
+`READY` in [ROADMAP.md](ROADMAP.md). It is a Class C remediation limited
+to `package.json` and `package-lock.json`; Łukasz explicitly authorized
+the dependency and lockfile scope on 2026-07-27. The task must remove
+the current development-toolchain audit findings without changing
+source code, tests, Vite/Vitest configuration, CI, runtime behavior, or
+the zero-vulnerability production audit.
+
+Execution must use a machine-readable GitHub issue contract bound to
+the exact `main` SHA after this activation change is human-merged. It
+must use E4 with `build_high`, a separate `review_high` Reviewer,
+complete validation, and `publish_feature`, and it must stop before
+merge.
