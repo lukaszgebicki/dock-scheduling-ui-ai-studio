@@ -138,7 +138,7 @@ export function AppointmentsPage() {
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-4 border-t border-gray-100 pt-4">
-          <p className="text-sm text-gray-600" aria-live="polite">
+          <p className="text-sm text-gray-600" role="status" aria-live="polite">
             Showing <span className="font-medium text-gray-900">{filteredAppointments.length}</span> of {demoAppointments.length} appointments
           </p>
           {hasActiveFilters && (
