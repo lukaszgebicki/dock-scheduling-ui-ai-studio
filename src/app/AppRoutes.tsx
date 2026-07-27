@@ -15,6 +15,7 @@ import { WarehousesPage } from '../warehouses/WarehousesPage';
 import { AddWarehousePage } from '../warehouses/AddWarehousePage';
 import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrganizationsPage';
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
+import { AppointmentsPage } from '../appointments/AppointmentsPage';
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
@@ -36,6 +37,7 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AuthenticatedShell />}>
           <Route path="/" element={<Navigate to="/users" replace />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
           <Route path="/users" element={<UsersAccessPage />} />
           <Route path="/users/invite" element={<InviteUserPage />} />
           <Route path="/warehouses" element={<WarehousesPage />} />
