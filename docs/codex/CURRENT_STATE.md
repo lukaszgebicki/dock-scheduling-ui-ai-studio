@@ -1,14 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-27 at
-`1b244503f390487651331be6ff372c0b08e63f7c`.
+`4245fc45ca36f26dcc22c9c781b72f5a136302a3`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
+- Visibility: public.
 - The verified `origin/main` baseline is
-  `1b244503f390487651331be6ff372c0b08e63f7c`, after human merge of
-  `SPR-2E-CI-REPAIR-2` pull request #15.
+  `4245fc45ca36f26dcc22c9c781b72f5a136302a3`, after human merge of
+  `STATE-UPDATE-2` pull request #16.
 
 ## Merged milestones
 
@@ -29,6 +30,7 @@ Verified on 2026-07-27 at
 | AUTONOMY-PILOT-1 — Soon navigation accessibility pilot | PR #13, human-merged |
 | SPR-2E — appointments operational overview | PR #14, human-merged |
 | SPR-2E-CI-REPAIR-2 — appointments CI stabilization | PR #15, human-merged |
+| STATE-UPDATE-2 — post-appointments state update | PR #16, human-merged |
 
 ## Routes
 
@@ -71,6 +73,18 @@ authentication state.
   warehouse, and supplier filters, responsive presentations, an exact
   result count, a clear-filters action, and an empty state.
 
+## Main branch governance
+
+- Active repository ruleset `Protect main` (ID `19850347`) targets only
+  `refs/heads/main`.
+- All changes to `main` require a pull request.
+- The `Typecheck, test and build` check is required and must run against
+  the latest `main` before merge.
+- Force pushes and deletion of `main` are blocked.
+- The ruleset has no bypass actors. GitHub reports `main` as protected.
+- The pull-request rule requires no approving reviews; human merge
+  authorization remains a repository-process gate.
+
 ## Validation baseline
 
 Commands were run in the authorized external worktree on 2026-07-27.
@@ -110,8 +124,9 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`AUTONOMY-PILOT-1` is `DONE`; PR #13 was human-merged. `SPR-2E` is
-`DONE`; PR #14 delivered the appointments overview and PR #15 preserved
-its complete test coverage while repairing CI. No subsequent product
-capability is currently documented as `READY`; further scope requires
-a separate approved task contract.
+`STATE-UPDATE-2` is `DONE`; PR #16 was human-merged.
+`MAIN-BRANCH-GOVERNANCE-1` is `IN_PROGRESS`; active ruleset `19850347`
+protects `main`, while its documentation publication and human merge
+remain pending. No other product, governance, security, or
+infrastructure implementation task is documented as `READY`; further
+scope requires a separate approved task contract.

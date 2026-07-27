@@ -22,10 +22,14 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | AUTONOMY-RUNNER-COMPAT-1 — Codex CLI compatibility | DONE; PR #12 human-merged |
 | AUTONOMY-PILOT-1 — Soon navigation accessibility pilot | DONE; PR #13 human-merged |
 | SPR-2E — appointments operational overview | DONE; PR #14 human-merged; CI stabilized in PR #15 |
+| STATE-UPDATE-2 — post-appointments state update | DONE; PR #16 human-merged |
 
 ## Active and queued
 
-No subsequent product, governance, security, or infrastructure
-implementation task is currently approved as `READY` or active. Any
-such work requires a separate approved task contract and the applicable
-human gates.
+| Task | State |
+| --- | --- |
+| MAIN-BRANCH-GOVERNANCE-1 — protect `main` | IN_PROGRESS; ruleset `19850347` active; documentation publication and human merge pending |
+
+No other product, governance, security, or infrastructure implementation
+task is currently approved as `READY` or active. Any such work requires
+a separate approved task contract and the applicable human gates.
