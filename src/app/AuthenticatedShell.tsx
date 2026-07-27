@@ -73,7 +73,7 @@ export function AuthenticatedShell() {
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Overview</h2>
             <ul>
               <li>
-                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                <div role="link" aria-disabled="true" className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
                   <div className="flex items-center gap-3">
                     <LayoutDashboard size={18} />
                     <span>Dashboard</span>
@@ -88,7 +88,7 @@ export function AuthenticatedShell() {
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Scheduling</h2>
             <ul className="flex flex-col gap-1">
               <li>
-                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                <div role="link" aria-disabled="true" className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
                   <div className="flex items-center gap-3">
                     <CalendarClock size={18} />
                     <span>Appointments</span>
@@ -97,7 +97,7 @@ export function AuthenticatedShell() {
                 </div>
               </li>
               <li>
-                <div className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
+                <div role="link" aria-disabled="true" className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
                   <div className="flex items-center gap-3">
                     <Calendar size={18} />
                     <span>Slot calendar</span>
