@@ -1,17 +1,14 @@
 # Verified current state
 
-Verified on 2026-07-26 at
-`17e1c0d67a13f4df2f4917cfdbea937aa5fc044a`.
+Verified on 2026-07-27 at
+`6f8eead83090db4d28a4615556faa7bf6cec94db`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - `main` and `origin/main` are
-  `17e1c0d67a13f4df2f4917cfdbea937aa5fc044a` after human merge of
-  `SPR-SEC-2` pull request #9.
-- `AUTONOMY-GOV-1` is in progress in its authorized external worktree
-  `chore/autonomy-gov-runner`; its preserved implementation is being
-  reconciled with this baseline.
+  `6f8eead83090db4d28a4615556faa7bf6cec94db` after human merge of
+  `AUTONOMY-GOV-1` pull request #10.
 
 ## Merged milestones
 
@@ -26,6 +23,7 @@ Verified on 2026-07-26 at
 | SPR-2D — Supplier organizations administration | PR #6, merged |
 | AUTONOMY-FOUNDATION-1 — repository governance foundation | PR #8, merged |
 | SPR-SEC-2 — React Router 8.3 security migration | PR #9, human-merged |
+| AUTONOMY-GOV-1 — local autonomy runner MVP | PR #10, human-merged |
 
 ## Routes
 
@@ -65,7 +63,7 @@ authentication state.
 
 ## Validation baseline
 
-Commands were run in the authorized external worktree on 2026-07-26.
+Commands were run in the authorized external worktree on 2026-07-27.
 
 | Check | Verified result |
 | --- | --- |
@@ -88,22 +86,26 @@ dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
 
 ## Local runner status
 
-`AUTONOMY-GOV-1` is implementing a local Node.js orchestration runner
-and GitHub task issue form, extended by Dock AI Playbook v2 policy. The
-design uses strict contracts, fixed model and reasoning profiles,
-two-dimensional risk and execution controls, external locks and run
-state, executable-plus-argument process invocation,
-separate workspace-write Builder and read-only Reviewer processes,
-bounded repair loops, exact-path publication, and a hard stop before
-merge.
+`AUTONOMY-GOV-1` is DONE and human-merged through PR #10. The governed
+local runner and Dock AI Playbook v2 are available on `main`. The fixed
+profiles are `scan_low`, `mechanical_low`, `build_medium`,
+`repair_medium`, `build_high`, and `review_high`; E0–E4 separately
+control execution autonomy, from read-only reporting through one
+verified PR that always stops before merge.
 
-This runner is not active automation. It remains unavailable for task
-execution until its implementation is independently reviewed, merged,
-and successfully piloted through separately approved setup.
+Readiness verification on 2026-07-27 passed: autonomy doctor found all
+six profiles available with workspace-write Builder and read-only
+Reviewer boundaries, every profile prohibited merge, and the focused
+runner suite passed 68/68. The runtime audit reported zero
+vulnerabilities. The runner is ready only for a separately approved
+controlled pilot; no autonomous pilot has run and no end-to-end
+operational use is claimed.
 
 ## Next controlled task
 
 `SPR-SEC-2` is `DONE`; PR #9 was human-merged. `AUTONOMY-GOV-1` is
-`IN_PROGRESS` under its explicitly approved Class C implementation
-contract. `AUTONOMY-PILOT-1` remains blocked until the runner is
-independently reviewed, merged, and prepared through controlled setup.
+`DONE`; PR #10 was human-merged. `AUTONOMY-PILOT-1` is ready only for a
+separately approved complete task contract and controlled pilot. Its
+exact product scope and contract remain subject to separate Project
+Lead and Business Owner approval. `SPR-2E` remains blocked and
+unscoped.
