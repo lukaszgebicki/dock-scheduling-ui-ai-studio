@@ -127,7 +127,7 @@ describe('AuthenticatedShell', () => {
     expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-label')).toBe('Open menu');
   });
 
-  it('7. Soon navigation items expose disabled link semantics while remaining non-navigable', () => {
+  it('7. unavailable navigation items expose disabled link semantics while remaining non-navigable', () => {
     render(
       <MemoryRouter initialEntries={['/users']}>
         <AuthenticatedShell />
@@ -136,13 +136,30 @@ describe('AuthenticatedShell', () => {
 
     const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
     const dashboard = within(primaryNav).getByRole('link', { name: /Dashboard\s*Soon/i });
-    const appointments = within(primaryNav).getByRole('link', { name: /Appointments\s*Soon/i });
     const slotCalendar = within(primaryNav).getByRole('link', { name: /Slot calendar\s*Soon/i });
 
-    for (const item of [dashboard, appointments, slotCalendar]) {
+    for (const item of [dashboard, slotCalendar]) {
       expect(item.getAttribute('aria-disabled')).toBe('true');
       expect(item.tagName).toBe('DIV');
       expect(item.getAttribute('href')).toBeNull();
     }
+  });
+
+  it('8. Appointments is a navigable active item with a Scheduling breadcrumb', () => {
+    render(
+      <MemoryRouter initialEntries={['/appointments']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
+    const appointmentsLink = within(primaryNav).getByRole('link', { name: 'Appointments' });
+    expect(appointmentsLink.getAttribute('href')).toBe('/appointments');
+    expect(appointmentsLink.getAttribute('aria-current')).toBe('page');
+    expect(appointmentsLink.getAttribute('aria-disabled')).toBeNull();
+
+    const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(within(breadcrumb).getByText('Scheduling').textContent).toBe('Scheduling');
+    expect(within(breadcrumb).getByText('Appointments').textContent).toBe('Appointments');
   });
 });
