@@ -17,39 +17,15 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | SPR-SEC-1 — React Router security migration | DONE |
 | AUTONOMY-FOUNDATION-1 — repository governance foundation | DONE |
 | SPR-SEC-2 — React Router 8.3 security migration | DONE; PR #9 human-merged |
+| AUTONOMY-GOV-1 — local autonomy runner MVP | DONE; PR #10 human-merged |
 
 ## Active and queued
-
-### AUTONOMY-GOV-1 — local autonomy runner MVP
-
-- Objective: implement the repository-native local runner and GitHub
-  task issue form for bounded Builder, validation, Reviewer, repair,
-  publication, CI-observation orchestration, and Dock AI Playbook v2
-  model and execution policy.
-- State: `IN_PROGRESS`.
-- Risk class: Class C.
-- Allowed repository:
-  `lukaszgebicki/dock-scheduling-ui-ai-studio` only.
-- Dependency/configuration authorization: one `package.json` runner
-  script is authorized; dependencies and `package-lock.json` changes
-  are not. Locked `npm ci` validation is not a dependency change.
-- Required human gates: the exact runner contract and Class C paths are
-  approved; independent review and the human merge decision remain
-  mandatory.
-- Expected quality gates: runner and policy-focused security tests, the
-  complete repository validation baseline, installed-profile evidence,
-  actual non-mutating doctor PASS, exact scope, independent Reviewer
-  PASS, green CI, and human merge decision.
-- Completion criteria: the runner and issue form are implemented in
-  approved paths, validated, independently reviewed, and made available
-  in one verified open PR. Operational use still requires a successful
-  pilot.
 
 ### AUTONOMY-PILOT-1 — first bounded autonomous delivery task
 
 - Objective: take one separately approved low-risk UI-sandbox task from
   `READY` through a verified open PR using this governance.
-- State: `BLOCKED`.
+- State: `READY`.
 - Risk class: Class A; the approved pilot contract must remain within
   Class A.
 - Allowed repository:
@@ -62,9 +38,16 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
   Reviewer PASS, score at least 8/10, green CI, and human merge gate.
 - Completion criteria: approved behavior is delivered in one verified
   open PR with complete evidence and no unresolved findings.
-- Blocking reason: `AUTONOMY-GOV-1` must be independently reviewed and
-  merged, then controlled local setup and a separate pilot contract
-  must be approved.
+- Readiness evidence: the merged runner passed `npm ci`, autonomy doctor,
+  focused runner tests (68/68), `npm audit --omit=dev` with zero
+  vulnerabilities, and `git diff --check` from the clean `main`
+  baseline.
+- Separate execution contract: before any pilot, Project Lead and
+  Business Owner approval must define exact behavior, acceptance
+  criteria, baseline SHA, branch, external worktree, allowed and
+  protected paths, profiles, execution level, Git permissions, and
+  stop conditions. No product behavior or UI path is approved by this
+  roadmap entry.
 
 ### SPR-2E — next product capability
 
@@ -87,5 +70,6 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 - Blocking reason: pending ChatGPT Project Lead scope and approved
   business acceptance criteria.
 
-Only `AUTONOMY-GOV-1` is currently `IN_PROGRESS`. No ambiguous product
-task is `READY`.
+`AUTONOMY-PILOT-1` is the only task currently `READY`. `SPR-2E` remains
+`BLOCKED`; no ambiguous product task is approved beyond the separately
+contracted pilot.
