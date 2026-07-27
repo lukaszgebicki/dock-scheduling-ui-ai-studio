@@ -13,6 +13,8 @@ interface BreadcrumbInfo {
 
 function getBreadcrumb(pathname: string): BreadcrumbInfo {
   switch (pathname) {
+    case '/appointments':
+      return { current: 'Appointments' };
     case '/users/invite':
       return { parent: { label: 'Users & access', to: '/users' }, current: 'Invite user' };
     case '/warehouses/new':
@@ -34,6 +36,7 @@ export function AuthenticatedShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+  const isAppointmentsRoute = location.pathname.startsWith('/appointments');
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col md:flex-row">
@@ -88,13 +91,19 @@ export function AuthenticatedShell() {
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Scheduling</h2>
             <ul className="flex flex-col gap-1">
               <li>
-                <div role="link" aria-disabled="true" className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
-                  <div className="flex items-center gap-3">
-                    <CalendarClock size={18} />
-                    <span>Appointments</span>
-                  </div>
-                  <span className="text-[10px] uppercase bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">Soon</span>
-                </div>
+                <Link
+                  to="/appointments"
+                  onClick={closeMobileMenu}
+                  aria-current={isAppointmentsRoute ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                    isAppointmentsRoute
+                      ? 'bg-[#023466] text-white font-medium'
+                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                  }`}
+                >
+                  <CalendarClock size={18} aria-hidden="true" />
+                  <span>Appointments</span>
+                </Link>
               </li>
               <li>
                 <div role="link" aria-disabled="true" className="flex items-center justify-between px-2 py-2 text-gray-500 rounded-lg cursor-not-allowed">
@@ -193,7 +202,7 @@ export function AuthenticatedShell() {
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-8 shrink-0 shadow-sm z-10">
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500 hidden sm:inline">Administration</span>
+            <span className="text-gray-500 hidden sm:inline">{isAppointmentsRoute ? 'Scheduling' : 'Administration'}</span>
             <span className="text-gray-400 hidden sm:inline">/</span>
             {(() => {
               const breadcrumb = getBreadcrumb(location.pathname);
