@@ -1,14 +1,14 @@
 # Verified current state
 
 Verified on 2026-07-27 at
-`6f8eead83090db4d28a4615556faa7bf6cec94db`.
+`1b244503f390487651331be6ff372c0b08e63f7c`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- `main` and `origin/main` are
-  `6f8eead83090db4d28a4615556faa7bf6cec94db` after human merge of
-  `AUTONOMY-GOV-1` pull request #10.
+- The verified `origin/main` baseline is
+  `1b244503f390487651331be6ff372c0b08e63f7c`, after human merge of
+  `SPR-2E-CI-REPAIR-2` pull request #15.
 
 ## Merged milestones
 
@@ -24,6 +24,11 @@ Verified on 2026-07-27 at
 | AUTONOMY-FOUNDATION-1 — repository governance foundation | PR #8, merged |
 | SPR-SEC-2 — React Router 8.3 security migration | PR #9, human-merged |
 | AUTONOMY-GOV-1 — local autonomy runner MVP | PR #10, human-merged |
+| AUTONOMY-STATE-1 — runner readiness state update | PR #11, human-merged |
+| AUTONOMY-RUNNER-COMPAT-1 — Codex CLI compatibility | PR #12, human-merged |
+| AUTONOMY-PILOT-1 — Soon navigation accessibility pilot | PR #13, human-merged |
+| SPR-2E — appointments operational overview | PR #14, human-merged |
+| SPR-2E-CI-REPAIR-2 — appointments CI stabilization | PR #15, human-merged |
 
 ## Routes
 
@@ -36,6 +41,7 @@ Verified on 2026-07-27 at
 | `/warehouses/new` | Local-only warehouse preparation |
 | `/supplier-organizations` | Supplier-organization overview |
 | `/supplier-organizations/new` | Local-only organization preparation |
+| `/appointments` | Operational appointment overview |
 | `/login` | Public-only demo sign-in |
 | `/forgot-password` | Demo recovery request |
 | `/reset-password` | Demo reset flow |
@@ -57,9 +63,13 @@ authentication state.
   used by newer flows. `src/users/demoUsers.ts` remains a legacy fixture
   with duplicated presentation labels and access text.
 - Current enabled administration areas are users and access,
-  invitations, warehouses, and supplier organizations. Dashboard,
-  appointments, and slot calendar are visible only as disabled
-  “Soon” navigation.
+  invitations, warehouses, supplier organizations, and appointments.
+  Dashboard and slot calendar remain visible only as disabled “Soon”
+  navigation.
+- The appointments overview contains eight UI-only demo appointments,
+  search by reference, supplier, or warehouse, AND-combined status,
+  warehouse, and supplier filters, responsive presentations, an exact
+  result count, a clear-filters action, and an empty state.
 
 ## Validation baseline
 
@@ -69,16 +79,16 @@ Commands were run in the authorized external worktree on 2026-07-27.
 | --- | --- |
 | `npm ci` | PASS; 225 packages added |
 | `npm run typecheck` | PASS |
-| `npm test -- --reporter=verbose` | PASS; 16 files, 280 tests, 0 failed, 0 skipped |
+| `npm test -- --reporter=verbose` | PASS; 17 files, 287 tests, 0 failed, 0 skipped |
 | `npm run build` | PASS; no warnings |
 | `npm audit --omit=dev` | PASS; 0 vulnerabilities |
 | Node.js | 24.14.0 |
 | npm | 11.18.0 |
 | Vite | 5.4.21 |
-| Modules transformed | 1,685 |
+| Modules transformed | 1,687 |
 | HTML | 0.41 kB; 0.28 kB gzip |
-| CSS | 30.68 kB; 6.48 kB gzip |
-| JavaScript | 426.71 kB; 119.49 kB gzip |
+| CSS | 31.74 kB; 6.66 kB gzip |
+| JavaScript | 436.53 kB; 121.13 kB gzip |
 
 GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
 dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
@@ -86,26 +96,22 @@ dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
 
 ## Local runner status
 
-`AUTONOMY-GOV-1` is DONE and human-merged through PR #10. The governed
-local runner and Dock AI Playbook v2 are available on `main`. The fixed
-profiles are `scan_low`, `mechanical_low`, `build_medium`,
-`repair_medium`, `build_high`, and `review_high`; E0–E4 separately
-control execution autonomy, from read-only reporting through one
-verified PR that always stops before merge.
+`AUTONOMY-GOV-1` is DONE and human-merged through PR #10. PR #11
+recorded runner readiness, and PR #12 resolved the Codex CLI
+compatibility findings discovered during pilot execution. The governed
+local runner and Dock AI Playbook v2 remain available on `main`.
 
-Readiness verification on 2026-07-27 passed: autonomy doctor found all
-six profiles available with workspace-write Builder and read-only
-Reviewer boundaries, every profile prohibited merge, and the focused
-runner suite passed 68/68. The runtime audit reported zero
-vulnerabilities. The runner is ready only for a separately approved
-controlled pilot; no autonomous pilot has run and no end-to-end
-operational use is claimed.
+`AUTONOMY-PILOT-1` is DONE and human-merged through PR #13. The pilot
+delivered the approved accessibility correction through a verified
+open PR and preserved the human merge gate. The fixed profiles remain
+`scan_low`, `mechanical_low`, `build_medium`, `repair_medium`,
+`build_high`, and `review_high`; E0–E4 separately control execution
+autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`SPR-SEC-2` is `DONE`; PR #9 was human-merged. `AUTONOMY-GOV-1` is
-`DONE`; PR #10 was human-merged. `AUTONOMY-PILOT-1` is ready only for a
-separately approved complete task contract and controlled pilot. Its
-exact product scope and contract remain subject to separate Project
-Lead and Business Owner approval. `SPR-2E` remains blocked and
-unscoped.
+`AUTONOMY-PILOT-1` is `DONE`; PR #13 was human-merged. `SPR-2E` is
+`DONE`; PR #14 delivered the appointments overview and PR #15 preserved
+its complete test coverage while repairing CI. No subsequent product
+capability is currently documented as `READY`; further scope requires
+a separate approved task contract.
