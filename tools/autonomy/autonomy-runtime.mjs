@@ -865,30 +865,13 @@ export function codexCommand(tools, operation) {
       const worktree = assertAbsolutePath(operation.worktree, "worktree");
       return fixed(
         [
+          "--ask-for-approval",
+          "never",
+          "exec",
           "--sandbox",
           "workspace-write",
           "--cd",
           worktree,
-          "--ask-for-approval",
-          "never",
-          "exec",
-          "--help",
-        ],
-        ["kind", "worktree"],
-      );
-    }
-    case "reviewerHelp": {
-      const worktree = assertAbsolutePath(operation.worktree, "worktree");
-      return fixed(
-        [
-          "--sandbox",
-          "read-only",
-          "--cd",
-          worktree,
-          "--ask-for-approval",
-          "never",
-          "exec",
-          "review",
           "--help",
         ],
         ["kind", "worktree"],
@@ -939,9 +922,11 @@ export function codexCommand(tools, operation) {
           "PROHIBITED_CODEX_INVOCATION",
         );
       }
-      const reviewer = kind === "reviewer";
       return fixed(
         [
+          "--ask-for-approval",
+          runtimeProfile.approvalMode,
+          "exec",
           "--strict-config",
           "--model",
           runtimeProfile.model,
@@ -951,10 +936,6 @@ export function codexCommand(tools, operation) {
           runtimeProfile.sandbox,
           "--cd",
           worktree,
-          "--ask-for-approval",
-          runtimeProfile.approvalMode,
-          "exec",
-          ...(reviewer ? ["review", "--uncommitted"] : []),
           "--ephemeral",
           "--ignore-user-config",
           "--output-last-message",
@@ -1130,15 +1111,10 @@ export async function runDoctor({
     );
   }
 
-  const [codexHelp, execHelp, reviewHelp, authStatus, repositoryRoot, remote] =
+  const [execHelp, authStatus, repositoryRoot, remote] =
     await Promise.all([
-      commandRunner.codex({ kind: "help" }, { cwd: canonicalRoot }),
       commandRunner.codex(
         { kind: "builderHelp", worktree: canonicalRoot },
-        { cwd: canonicalRoot },
-      ),
-      commandRunner.codex(
-        { kind: "reviewerHelp", worktree: canonicalRoot },
         { cwd: canonicalRoot },
       ),
       commandRunner.gh({ kind: "authStatus" }, {
@@ -1156,10 +1132,12 @@ export async function runDoctor({
     [execHelp.stdout, "Run Codex non-interactively"],
     [execHelp.stdout, "--model <MODEL>"],
     [execHelp.stdout, "--config <key=value>"],
-    [codexHelp.stdout, "--cd <DIR>"],
-    [codexHelp.stdout, "read-only"],
-    [reviewHelp.stdout, "--uncommitted"],
-    [reviewHelp.stdout, "--ephemeral"],
+    [execHelp.stdout, "--sandbox <SANDBOX_MODE>"],
+    [execHelp.stdout, "read-only"],
+    [execHelp.stdout, "--ephemeral"],
+    [execHelp.stdout, "--ignore-user-config"],
+    [execHelp.stdout, "--output-last-message"],
+    [execHelp.stdout, "instructions are read from stdin"],
   ];
   for (const [helpText, capability] of codexCapabilities) {
     if (!helpText.includes(capability)) {
@@ -1366,6 +1344,20 @@ async function changedPathInventory(commandRunner, worktree) {
       ...parseNulList(untracked.stdout),
     ]),
   ].sort();
+}
+
+export function requireChangedPaths(paths, contract, phase) {
+  const changedPaths = assertChangedPaths(paths, contract);
+  if (changedPaths.length === 0) {
+    const simplified = phase === "simplification";
+    throw new AutonomyError(
+      simplified
+        ? "simplification removed the complete approved diff"
+        : "initial Builder produced no changed files",
+      simplified ? "EMPTY_SIMPLIFIED_DIFF" : "EMPTY_INITIAL_BUILDER_DIFF",
+    );
+  }
+  return changedPaths;
 }
 
 function stablePullRequestState(rawOutput) {
@@ -2382,9 +2374,10 @@ export async function executeTask({
       runDirectory,
       0,
     );
-    let changedPaths = assertChangedPaths(
+    let changedPaths = requireChangedPaths(
       await changedPathInventory(commandRunner, contract.externalWorktree),
       contract,
+      "initial Builder",
     );
     scanChangedTextFiles(contract.externalWorktree, changedPaths);
     await runValidation(commandRunner, contract.externalWorktree, contract);
@@ -2396,12 +2389,13 @@ export async function executeTask({
         contract.externalWorktree,
         runDirectory,
       );
-      changedPaths = assertChangedPaths(
+      changedPaths = requireChangedPaths(
         await changedPathInventory(
           commandRunner,
           contract.externalWorktree,
         ),
         contract,
+        "simplification",
       );
       scanChangedTextFiles(contract.externalWorktree, changedPaths);
       await runValidation(

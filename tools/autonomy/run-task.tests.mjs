@@ -41,11 +41,13 @@ import {
   captureCodexBoundarySnapshot,
   classifyNetworkFailure,
   codexCommand,
+  executeTask,
   ghCommand,
   gitCommand,
   runDoctor,
   runProcess,
   runWithNetworkRetry,
+  requireChangedPaths,
   stageExactPaths,
   verifyCanonicalBaseline,
   verifyConfiguredProfiles,
@@ -217,15 +219,122 @@ function fakeDoctorRunner(
       }
       if (operation.kind === "builderHelp") {
         return result(
-          "Run Codex non-interactively\n--model <MODEL>\n--config <key=value>",
+          `Run Codex non-interactively\n--model <MODEL>\n--config <key=value>\n--sandbox <SANDBOX_MODE>\n${includeReadOnly ? "read-only" : ""}\n--ephemeral\n--ignore-user-config\n--output-last-message\ninstructions are read from stdin`,
         );
-      }
-      if (operation.kind === "reviewerHelp") {
-        return result("--uncommitted\n--ephemeral");
       }
       throw new Error(`unexpected codex: ${operation.kind}`);
     },
   };
+}
+
+function lifecycleRunner(
+  canonicalRoot,
+  { initialEmpty = false, simplifyToEmpty = false } = {},
+) {
+  const runner = fakeDoctorRunner(canonicalRoot);
+  runner.environment = { PATH: "fake-path" };
+  const baseSha = "1".repeat(40);
+  const branch = "feat/autonomy-pilot";
+  const calls = { npm: 0, simplifier: 0, reviewer: 0, publication: 0 };
+  let worktree;
+  let hasDiff = !initialEmpty;
+  const result = (stdout = "", code = 0) =>
+    Promise.resolve({ stdout, stderr: "", code });
+  const doctorGit = runner.git.bind(runner);
+  const doctorCodex = runner.codex.bind(runner);
+  runner.git = (operation, options = {}) => {
+    if (["version", "repositoryRoot", "remoteOrigin"].includes(operation.kind)) {
+      return doctorGit(operation, options);
+    }
+    switch (operation.kind) {
+      case "fetchOrigin":
+      case "diffCheck":
+      case "stagedCheck":
+      case "diffPath":
+        return result();
+      case "branchCurrent":
+        return result(options.cwd === canonicalRoot ? "main\n" : `${branch}\n`);
+      case "head":
+      case "main":
+      case "originMain":
+        return result(`${baseSha}\n`);
+      case "status":
+      case "stagedNames":
+      case "remoteFeature":
+      case "worktreeList":
+        return result();
+      case "showLocalBranch":
+      case "showRemoteTrackingBranch":
+        return result("", 1);
+      case "worktreeAdd":
+        worktree = operation.worktree;
+        mkdirSync(worktree, { recursive: true });
+        writeFileSync(path.join(worktree, "package.json"), "{}\n");
+        writeFileSync(path.join(worktree, "package-lock.json"), "{}\n");
+        return result();
+      case "changedNames":
+      case "untrackedNames":
+        return result(hasDiff ? "src/example/A.ts\0" : "");
+      case "remoteMain":
+        return result(`${baseSha}\trefs/heads/main\n`);
+      case "branchReflog":
+        return result(`${baseSha}\n`);
+      case "addExact":
+      case "commit":
+      case "pushFeature":
+        calls.publication += 1;
+        return result();
+      default:
+        throw new Error(`unexpected lifecycle git: ${operation.kind}`);
+    }
+  };
+  runner.gh = (operation) => {
+    if (operation.kind === "version" || operation.kind === "authStatus") {
+      return operation.kind === "version" ? result("gh version 2.96.0") : result("authenticated");
+    }
+    if (operation.kind === "prDiscovery") return result("[]");
+    throw new Error(`unexpected lifecycle gh: ${operation.kind}`);
+  };
+  runner.npm = (args) => {
+    if (args[0] === "--version") return result("11.18.0");
+    calls.npm += 1;
+    return result();
+  };
+  runner.codex = (operation, options = {}) => {
+    if (!["builder", "reviewer"].includes(operation.kind)) {
+      return doctorCodex(operation, options);
+    }
+    if (operation.kind === "reviewer") calls.reviewer += 1;
+    if (
+      operation.kind === "builder" &&
+      options.input.includes("Simplification Pass")
+    ) {
+      calls.simplifier += 1;
+      hasDiff = false;
+    }
+    mkdirSync(path.dirname(operation.outputFile), { recursive: true });
+    writeFileSync(operation.outputFile, "Builder completed\n");
+    return result();
+  };
+  return { runner, calls };
+}
+
+function lifecycleContract() {
+  const externalWorktree = path.join(tmpdir(), `autonomy-worktree-${Date.now()}-${Math.random()}`);
+  const contractPath = path.join(tmpdir(), `autonomy-contract-${Date.now()}-${Math.random()}.json`);
+  writeFileSync(
+    contractPath,
+    JSON.stringify(
+      contract({
+        externalWorktree,
+        executionLevel: "E4",
+        gitPermission: "publish_feature",
+        allowedPaths: ["src/example/**"],
+        branch: "feat/autonomy-pilot",
+      }),
+    ),
+  );
+  return { contractPath, stateRoot: mkdtempSync(path.join(tmpdir(), "autonomy-state-")) };
 }
 
 test("default help is non-mutating", async () => {
@@ -1223,8 +1332,67 @@ test("Builder and Reviewer invocations use distinct enforced sandboxes", () => {
     reviewer.args[reviewer.args.indexOf("--sandbox") + 1],
     "read-only",
   );
-  assert.ok(reviewer.args.includes("--uncommitted"));
+  assert.ok(!reviewer.args.includes("review"));
+  assert.ok(!reviewer.args.includes("--uncommitted"));
   assert.ok(!builder.args.includes("--uncommitted"));
+  assert.equal(builder.args[builder.args.indexOf("--ask-for-approval") + 2], "exec");
+  assert.equal(reviewer.args[reviewer.args.indexOf("--ask-for-approval") + 2], "exec");
+  assert.equal(builder.args.at(-1), "-");
+  assert.equal(reviewer.args.at(-1), "-");
+});
+
+test("initial Builder empty diff stops before validation, simplification, review, and publication", async () => {
+  const { runner, calls } = lifecycleRunner(process.cwd(), { initialEmpty: true });
+  const { contractPath, stateRoot } = lifecycleContract();
+  await assert.rejects(
+    executeTask({
+      canonicalRoot: process.cwd(),
+      contractPath,
+      stateRoot,
+      commandRunner: runner,
+    }),
+    { code: "EMPTY_INITIAL_BUILDER_DIFF" },
+  );
+  assert.deepEqual(calls, {
+    npm: 0,
+    simplifier: 0,
+    reviewer: 0,
+    publication: 0,
+  });
+});
+
+test("empty simplified diff stops before post-simplification validation, review, and publication", async () => {
+  const { runner, calls } = lifecycleRunner(process.cwd(), { simplifyToEmpty: true });
+  const { contractPath, stateRoot } = lifecycleContract();
+  await assert.rejects(
+    executeTask({
+      canonicalRoot: process.cwd(),
+      contractPath,
+      stateRoot,
+      commandRunner: runner,
+    }),
+    { code: "EMPTY_SIMPLIFIED_DIFF" },
+  );
+  assert.deepEqual(calls, {
+    npm: 6,
+    simplifier: 1,
+    reviewer: 0,
+    publication: 0,
+  });
+});
+
+test("initial Builder empty diff stops before validation", () => {
+  const validated = validateContract(contract());
+  assert.throws(() => requireChangedPaths([], validated, "initial Builder"), {
+    code: "EMPTY_INITIAL_BUILDER_DIFF",
+  });
+});
+
+test("empty diff after simplification stops before review", () => {
+  const validated = validateContract(contract());
+  assert.throws(() => requireChangedPaths([], validated, "simplification"), {
+    code: "EMPTY_SIMPLIFIED_DIFF",
+  });
 });
 
 test("Codex command shapes reject sandbox, worktree, and output overrides", () => {
