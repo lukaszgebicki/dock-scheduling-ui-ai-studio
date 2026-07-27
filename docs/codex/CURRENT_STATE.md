@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-27 at
-`4245fc45ca36f26dcc22c9c781b72f5a136302a3`.
+`1f039502a8cc290a75bde4e35babd17622446f2f`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `4245fc45ca36f26dcc22c9c781b72f5a136302a3`, after human merge of
-  `STATE-UPDATE-2` pull request #16.
+  `1f039502a8cc290a75bde4e35babd17622446f2f`, after human merge of
+  `MAIN-BRANCH-GOVERNANCE-1` pull request #17.
 
 ## Merged milestones
 
@@ -31,6 +31,7 @@ Verified on 2026-07-27 at
 | SPR-2E — appointments operational overview | PR #14, human-merged |
 | SPR-2E-CI-REPAIR-2 — appointments CI stabilization | PR #15, human-merged |
 | STATE-UPDATE-2 — post-appointments state update | PR #16, human-merged |
+| MAIN-BRANCH-GOVERNANCE-1 — protect `main` | PR #17, human-merged |
 
 ## Routes
 
@@ -124,9 +125,8 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`STATE-UPDATE-2` is `DONE`; PR #16 was human-merged.
-`MAIN-BRANCH-GOVERNANCE-1` is `IN_PROGRESS`; active ruleset `19850347`
-protects `main`, while its documentation publication and human merge
-remain pending. No other product, governance, security, or
-infrastructure implementation task is documented as `READY`; further
-scope requires a separate approved task contract.
+`MAIN-BRANCH-GOVERNANCE-1` is `DONE`; PR #17 was human-merged and
+active ruleset `19850347` protects `main`. No subsequent product,
+governance, security, or infrastructure implementation task is
+documented as `READY`; further scope requires a separate approved task
+contract.
