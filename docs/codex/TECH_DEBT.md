@@ -30,7 +30,9 @@
 
 ## DEV-SEC-001 — development toolchain audit findings
 
-- Status: `OPEN`; remediation is not authorized by the foundation task.
+- Status: `OPEN`; remediation task `DEV-SEC-001-REMEDIATE` is approved
+  as `READY`, but implementation must wait for the activation change to
+  be human-merged and the exact-SHA GitHub issue contract to be created.
 - Audit command: `npm audit`.
 - Aggregate result: 4 vulnerable packages — 2 moderate, 1 high, and 1
   critical.
@@ -54,12 +56,14 @@
   `npm audit --omit=dev` reports 0 vulnerabilities. Development-server
   exposure still matters when the server is reachable by untrusted
   content.
-- Proposed remediation task: `DEV-SEC-001-REMEDIATE`, a dedicated Class
-  C Vite/Vitest/esbuild toolchain upgrade with compatibility study,
-  focused config review, complete validation, both audits, and
-  independent review.
-- Human authorization: explicit Project Lead approval is required for
-  dependency and lockfile changes.
+- Approved remediation task: `DEV-SEC-001-REMEDIATE`, a dedicated Class
+  C Vite/Vitest/esbuild toolchain upgrade limited to `package.json` and
+  `package-lock.json`, with compatibility study, focused config review,
+  complete validation, both audits, and independent review.
+- Human authorization: Łukasz explicitly approved the dependency and
+  lockfile scope on 2026-07-27. Source code, tests, Vite/Vitest
+  configuration, workflows, and repository configuration remain
+  protected.
 - Prohibited shortcut: do not run `npm audit fix` or
   `npm audit fix --force`. The audit suggested a breaking Vite 8.1.5
   installation; no dependency was changed, overridden, or suppressed.
