@@ -126,4 +126,23 @@ describe('AuthenticatedShell', () => {
 
     expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-label')).toBe('Open menu');
   });
+
+  it('7. Soon navigation items expose disabled link semantics while remaining non-navigable', () => {
+    render(
+      <MemoryRouter initialEntries={['/users']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
+    const dashboard = within(primaryNav).getByRole('link', { name: /Dashboard\s*Soon/i });
+    const appointments = within(primaryNav).getByRole('link', { name: /Appointments\s*Soon/i });
+    const slotCalendar = within(primaryNav).getByRole('link', { name: /Slot calendar\s*Soon/i });
+
+    for (const item of [dashboard, appointments, slotCalendar]) {
+      expect(item.getAttribute('aria-disabled')).toBe('true');
+      expect(item.tagName).toBe('DIV');
+      expect(item.getAttribute('href')).toBeNull();
+    }
+  });
 });
