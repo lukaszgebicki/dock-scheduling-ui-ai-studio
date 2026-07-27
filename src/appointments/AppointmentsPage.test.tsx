@@ -7,7 +7,8 @@ import { AppointmentsPage } from './AppointmentsPage';
 afterEach(() => cleanup());
 
 function expectResultCount(text: string) {
-  expect(screen.getByRole('status').textContent).toBe(text);
+  const resultText = screen.getByRole('status').textContent?.replace(/\s+/g, ' ').trim();
+  expect(resultText).toBe(text);
 }
 
 describe('AppointmentsPage', () => {
