@@ -45,12 +45,19 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 - Approved authority: [DCF-019 and DCF-020](DECISION_LOG.md) record
   Łukasz Gębicki's approval of version 0.2, all recommendation markers,
   and the continuing exclusion of section 24.
+- Canonical planning sources:
+  [Business Decision Pack UI MVP v0.2](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md),
+  [UI MVP traceability](../product/UI_MVP_TRACEABILITY.md), and the
+  [UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md).
 - Delivery: E4, `build_high`, separate `review_high` Reviewer, extended
   context, quality-first token posture, complete validation,
   `publish_feature`, and mandatory stop before merge.
-- Contract gate: after this activation is human-merged, create a
-  machine-readable GitHub issue contract bound to the resulting exact
-  `main` SHA before implementation.
+- Active contract: GitHub issue #30 binds this documentation-only
+  onboarding to exact `main` SHA
+  `079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
+- State boundary: `UI-MVP-SPEC-1` remains the sole `READY` task until a
+  separate post-merge state update. The ten controlled tasks in the
+  implementation plan are planning traceability only; none is `READY`.
 - Authorization boundary: no application code, backend, persistence,
   dependency, CI, runner, production repository, or implementation task
   is authorized.

@@ -4,6 +4,7 @@
 
 - [Repository boundary](#repository-boundary)
 - [Governance sources](#governance-sources)
+- [Product specification sources](#product-specification-sources)
 - [Required commands](#required-commands)
 - [Local autonomy runner](#local-autonomy-runner)
 - [Delivery rules](#delivery-rules)
@@ -45,6 +46,28 @@ worktree inside the canonical repository.
 
 Detailed definitions live in those documents. Link to the canonical
 policy instead of copying it into task notes or pull requests.
+
+## Product specification sources
+
+- [UI MVP Business Decision Pack v0.2](docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md)
+  is the approved canonical source for UI MVP business behavior.
+- [UI MVP traceability](docs/product/UI_MVP_TRACEABILITY.md) maps approved BDP
+  requirements and AC scenarios to controlled implementation tasks.
+- [UI MVP implementation plan](docs/codex/UI_MVP_IMPLEMENTATION_PLAN.md) defines
+  the approved delivery sequence; it does not authorize a task by itself.
+
+The Business Decision Pack was approved by Łukasz Gębicki on 2026-07-28.
+Every source occurrence of `REKOMENDACJA DO ZATWIERDZENIA` is interpreted as
+`APPROVED`. Section 24 remains excluded from UI MVP.
+
+Codex must implement only the BDP identifiers, numbered sections, and AC
+identifiers explicitly named in the active exact-SHA task contract. Planning
+traceability is not implementation permission.
+
+When the Business Decision Pack, current repository behavior, and active task
+contract conflict or leave material business behavior ambiguous, stop and return
+the conflict to the Project Lead. Do not invent a transition, permission,
+persistence effect, integration, role, entity, workflow, or excluded feature.
 
 ## Required commands
 
