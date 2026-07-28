@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-28 at
-`079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
+`a83fbb60c9f58732919021717156bff7907e7aed`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`, after human merge of
-  the UI MVP specification activation pull request #29.
+  `a83fbb60c9f58732919021717156bff7907e7aed`, after human merge of
+  the UI MVP specification onboarding pull request #31.
 
 ## Merged milestones
 
@@ -35,6 +35,7 @@ Verified on 2026-07-28 at
 | DEV-SEC-001-REMEDIATE — development-toolchain remediation | PR #19 activation; PR #21 human-merged |
 | DEV-SEC-001-STATE — post-remediation state update | PR #23, human-merged |
 | UI-MVP-SPEC-1-ACTIVATE — approve and ready UI MVP specification onboarding | PR #29, human-merged |
+| UI-MVP-SPEC-1 — onboard approved UI MVP specification | PR #31, human-merged |
 
 ## Routes
 
@@ -107,7 +108,7 @@ Commands were run in the authorized external worktree on 2026-07-28.
 | Vite | 6.4.3 |
 | Modules transformed | 1,682 |
 | HTML | 0.41 kB; 0.28 kB gzip |
-| CSS | 31.73 kB; 6.66 kB gzip |
+| CSS | 31.75 kB; 6.67 kB gzip |
 | JavaScript | 438.50 kB; 122.09 kB gzip |
 
 GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
@@ -130,14 +131,17 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`UI-MVP-SPEC-1` remains the only approved `READY` task in
-[ROADMAP.md](ROADMAP.md). GitHub issue #30 binds its Class A,
-documentation-only onboarding contract to the exact verified `main` SHA
-`079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
+`UI-MVP-SPEC-1` is `DONE`; PR #31 was human-merged. The canonical
+[Business Decision Pack UI MVP v0.2](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md),
+[traceability matrix](../product/UI_MVP_TRACEABILITY.md), ten-task
+[implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md), repository
+guidance, and DCF-021 are present on `main`. The specification preserves
+20 unique BDP identifiers, 14 unique acceptance-scenario identifiers,
+and the absolute exclusion of section 24.
 
-The task may add only the approved Business Decision Pack UI MVP v0.2,
-complete BDP and acceptance-scenario traceability, the controlled
-implementation sequence, repository guidance, and verified governance
-state. Section 24 remains excluded. No application implementation,
-backend, persistence, dependency, CI, runner, or production-repository
-work is authorized.
+`UI-MVP-FOUNDATION-1` is the next controlled candidate in the approved
+sequence, but it is not `READY` and has no active implementation
+contract. A separate activation and machine-readable contract bound to
+the then-current exact `main` SHA are required before implementation.
+No product, governance, security, or infrastructure task is currently
+approved as `READY` or active.
