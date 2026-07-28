@@ -1,15 +1,15 @@
 # Verified current state
 
-Verified on 2026-07-27 at
-`0f1c7524fca765a13e7653d25c75b79009b2fd9d`.
+Verified on 2026-07-28 at
+`1190c6dbd63a82843487d3d78326d3695c794320`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `0f1c7524fca765a13e7653d25c75b79009b2fd9d`, after human merge of
-  the post-governance state-update pull request #18.
+  `1190c6dbd63a82843487d3d78326d3695c794320`, after human merge of
+  the development-toolchain remediation pull request #21.
 
 ## Merged milestones
 
@@ -31,7 +31,8 @@ Verified on 2026-07-27 at
 | SPR-2E — appointments operational overview | PR #14, human-merged |
 | SPR-2E-CI-REPAIR-2 — appointments CI stabilization | PR #15, human-merged |
 | STATE-UPDATE-2 — post-appointments state update | PR #16, human-merged |
-| MAIN-BRANCH-GOVERNANCE-1 — protect `main` | PR #17, human-merged |
+| MAIN-BRANCH-GOVERNANCE-1 — protect `main` | PR #17, human-merged; state recorded in PR #18 |
+| DEV-SEC-001-REMEDIATE — development-toolchain remediation | PR #19 activation; PR #21 human-merged |
 
 ## Routes
 
@@ -58,8 +59,9 @@ authentication state.
 
 - React and React DOM 19.2.7, React Router 8.3.0, and Lucide React
   0.397.0. React Router DOM is no longer installed.
-- Vite 5.4.21, TypeScript 5.9.3, Vitest 1.6.1, React Hook Form 7.82.0,
-  and Zod 4.4.3 are resolved in the lockfile.
+- Vite 6.4.3, Vitest 3.2.7, Vite-node 3.2.4, esbuild 0.25.12,
+  TypeScript 5.9.3, React Hook Form 7.82.0, and Zod 4.4.3 are resolved
+  in the lockfile. `@vitejs/plugin-react` resolves to 4.7.0.
 - Frontend-only, demo-injected authentication; no production persistence
   or backend integration.
 - `src/users/demoAccessScope.ts` centralizes the typed access-scope data
@@ -88,22 +90,23 @@ authentication state.
 
 ## Validation baseline
 
-Commands were run in the authorized external worktree on 2026-07-27.
+Commands were run in the authorized external worktree on 2026-07-28.
 
 | Check | Verified result |
 | --- | --- |
-| `npm ci` | PASS; 225 packages added |
+| `npm ci` | PASS; 199 packages added; 200 packages audited; 0 vulnerabilities |
 | `npm run typecheck` | PASS |
 | `npm test -- --reporter=verbose` | PASS; 17 files, 287 tests, 0 failed, 0 skipped |
 | `npm run build` | PASS; no warnings |
+| `npm audit` | PASS; 0 vulnerabilities |
 | `npm audit --omit=dev` | PASS; 0 vulnerabilities |
 | Node.js | 24.14.0 |
 | npm | 11.18.0 |
-| Vite | 5.4.21 |
-| Modules transformed | 1,687 |
+| Vite | 6.4.3 |
+| Modules transformed | 1,682 |
 | HTML | 0.41 kB; 0.28 kB gzip |
-| CSS | 31.74 kB; 6.66 kB gzip |
-| JavaScript | 436.53 kB; 121.13 kB gzip |
+| CSS | 31.73 kB; 6.66 kB gzip |
+| JavaScript | 438.50 kB; 122.09 kB gzip |
 
 GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
 dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
@@ -125,16 +128,8 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`DEV-SEC-001-REMEDIATE` is the next approved task and is documented as
-`READY` in [ROADMAP.md](ROADMAP.md). It is a Class C remediation limited
-to `package.json` and `package-lock.json`; Łukasz explicitly authorized
-the dependency and lockfile scope on 2026-07-27. The task must remove
-the current development-toolchain audit findings without changing
-source code, tests, Vite/Vitest configuration, CI, runtime behavior, or
-the zero-vulnerability production audit.
-
-Execution must use a machine-readable GitHub issue contract bound to
-the exact `main` SHA after this activation change is human-merged. It
-must use E4 with `build_high`, a separate `review_high` Reviewer,
-complete validation, and `publish_feature`, and it must stop before
-merge.
+`DEV-SEC-001-REMEDIATE` is `DONE`; PR #21 was human-merged and both the
+complete and production-only dependency audits report zero
+vulnerabilities. No subsequent product, governance, security, or
+infrastructure implementation task is documented as `READY`; further
+scope requires a separate approved task contract.
