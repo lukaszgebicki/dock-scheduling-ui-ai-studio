@@ -25,42 +25,16 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | STATE-UPDATE-2 — post-appointments state update | DONE; PR #16 human-merged |
 | MAIN-BRANCH-GOVERNANCE-1 — protect `main` | DONE; PR #17 human-merged; ruleset `19850347` active |
 | DEV-SEC-001-REMEDIATE — development-toolchain remediation | DONE; PR #21 human-merged; both dependency audits report 0 vulnerabilities |
+| UI-MVP-SPEC-1 — onboard approved UI MVP specification | DONE; PR #31 human-merged |
 
 ## Active and queued
 
-### UI-MVP-SPEC-1 — onboard approved UI MVP specification
+`UI-MVP-FOUNDATION-1` is the next controlled candidate in the approved
+[UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md). It is not
+`READY`, and the plan is traceability only. A separate activation and
+machine-readable contract bound to the then-current exact `main` SHA
+must define its BDP and AC scope, acceptance criteria, allowed paths,
+and delivery controls before implementation.
 
-- State: `READY`.
-- Risk class: Class A.
-- Objective: add the approved Business Decision Pack UI MVP v0.2 as
-  canonical Markdown, add traceability and the controlled implementation
-  sequence, and update repository guidance without modifying application
-  behavior.
-- Future allowed paths: `AGENTS.md`,
-  `docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md`,
-  `docs/product/UI_MVP_TRACEABILITY.md`,
-  `docs/codex/UI_MVP_IMPLEMENTATION_PLAN.md`,
-  `docs/codex/DECISION_LOG.md`, `docs/codex/ROADMAP.md`, and
-  `docs/codex/CURRENT_STATE.md` only.
-- Approved authority: [DCF-019 and DCF-020](DECISION_LOG.md) record
-  Łukasz Gębicki's approval of version 0.2, all recommendation markers,
-  and the continuing exclusion of section 24.
-- Canonical planning sources:
-  [Business Decision Pack UI MVP v0.2](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md),
-  [UI MVP traceability](../product/UI_MVP_TRACEABILITY.md), and the
-  [UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md).
-- Delivery: E4, `build_high`, separate `review_high` Reviewer, extended
-  context, quality-first token posture, complete validation,
-  `publish_feature`, and mandatory stop before merge.
-- Active contract: GitHub issue #30 binds this documentation-only
-  onboarding to exact `main` SHA
-  `079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
-- State boundary: `UI-MVP-SPEC-1` remains the sole `READY` task until a
-  separate post-merge state update. The ten controlled tasks in the
-  implementation plan are planning traceability only; none is `READY`.
-- Authorization boundary: no application code, backend, persistence,
-  dependency, CI, runner, production repository, or implementation task
-  is authorized.
-
-No other product, governance, security, or infrastructure
-implementation task is currently approved as `READY` or active.
+No product, governance, security, or infrastructure task is currently
+approved as `READY` or active.
