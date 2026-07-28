@@ -5,7 +5,7 @@ import { ApiClient, ApiRequestOptions } from './apiClient';
 describe('AuthApi', () => {
   let apiClient: ApiClient;
   let authApi: AuthApi;
-  let mockPost: MockInstance<[path: string, options?: ApiRequestOptions], Promise<unknown>>;
+  let mockPost: MockInstance<(path: string, options?: ApiRequestOptions) => Promise<unknown>>;
 
   beforeEach(() => {
     apiClient = new ApiClient();
