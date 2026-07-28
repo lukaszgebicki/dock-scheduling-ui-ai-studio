@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-28 at
-`7ba2a3094cc92a53a3c01ebb8c0084c330206ba7`.
+`079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `7ba2a3094cc92a53a3c01ebb8c0084c330206ba7`, after human merge of
-  the development-toolchain state-update pull request #23.
+  `079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`, after human merge of
+  the UI MVP specification activation pull request #29.
 
 ## Merged milestones
 
@@ -34,6 +34,7 @@ Verified on 2026-07-28 at
 | MAIN-BRANCH-GOVERNANCE-1 — protect `main` | PR #17, human-merged; state recorded in PR #18 |
 | DEV-SEC-001-REMEDIATE — development-toolchain remediation | PR #19 activation; PR #21 human-merged |
 | DEV-SEC-001-STATE — post-remediation state update | PR #23, human-merged |
+| UI-MVP-SPEC-1-ACTIVATE — approve and ready UI MVP specification onboarding | PR #29, human-merged |
 
 ## Routes
 
@@ -129,15 +130,14 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`UI-MVP-SPEC-1` is the only next approved task and is documented as
-`READY` in [ROADMAP.md](ROADMAP.md) after this activation is
-human-merged. Łukasz Gębicki approved the complete Business Decision
-Pack UI MVP v0.2 on 2026-07-28; every
-`REKOMENDACJA DO ZATWIERDZENIA` marker is authoritative as approved,
-while section 24 remains explicitly excluded.
+`UI-MVP-SPEC-1` remains the only approved `READY` task in
+[ROADMAP.md](ROADMAP.md). GitHub issue #30 binds its Class A,
+documentation-only onboarding contract to the exact verified `main` SHA
+`079ddfe402a9537d5b4f4306b41bbf0d6d21f79c`.
 
-The task is Class A and documentation-only. It may onboard the approved
-source, traceability, controlled implementation sequence, and repository
-guidance only after a machine-readable GitHub issue contract is bound to
-the resulting exact `main` SHA. This activation does not authorize any
-application implementation.
+The task may add only the approved Business Decision Pack UI MVP v0.2,
+complete BDP and acceptance-scenario traceability, the controlled
+implementation sequence, repository guidance, and verified governance
+state. Section 24 remains excluded. No application implementation,
+backend, persistence, dependency, CI, runner, or production-repository
+work is authorized.
