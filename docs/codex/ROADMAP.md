@@ -28,7 +28,32 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ## Active and queued
 
-No subsequent product, governance, security, or infrastructure
-implementation task is currently approved as `READY` or active. Any
-such work requires a separate approved task contract and the applicable
-human gates.
+### UI-MVP-SPEC-1 — onboard approved UI MVP specification
+
+- State: `READY`.
+- Risk class: Class A.
+- Objective: add the approved Business Decision Pack UI MVP v0.2 as
+  canonical Markdown, add traceability and the controlled implementation
+  sequence, and update repository guidance without modifying application
+  behavior.
+- Future allowed paths: `AGENTS.md`,
+  `docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md`,
+  `docs/product/UI_MVP_TRACEABILITY.md`,
+  `docs/codex/UI_MVP_IMPLEMENTATION_PLAN.md`,
+  `docs/codex/DECISION_LOG.md`, `docs/codex/ROADMAP.md`, and
+  `docs/codex/CURRENT_STATE.md` only.
+- Approved authority: [DCF-019 and DCF-020](DECISION_LOG.md) record
+  Łukasz Gębicki's approval of version 0.2, all recommendation markers,
+  and the continuing exclusion of section 24.
+- Delivery: E4, `build_high`, separate `review_high` Reviewer, extended
+  context, quality-first token posture, complete validation,
+  `publish_feature`, and mandatory stop before merge.
+- Contract gate: after this activation is human-merged, create a
+  machine-readable GitHub issue contract bound to the resulting exact
+  `main` SHA before implementation.
+- Authorization boundary: no application code, backend, persistence,
+  dependency, CI, runner, production repository, or implementation task
+  is authorized.
+
+No other product, governance, security, or infrastructure
+implementation task is currently approved as `READY` or active.

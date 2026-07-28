@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-28 at
-`1190c6dbd63a82843487d3d78326d3695c794320`.
+`7ba2a3094cc92a53a3c01ebb8c0084c330206ba7`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `1190c6dbd63a82843487d3d78326d3695c794320`, after human merge of
-  the development-toolchain remediation pull request #21.
+  `7ba2a3094cc92a53a3c01ebb8c0084c330206ba7`, after human merge of
+  the development-toolchain state-update pull request #23.
 
 ## Merged milestones
 
@@ -33,6 +33,7 @@ Verified on 2026-07-28 at
 | STATE-UPDATE-2 — post-appointments state update | PR #16, human-merged |
 | MAIN-BRANCH-GOVERNANCE-1 — protect `main` | PR #17, human-merged; state recorded in PR #18 |
 | DEV-SEC-001-REMEDIATE — development-toolchain remediation | PR #19 activation; PR #21 human-merged |
+| DEV-SEC-001-STATE — post-remediation state update | PR #23, human-merged |
 
 ## Routes
 
@@ -128,8 +129,15 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`DEV-SEC-001-REMEDIATE` is `DONE`; PR #21 was human-merged and both the
-complete and production-only dependency audits report zero
-vulnerabilities. No subsequent product, governance, security, or
-infrastructure implementation task is documented as `READY`; further
-scope requires a separate approved task contract.
+`UI-MVP-SPEC-1` is the only next approved task and is documented as
+`READY` in [ROADMAP.md](ROADMAP.md) after this activation is
+human-merged. Łukasz Gębicki approved the complete Business Decision
+Pack UI MVP v0.2 on 2026-07-28; every
+`REKOMENDACJA DO ZATWIERDZENIA` marker is authoritative as approved,
+while section 24 remains explicitly excluded.
+
+The task is Class A and documentation-only. It may onboard the approved
+source, traceability, controlled implementation sequence, and repository
+guidance only after a machine-readable GitHub issue contract is bound to
+the resulting exact `main` SHA. This activation does not authorize any
+application implementation.
