@@ -29,12 +29,49 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ## Active and queued
 
-`UI-MVP-FOUNDATION-1` is the next controlled candidate in the approved
-[UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md). It is not
-`READY`, and the plan is traceability only. A separate activation and
-machine-readable contract bound to the then-current exact `main` SHA
-must define its BDP and AC scope, acceptance criteria, allowed paths,
-and delivery controls before implementation.
+### UI-MVP-FOUNDATION-1 — role and demo-domain foundation
+
+- State: `READY`.
+- Risk class: Class B.
+- Objective: create the minimum shared UI-only foundation required by
+  later role-specific work: six approved roles, active demonstration
+  identity and context, role-aware navigation, stable organization and
+  warehouse assignments, and typed shared demo-domain records.
+- Approved coverage: `BDP-CFG-001`, `BDP-RBAC-001`, `BDP-SUP-001`,
+  `BDP-USR-001`, sections 3.1–3.7, 17.3, 18 and 19, and the foundation
+  portion of `AC-SYS-001`.
+- Repository fit: reuse `AuthenticatedShell`, existing demo
+  authentication, `/users`, `/warehouses`, `/supplier-organizations`,
+  `/appointments`, and `demoAccessScope.ts`. Resolve shared-domain
+  duplication only where directly required.
+- Future implementation paths: `src/app/AppRoutes.tsx`,
+  `src/app/AppRouter.test.tsx`, `src/app/AuthenticatedShell.tsx`,
+  `src/app/AuthenticatedShell.test.tsx`, `src/users/demoAccessScope.ts`,
+  `src/users/demoUsers.ts`, `src/users/UsersAccessPage.tsx`,
+  `src/users/UsersAccessPage.test.tsx`,
+  `src/warehouses/WarehousesPage.tsx`,
+  `src/warehouses/WarehousesPage.test.tsx`,
+  `src/supplierOrganizations/SupplierOrganizationsPage.tsx`,
+  `src/supplierOrganizations/SupplierOrganizationsPage.test.tsx`,
+  `src/appointments/AppointmentsPage.tsx`,
+  `src/appointments/AppointmentsPage.test.tsx`, new files under
+  `src/demoDomain/**`, `docs/codex/CURRENT_STATE.md`, and
+  `docs/codex/ROADMAP.md` only. The exact implementation contract may
+  narrow but must not expand this boundary without separate approval.
+- Delivery: E4, `build_high`, separate `review_high` Reviewer, extended
+  context, quality-first token posture, complete validation,
+  `publish_feature`, and mandatory stop before merge.
+- Contract gate: after this activation is human-merged, create a
+  machine-readable GitHub issue contract bound to the resulting exact
+  `main` SHA before implementation.
+- Exit gate: focused tests prove each role sees only approved existing
+  routes, data scope and actions. Any identity selector is visibly
+  demonstrational and cannot imply real authentication or authorization.
+- Authorization boundary: no later-task booking, calendar/capacity,
+  lifecycle, details, gate operations, notifications,
+  dashboards/mobile completion, or standing-appointment behavior; no
+  backend, persistence, real authorization, dependency, CI, runner,
+  deployment, production repository, or section 24 work.
 
 No product, governance, security, or infrastructure task is currently
-approved as `READY` or active.
+approved as `READY` or active beyond `UI-MVP-FOUNDATION-1`.

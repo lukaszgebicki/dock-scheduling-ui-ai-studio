@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-28 at
-`a83fbb60c9f58732919021717156bff7907e7aed`.
+`389e624f6006ebbe706afb3cfce234c44ea17280`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `a83fbb60c9f58732919021717156bff7907e7aed`, after human merge of
-  the UI MVP specification onboarding pull request #31.
+  `389e624f6006ebbe706afb3cfce234c44ea17280`, after human merge of
+  the UI MVP specification state-update pull request #33.
 
 ## Merged milestones
 
@@ -36,6 +36,7 @@ Verified on 2026-07-28 at
 | DEV-SEC-001-STATE — post-remediation state update | PR #23, human-merged |
 | UI-MVP-SPEC-1-ACTIVATE — approve and ready UI MVP specification onboarding | PR #29, human-merged |
 | UI-MVP-SPEC-1 — onboard approved UI MVP specification | PR #31, human-merged |
+| UI-MVP-SPEC-1-STATE — post-onboarding state update | PR #33, human-merged |
 
 ## Routes
 
@@ -131,17 +132,17 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`UI-MVP-SPEC-1` is `DONE`; PR #31 was human-merged. The canonical
-[Business Decision Pack UI MVP v0.2](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md),
-[traceability matrix](../product/UI_MVP_TRACEABILITY.md), ten-task
-[implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md), repository
-guidance, and DCF-021 are present on `main`. The specification preserves
-20 unique BDP identifiers, 14 unique acceptance-scenario identifiers,
-and the absolute exclusion of section 24.
+`UI-MVP-FOUNDATION-1` is the only next approved task and is documented
+as `READY` in [ROADMAP.md](ROADMAP.md) after this activation is
+human-merged. Its approved coverage is `BDP-CFG-001`, `BDP-RBAC-001`,
+`BDP-SUP-001`, `BDP-USR-001`, sections 3.1–3.7, 17.3, 18 and 19, and
+the foundation portion of `AC-SYS-001`.
 
-`UI-MVP-FOUNDATION-1` is the next controlled candidate in the approved
-sequence, but it is not `READY` and has no active implementation
-contract. A separate activation and machine-readable contract bound to
-the then-current exact `main` SHA are required before implementation.
-No product, governance, security, or infrastructure task is currently
-approved as `READY` or active.
+The task is Class B and limited to the minimum shared UI-only role and
+demo-domain foundation. Existing demo authentication remains unchanged;
+demonstration identity and scope must not imply real authentication or
+authorization. Implementation requires a separate machine-readable
+GitHub issue contract bound to the exact `main` SHA after this
+activation is human-merged. No later UI MVP task, backend, persistence,
+dependency, CI, runner, deployment, section 24 item, or production
+repository work is authorized.
