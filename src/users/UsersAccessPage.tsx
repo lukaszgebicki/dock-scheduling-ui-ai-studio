@@ -5,11 +5,16 @@ import { demoUsers, uiMvpRoles, UserRole, UserStatus } from './demoUsers';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import {
   getOrganizationDisplayName,
-  getWarehouseDisplayNames,
+  type DemoUserId,
 } from '../demoDomain/demoDomain';
 
 export function UsersAccessPage() {
-  const { canPerformAction, canViewUser } = useDemoDomain();
+  const {
+    canPerformAction,
+    canViewUser,
+    configuration,
+    getWarehouseDisplayNames,
+  } = useDemoDomain();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'All roles'>('All roles');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'All statuses'>('All statuses');
@@ -17,13 +22,24 @@ export function UsersAccessPage() {
 
   const scopedUsers = demoUsers
     .filter(canViewUser)
-    .map((user) => ({
-      ...user,
-      organization: getOrganizationDisplayName(user.organizationId),
-      warehouseAccess: user.role === 'System Administrator'
-        ? 'All warehouses'
-        : getWarehouseDisplayNames(user.warehouseIds).join(', ') || 'No warehouse assignment',
-    }));
+    .map((user) => {
+      const supplier = configuration.suppliers.find((candidate) =>
+        candidate.organizationId === user.organizationId);
+      const configuredWarehouseIds = supplier
+        ? supplier.warehouseIds
+        : user.role === 'Warehouse Administrator'
+          ? configuration.warehouses
+            .filter((warehouse) => warehouse.administratorUserIds.includes(user.id as DemoUserId))
+            .map((warehouse) => warehouse.id)
+          : user.warehouseIds;
+      return {
+        ...user,
+        organization: getOrganizationDisplayName(user.organizationId),
+        warehouseAccess: user.role === 'System Administrator'
+          ? 'All warehouses'
+          : getWarehouseDisplayNames(configuredWarehouseIds).join(', ') || 'No warehouse assignment',
+      };
+    });
 
   const organizations = [
     'All organizations',

@@ -14,7 +14,17 @@ export const warehouseIds = [
   'zielona-gora-plant',
 ] as const;
 
-export type WarehouseId = (typeof warehouseIds)[number];
+declare const configuredWarehouseIdBrand: unique symbol;
+export type WarehouseId =
+  | (typeof warehouseIds)[number]
+  | (string & { readonly [configuredWarehouseIdBrand]: 'ConfiguredWarehouseId' });
+
+export function asWarehouseId(value: string): WarehouseId {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw new Error(`Invalid warehouse ID: ${value}`);
+  }
+  return value as WarehouseId;
+}
 
 export const supplierOrganizationIds = [
   'northstar-packaging',
@@ -59,7 +69,9 @@ export type DemoRoute =
 export type DemoAction =
   | 'invite-user'
   | 'add-warehouse'
-  | 'add-supplier-organization';
+  | 'add-supplier-organization'
+  | 'configure-warehouse'
+  | 'configure-supplier-organization';
 
 export interface DemoActor {
   id: string;
@@ -246,8 +258,14 @@ const routesByRole: Readonly<Record<UiMvpRole, readonly DemoRoute[]>> = {
 };
 
 const actionsByRole: Readonly<Record<UiMvpRole, readonly DemoAction[]>> = {
-  'System Administrator': ['invite-user', 'add-warehouse', 'add-supplier-organization'],
-  'Warehouse Administrator': [],
+  'System Administrator': [
+    'invite-user',
+    'add-warehouse',
+    'add-supplier-organization',
+    'configure-warehouse',
+    'configure-supplier-organization',
+  ],
+  'Warehouse Administrator': ['configure-warehouse'],
   'Warehouse Operator': [],
   'Security Officer': [],
   'Supplier Administrator': ['invite-user'],

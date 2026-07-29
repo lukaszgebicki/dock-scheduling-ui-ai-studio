@@ -42,7 +42,7 @@ export function AddSupplierOrganizationPage() {
 
   const onSubmit = (data: SupplierOrganizationSubmitValues) => {
     const normalizedWarehouseAccess = demoWarehouses
-      .filter((warehouse) => data.warehouseAccess.includes(warehouse.id))
+      .filter((warehouse) => data.warehouseAccess.some((id) => id === warehouse.id))
       .map((warehouse) => warehouse.id);
 
     setSuccessState({

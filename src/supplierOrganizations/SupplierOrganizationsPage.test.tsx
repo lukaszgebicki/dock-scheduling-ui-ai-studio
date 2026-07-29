@@ -69,6 +69,12 @@ describe('SupplierOrganizationsPage', () => {
 
     expect(screen.getByRole('link', { name: 'Add supplier organization' }).getAttribute('href'))
       .toBe('/supplier-organizations/new');
+    expect(screen.getAllByRole('link', { name: 'Configure' }).map((link) => link.getAttribute('href')))
+      .toEqual([
+        '/supplier-organizations/northstar-packaging/configuration',
+        '/supplier-organizations/baltic-freight/configuration',
+        '/supplier-organizations/vistula-materials/configuration',
+      ]);
   });
 
   it('3. exposes no Edit, Delete, Actions or status controls;', () => {
@@ -126,7 +132,7 @@ describe('SupplierOrganizationsPage', () => {
     expect(row.getByRole('cell', { name: '2' }).textContent).toBe('2');
   });
 
-  it('9. renders a semantic table with the exact four column headings;', () => {
+  it('9. renders a semantic table with the exact configuration column;', () => {
     renderPage();
     const table = screen.getByRole('table');
     const headings = within(table).getAllByRole('columnheader').map((heading) => {
@@ -142,6 +148,7 @@ describe('SupplierOrganizationsPage', () => {
       'Stable ID',
       'Warehouse access',
       'Warehouse count',
+      'Configuration',
     ]);
   });
 
@@ -225,5 +232,7 @@ describe('SupplierOrganizationsPage', () => {
     expect(screen.getAllByText('Vistula Materials')).toHaveLength(2);
     expect(screen.queryByText('Baltic Freight')).toBeNull();
     expect(screen.queryByRole('link', { name: 'Add supplier organization' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Configure' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Configure organization' })).toBeNull();
   });
 });

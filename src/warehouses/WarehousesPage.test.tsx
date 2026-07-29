@@ -55,13 +55,18 @@ function expectSummaryValue(label: string, value: string) {
 }
 
 describe('WarehousesPage', () => {
-  it('1. exposes the page heading, supporting copy, add link, and no record actions;', () => {
+  it('1. exposes the page heading, creation and configuration actions;', () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: 'Warehouses', level: 1 }).textContent).toBe('Warehouses');
     expect(screen.getByText('Manage warehouse locations available for access configuration.').textContent)
       .toBe('Manage warehouse locations available for access configuration.');
     expect(screen.getByRole('link', { name: 'Add warehouse' }).getAttribute('href')).toBe('/warehouses/new');
+    expect(screen.getAllByRole('link', { name: 'Configure' }).map((link) => link.getAttribute('href')))
+      .toEqual([
+        '/warehouses/nowy-kisielin-distribution-center/configuration',
+        '/warehouses/zielona-gora-plant/configuration',
+      ]);
     expect(screen.queryByText(/^(Edit|Delete|Actions)$/i)).toBeNull();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
@@ -107,7 +112,7 @@ describe('WarehousesPage', () => {
     expect(row.queryByText('Northstar Packaging')).toBeNull();
   });
 
-  it('6. renders a semantic table with the exact four column headings;', () => {
+  it('6. renders a semantic table with the exact configuration column;', () => {
     renderPage();
     const table = screen.getByRole('table');
     const headings = within(table).getAllByRole('columnheader').map((heading) => {
@@ -123,6 +128,7 @@ describe('WarehousesPage', () => {
       'Stable ID',
       'Supplier organizations',
       'Organization count',
+      'Configuration',
     ]);
   });
 
@@ -221,11 +227,13 @@ describe('WarehousesPage', () => {
     expect(screen.getAllByText('zielona-gora-plant')).toHaveLength(2);
   });
 
-  it('17. limits a warehouse administrator to the assigned warehouse and hides Add warehouse;', () => {
+  it('17. limits a warehouse administrator to the assigned warehouse and scoped Configure action;', () => {
     renderPage('warehouse-administrator');
 
     expect(screen.getAllByText('Nowy Kisielin Distribution Center')).toHaveLength(2);
     expect(screen.queryByText('Zielona Góra Plant')).toBeNull();
     expect(screen.queryByRole('link', { name: 'Add warehouse' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Configure' }).getAttribute('href'))
+      .toBe('/warehouses/nowy-kisielin-distribution-center/configuration');
   });
 });

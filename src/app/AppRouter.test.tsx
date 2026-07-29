@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, act, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, act, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { AppRoutes } from './AppRoutes';
 import { AuthProvider, AuthApiPort } from '../auth/AuthProvider';
@@ -290,5 +290,71 @@ describe('AppRouter', () => {
 
     await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/supplier-organizations/new'));
     expect(screen.getByRole('heading', { name: 'Add supplier organization', level: 1 }).textContent).toBe('Add supplier organization');
+  });
+
+  it('15. authenticated System Administrator reaches both configuration routes', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    const { unmount } = renderRouter(
+      '/warehouses/nowy-kisielin-distribution-center/configuration',
+    );
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByRole('heading', {
+      name: 'Configure Nowy Kisielin Distribution Center',
+    })).toBeDefined());
+    expect(screen.getByTestId('location-display').textContent)
+      .toBe('/warehouses/nowy-kisielin-distribution-center/configuration');
+    unmount();
+
+    const second = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(second.promise);
+    renderRouter('/supplier-organizations/northstar-packaging/configuration');
+    await act(async () => {
+      second.resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByRole('heading', {
+      name: 'Configure Northstar Packaging',
+    })).toBeDefined());
+  });
+
+  it('16. actor switching preserves assigned warehouse configuration access and rejects supplier configuration', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    const { unmount } = renderRouter(
+      '/warehouses/nowy-kisielin-distribution-center/configuration',
+    );
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+    await waitFor(() => expect(screen.getByLabelText('Demo access context')).toBeDefined());
+
+    fireEvent.change(screen.getByLabelText('Demo access context'), {
+      target: { value: 'warehouse-administrator' },
+    });
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent)
+      .toBe('/warehouses/nowy-kisielin-distribution-center/configuration'));
+    expect(screen.getByRole('heading', {
+      name: 'Configure Nowy Kisielin Distribution Center',
+    })).toBeDefined();
+    unmount();
+
+    const second = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(second.promise);
+    renderRouter('/supplier-organizations/northstar-packaging/configuration');
+    await act(async () => {
+      second.resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+    fireEvent.change(screen.getByLabelText('Demo access context'), {
+      target: { value: 'warehouse-administrator' },
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/users'));
+    expect(screen.queryByRole('heading', { name: 'Configure Northstar Packaging' })).toBeNull();
   });
 });

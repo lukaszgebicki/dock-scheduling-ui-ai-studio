@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { Building2, Warehouse, Layers, AlertCircle, Plus, Search } from 'lucide-react';
-import { demoSupplierOrganizations, demoSupplierAssignments, getWarehouseDisplayNames } from '../users/demoAccessScope';
+import { Building2, Warehouse, Layers, AlertCircle, Plus, Search, Settings } from 'lucide-react';
+import { demoSupplierOrganizations } from '../users/demoAccessScope';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 
 export function SupplierOrganizationsPage() {
-  const { canPerformAction, canViewSupplierOrganization, canViewWarehouse } = useDemoDomain();
+  const {
+    canPerformAction,
+    canViewSupplierOrganization,
+    canViewWarehouse,
+    configuration,
+    getWarehouseDisplayNames,
+  } = useDemoDomain();
   const [searchTerm, setSearchTerm] = useState('');
   const scopedOrganizations = demoSupplierOrganizations
     .filter((organization) => canViewSupplierOrganization(organization.id));
@@ -14,7 +20,9 @@ export function SupplierOrganizationsPage() {
   let organizationsWithoutAccess = 0;
 
   scopedOrganizations.forEach((organization) => {
-    const assignedIds = demoSupplierAssignments[organization.id].filter(canViewWarehouse);
+    const assignedIds = (configuration.suppliers
+      .find((supplier) => supplier.organizationId === organization.id)?.warehouseIds ?? [])
+      .filter(canViewWarehouse);
     warehouseAssignments += assignedIds.length;
     if (assignedIds.length > 1) {
       multiWarehouseOrganizations += 1;
@@ -36,11 +44,14 @@ export function SupplierOrganizationsPage() {
       organization.displayName.toLowerCase().includes(term)
       || organization.id.toLowerCase().includes(term))
     .map((organization) => {
-      const warehouseIdsForOrganization = demoSupplierAssignments[organization.id]
+      const supplierConfiguration = configuration.suppliers.find((supplier) =>
+        supplier.organizationId === organization.id);
+      const warehouseIdsForOrganization = (supplierConfiguration?.warehouseIds ?? [])
         .filter(canViewWarehouse);
       return {
         ...organization,
         warehouseNames: getWarehouseDisplayNames(warehouseIdsForOrganization),
+        status: supplierConfiguration?.status ?? 'inactive',
       };
     });
 
@@ -175,6 +186,9 @@ export function SupplierOrganizationsPage() {
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Warehouse count
                   </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Configuration
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -202,6 +216,17 @@ export function SupplierOrganizationsPage() {
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       {org.warehouseNames.length}
                     </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      {canPerformAction('configure-supplier-organization') && (
+                        <Link
+                          to={`/supplier-organizations/${org.id}/configuration`}
+                          className="inline-flex items-center gap-1 font-medium text-[#023466] hover:underline"
+                        >
+                          <Settings className="h-4 w-4" aria-hidden="true" />
+                          Configure
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -214,7 +239,17 @@ export function SupplierOrganizationsPage() {
                 <h2 className="text-lg font-medium leading-6 text-gray-900">{org.displayName}</h2>
                 <div className="mt-2 min-w-0 text-sm text-gray-500">
                   <p className="break-all font-mono text-xs">{org.id}</p>
+                  <p className="mt-1 capitalize">{org.status}</p>
                 </div>
+                {canPerformAction('configure-supplier-organization') && (
+                  <Link
+                    to={`/supplier-organizations/${org.id}/configuration`}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#023466] hover:underline"
+                  >
+                    <Settings className="h-4 w-4" aria-hidden="true" />
+                    Configure organization
+                  </Link>
+                )}
                 <div className="mt-4">
                   <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
                     Warehouse access ({org.warehouseNames.length})

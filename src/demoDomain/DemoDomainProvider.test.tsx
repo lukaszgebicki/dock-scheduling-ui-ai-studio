@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { DemoActionGuard } from './DemoActionGuard';
 import { DemoDomainProvider, useDemoDomain } from './DemoDomainProvider';
 import { DemoRouteGuard } from './DemoRouteGuard';
-import type { DemoActorId } from './demoDomain';
+import { asWarehouseId, demoUsers, type DemoActorId } from './demoDomain';
 
 afterEach(cleanup);
 
@@ -23,6 +23,80 @@ function ActorControl() {
         {actors.map((actor) => <option key={actor.id} value={actor.id}>{actor.role}</option>)}
       </select>
       <output>{activeActor.role}</output>
+    </>
+  );
+}
+
+function ConfigurationControl() {
+  const {
+    activeActor,
+    configuration,
+    createWarehouseDraft,
+    publishWarehouse,
+    setActiveActorId,
+  } = useDemoDomain();
+  const id = asWarehouseId('poznan-cross-dock');
+  const draft = configuration.warehouses.find((warehouse) => warehouse.id === id);
+  return (
+    <>
+      <output aria-label="warehouse count">{configuration.warehouses.length}</output>
+      <output aria-label="active warehouse IDs">{activeActor.warehouseIds.join(',')}</output>
+      <button
+        type="button"
+        onClick={() => createWarehouseDraft(id, 'Poznan Cross Dock')}
+      >
+        Create draft
+      </button>
+      <button
+        type="button"
+        disabled={!draft}
+        onClick={() => {
+          if (draft) publishWarehouse({ ...draft, administratorUserIds: ['u-2'] });
+        }}
+      >
+        Publish draft
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveActorId('warehouse-administrator')}
+      >
+        Switch actor
+      </button>
+    </>
+  );
+}
+
+function UserScopeControl() {
+  const {
+    canViewUser,
+    configuration,
+    publishSupplier,
+    setActiveActorId,
+  } = useDemoDomain();
+  const supplier = configuration.suppliers.find((candidate) =>
+    candidate.organizationId === 'northstar-packaging');
+  const supplierAdministrator = demoUsers.find((user) => user.id === 'u-5');
+  if (!supplier || !supplierAdministrator) throw new Error('Expected demo supplier user.');
+  return (
+    <>
+      <output aria-label="supplier user visible">
+        {canViewUser(supplierAdministrator) ? 'visible' : 'hidden'}
+      </output>
+      <button
+        type="button"
+        onClick={() => publishSupplier({
+          ...supplier,
+          warehouseIds: ['zielona-gora-plant'],
+        })}
+      >
+        Move supplier
+      </button>
+      <button type="button" onClick={() => setActiveActorId('supplier-administrator')}>
+        Supplier actor
+      </button>
+      <button type="button" onClick={() => setActiveActorId('warehouse-administrator')}>
+        Warehouse actor
+      </button>
     </>
   );
 }
@@ -82,5 +156,40 @@ describe('DemoDomainProvider', () => {
     );
     expect(screen.getByText('users').textContent).toBe('users');
     expect(screen.queryByText('invite')).toBeNull();
+  });
+
+  it('keeps published configuration while switching actors and derives assignments from it', () => {
+    render(
+      <DemoDomainProvider>
+        <ConfigurationControl />
+      </DemoDomainProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    expect(screen.getByLabelText('warehouse count').textContent).toBe('3');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publish draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Switch actor' }));
+
+    expect(screen.getByLabelText('warehouse count').textContent).toBe('3');
+    expect(screen.getByLabelText('active warehouse IDs').textContent)
+      .toContain('poznan-cross-dock');
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it('derives supplier-user visibility from current configuration assignments', () => {
+    render(
+      <DemoDomainProvider>
+        <UserScopeControl />
+      </DemoDomainProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move supplier' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Supplier actor' }));
+    expect(screen.getByLabelText('supplier user visible').textContent).toBe('visible');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Warehouse actor' }));
+    expect(screen.getByLabelText('supplier user visible').textContent).toBe('hidden');
   });
 });

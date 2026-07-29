@@ -6,7 +6,7 @@ import {
   Users, Building, Bell, ChevronDown, LogOut, Truck
 } from 'lucide-react';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
-import { getWarehouseDisplayNames, type DemoActorId } from '../demoDomain/demoDomain';
+import { type DemoActorId } from '../demoDomain/demoDomain';
 
 interface BreadcrumbInfo {
   parent?: { label: string; to: string };
@@ -14,6 +14,15 @@ interface BreadcrumbInfo {
 }
 
 function getBreadcrumb(pathname: string): BreadcrumbInfo {
+  if (/^\/warehouses\/[^/]+\/configuration$/.test(pathname)) {
+    return { parent: { label: 'Warehouses', to: '/warehouses' }, current: 'Warehouse configuration' };
+  }
+  if (/^\/supplier-organizations\/[^/]+\/configuration$/.test(pathname)) {
+    return {
+      parent: { label: 'Supplier organizations', to: '/supplier-organizations' },
+      current: 'Supplier configuration',
+    };
+  }
   switch (pathname) {
     case '/appointments':
       return { current: 'Appointments' };
@@ -40,6 +49,7 @@ export function AuthenticatedShell() {
     activeActor,
     actors,
     canAccessRoute,
+    getWarehouseDisplayNames,
     setActiveActorId,
   } = useDemoDomain();
 
