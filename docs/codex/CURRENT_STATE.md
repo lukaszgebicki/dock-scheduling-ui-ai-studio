@@ -1,15 +1,15 @@
 # Verified current state
 
-Verified on 2026-07-28 at
-`389e624f6006ebbe706afb3cfce234c44ea17280`.
+Verified on 2026-07-29 at
+`85bddbdd81c22cceb7f27f257c731b28327ced82`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `389e624f6006ebbe706afb3cfce234c44ea17280`, after human merge of
-  the UI MVP specification state-update pull request #33.
+  `85bddbdd81c22cceb7f27f257c731b28327ced82`, after human merge of
+  the role and demo-domain foundation pull request #37.
 
 ## Merged milestones
 
@@ -37,25 +37,27 @@ Verified on 2026-07-28 at
 | UI-MVP-SPEC-1-ACTIVATE — approve and ready UI MVP specification onboarding | PR #29, human-merged |
 | UI-MVP-SPEC-1 — onboard approved UI MVP specification | PR #31, human-merged |
 | UI-MVP-SPEC-1-STATE — post-onboarding state update | PR #33, human-merged |
+| UI-MVP-FOUNDATION-1 — role and demo-domain foundation | PR #37, human-merged |
 
 ## Routes
 
 | Route | Current behavior |
 | --- | --- |
-| `/` | Protected redirect to `/users` |
-| `/users` | Users and access overview |
-| `/users/invite` | Local-only invitation preparation |
-| `/warehouses` | Warehouse overview |
-| `/warehouses/new` | Local-only warehouse preparation |
-| `/supplier-organizations` | Supplier-organization overview |
-| `/supplier-organizations/new` | Local-only organization preparation |
-| `/appointments` | Operational appointment overview |
+| `/` | Protected role-aware redirect to `/users` or `/appointments` |
+| `/users` | Role-guarded and scope-filtered users and access overview |
+| `/users/invite` | Role-guarded local-only invitation preparation |
+| `/warehouses` | Role-guarded and scope-filtered warehouse overview |
+| `/warehouses/new` | System Administrator-only local preparation |
+| `/supplier-organizations` | Role-guarded and scope-filtered supplier-organization overview |
+| `/supplier-organizations/new` | System Administrator-only local preparation |
+| `/appointments` | Role-visible, scope-filtered operational appointment overview |
 | `/login` | Public-only demo sign-in |
 | `/forgot-password` | Demo recovery request |
 | `/reset-password` | Demo reset flow |
-| `*` | Auth-aware redirect to `/users` or `/login` |
+| `*` | Auth-aware redirect to the role-aware default route or `/login` |
 
-Protected administration routes render in `AuthenticatedShell`.
+Protected administration routes render in `AuthenticatedShell` and reject
+roles without the corresponding demonstrational route or action permission.
 Forgot- and reset-password routes remain available regardless of current
 authentication state.
 
@@ -68,17 +70,22 @@ authentication state.
   in the lockfile. `@vitejs/plugin-react` resolves to 4.7.0.
 - Frontend-only, demo-injected authentication; no production persistence
   or backend integration.
-- `src/users/demoAccessScope.ts` centralizes the typed access-scope data
-  used by newer flows. `src/users/demoUsers.ts` remains a legacy fixture
-  with duplicated presentation labels and access text.
-- Current enabled administration areas are users and access,
-  invitations, warehouses, supplier organizations, and appointments.
+- `src/demoDomain/demoDomain.ts` is the canonical typed source for six
+  demonstration roles, actors, users, warehouses, supplier organizations,
+  stable identifiers, assignments, route access, action visibility, and
+  existing-data scope rules.
+- The authenticated shell exposes a visibly demonstrational active-context
+  selector. It changes only UI routing, navigation, actions, and local data
+  visibility; it does not change authentication or imply real authorization.
+- Enabled administration routes and actions vary by the active role.
   Dashboard and slot calendar remain visible only as disabled “Soon”
   navigation.
 - The appointments overview contains eight UI-only demo appointments,
   search by reference, supplier, or warehouse, AND-combined status,
   warehouse, and supplier filters, responsive presentations, an exact
-  result count, a clear-filters action, and an empty state.
+  result count, a clear-filters action, and an empty state. Users,
+  warehouses, supplier organizations, and appointments are filtered to
+  the active actor's approved organization and warehouse scope.
 
 ## Main branch governance
 
@@ -94,23 +101,25 @@ authentication state.
 
 ## Validation baseline
 
-Commands were run in the authorized external worktree on 2026-07-28.
+Commands were run in the authorized external worktree on 2026-07-29.
 
 | Check | Verified result |
 | --- | --- |
-| `npm ci` | PASS; 199 packages added; 200 packages audited; 0 vulnerabilities |
+| `npm ci` | PASS; 199 packages added, 200 audited, 0 vulnerabilities |
+| Focused issue #36 tests | PASS; 7 files, 72 tests |
 | `npm run typecheck` | PASS |
-| `npm test -- --reporter=verbose` | PASS; 17 files, 287 tests, 0 failed, 0 skipped |
-| `npm run build` | PASS; no warnings |
+| `npm test -- --reporter=verbose` | PASS; 19 files, 302 tests, 0 failed, 0 skipped |
+| `npm run build` | PASS; 1,686 modules transformed |
 | `npm audit` | PASS; 0 vulnerabilities |
 | `npm audit --omit=dev` | PASS; 0 vulnerabilities |
+| GitHub `Typecheck, test and build` | PASS on PR #37 |
 | Node.js | 24.14.0 |
-| npm | 11.18.0 |
+| npm | 12.0.1; compatibility warning because this npm declares Node.js >=24.15.0 |
 | Vite | 6.4.3 |
-| Modules transformed | 1,682 |
+| Modules transformed | 1,686 |
 | HTML | 0.41 kB; 0.28 kB gzip |
-| CSS | 31.75 kB; 6.67 kB gzip |
-| JavaScript | 438.50 kB; 122.09 kB gzip |
+| CSS | 31.91 kB; 6.69 kB gzip |
+| JavaScript | 442.98 kB; 123.46 kB gzip |
 
 GHSA-qwww-vcr4-c8h2 affected the prior React Router 7.18.0 runtime
 dependency. `SPR-SEC-2` resolved the runtime dependency to React Router
@@ -132,17 +141,16 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`UI-MVP-FOUNDATION-1` is the only next approved task and is documented
-as `READY` in [ROADMAP.md](ROADMAP.md) after this activation is
-human-merged. Its approved coverage is `BDP-CFG-001`, `BDP-RBAC-001`,
-`BDP-SUP-001`, `BDP-USR-001`, sections 3.1–3.7, 17.3, 18 and 19, and
-the foundation portion of `AC-SYS-001`.
+`UI-MVP-FOUNDATION-1` is `DONE`; PR #37 was human-merged. The six-role
+UI-only foundation, stable typed demo-domain identities and assignments,
+role-aware navigation, route and action guards, and existing-data scope
+filters are present on `main`. Existing demo authentication remains
+unchanged, and the active demonstration context does not imply real
+authentication or authorization.
 
-The task is Class B and limited to the minimum shared UI-only role and
-demo-domain foundation. Existing demo authentication remains unchanged;
-demonstration identity and scope must not imply real authentication or
-authorization. Implementation requires a separate machine-readable
-GitHub issue contract bound to the exact `main` SHA after this
-activation is human-merged. No later UI MVP task, backend, persistence,
-dependency, CI, runner, deployment, section 24 item, or production
-repository work is authorized.
+`UI-MVP-ADMIN-CONFIG-1` is the next controlled candidate in the approved
+[UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md), but it is not
+`READY` and has no active implementation contract. A separate activation
+and machine-readable contract bound to the then-current exact `main` SHA
+are required before implementation. No product, governance, security, or
+infrastructure task is currently approved as `READY` or active.
