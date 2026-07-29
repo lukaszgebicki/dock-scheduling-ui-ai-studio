@@ -16,16 +16,25 @@ import { AddWarehousePage } from '../warehouses/AddWarehousePage';
 import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrganizationsPage';
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
+import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
+import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
+
+function DefaultDemoRoute() {
+  const { defaultRoute } = useDemoDomain();
+  return <Navigate to={defaultRoute} replace />;
+}
 
 function NotFoundFallback() {
   const { status, isAuthenticated } = useAuth();
+  const { defaultRoute } = useDemoDomain();
 
   if (status === 'bootstrapping') {
     return <AuthBootstrapScreen />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/users" replace />;
+    return <Navigate to={defaultRoute} replace />;
   }
 
   return <Navigate to="/login" replace />;
@@ -33,28 +42,59 @@ function NotFoundFallback() {
 
 export function AppRoutes() {
   return (
-    <Routes>
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AuthenticatedShell />}>
-          <Route path="/" element={<Navigate to="/users" replace />} />
-          <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/users" element={<UsersAccessPage />} />
-          <Route path="/users/invite" element={<InviteUserPage />} />
-          <Route path="/warehouses" element={<WarehousesPage />} />
-          <Route path="/warehouses/new" element={<AddWarehousePage />} />
-          <Route path="/supplier-organizations" element={<SupplierOrganizationsPage />} />
-          <Route path="/supplier-organizations/new" element={<AddSupplierOrganizationPage />} />
+    <DemoDomainProvider>
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AuthenticatedShell />}>
+            <Route path="/" element={<DefaultDemoRoute />} />
+            <Route
+              path="/appointments"
+              element={<DemoRouteGuard route="/appointments"><AppointmentsPage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/users"
+              element={<DemoRouteGuard route="/users"><UsersAccessPage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/users/invite"
+              element={<DemoActionGuard action="invite-user"><InviteUserPage /></DemoActionGuard>}
+            />
+            <Route
+              path="/warehouses"
+              element={<DemoRouteGuard route="/warehouses"><WarehousesPage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/warehouses/new"
+              element={<DemoActionGuard action="add-warehouse"><AddWarehousePage /></DemoActionGuard>}
+            />
+            <Route
+              path="/supplier-organizations"
+              element={(
+                <DemoRouteGuard route="/supplier-organizations">
+                  <SupplierOrganizationsPage />
+                </DemoRouteGuard>
+              )}
+            />
+            <Route
+              path="/supplier-organizations/new"
+              element={(
+                <DemoActionGuard action="add-supplier-organization">
+                  <AddSupplierOrganizationPage />
+                </DemoActionGuard>
+              )}
+            />
+          </Route>
         </Route>
-      </Route>
 
-      <Route element={<PublicOnlyRoute />}>
-        <Route path="/login" element={<LoginPage />} />
-      </Route>
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
 
-      <Route path="/forgot-password" element={<ForgotPasswordPage api={demoAuthApi} />} />
-      <Route path="/reset-password" element={<ResetPasswordPage api={demoAuthApi} />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage api={demoAuthApi} />} />
+        <Route path="/reset-password" element={<ResetPasswordPage api={demoAuthApi} />} />
 
-      <Route path="*" element={<NotFoundFallback />} />
-    </Routes>
+        <Route path="*" element={<NotFoundFallback />} />
+      </Routes>
+    </DemoDomainProvider>
   );
 }

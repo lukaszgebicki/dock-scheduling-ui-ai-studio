@@ -3,16 +3,20 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { SupplierOrganizationsPage } from './SupplierOrganizationsPage';
+import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+import type { DemoActorId } from '../demoDomain/demoDomain';
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-function renderPage() {
+function renderPage(initialActorId: DemoActorId = 'system-administrator') {
   return render(
     <MemoryRouter>
-      <SupplierOrganizationsPage />
+      <DemoDomainProvider initialActorId={initialActorId}>
+        <SupplierOrganizationsPage />
+      </DemoDomainProvider>
     </MemoryRouter>,
   );
 }
@@ -212,5 +216,14 @@ describe('SupplierOrganizationsPage', () => {
     expect(screen.getAllByText('Baltic Freight').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Vistula Materials').length).toBeGreaterThan(0);
     expect(screen.queryByText('No supplier organizations found')).toBeNull();
+  });
+
+  it('17. limits a warehouse administrator to suppliers at the assigned warehouse and hides Add;', () => {
+    renderPage('warehouse-administrator');
+
+    expect(screen.getAllByText('Northstar Packaging')).toHaveLength(2);
+    expect(screen.getAllByText('Vistula Materials')).toHaveLength(2);
+    expect(screen.queryByText('Baltic Freight')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Add supplier organization' })).toBeNull();
   });
 });

@@ -1,32 +1,47 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Users, UserCheck, UserX, Truck, Search, X, UserPlus } from 'lucide-react';
 import { Link } from 'react-router';
-import { demoUsers, UserRole, UserStatus } from './demoUsers';
+import { demoUsers, uiMvpRoles, UserRole, UserStatus } from './demoUsers';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import {
+  getOrganizationDisplayName,
+  getWarehouseDisplayNames,
+} from '../demoDomain/demoDomain';
 
 export function UsersAccessPage() {
+  const { canPerformAction, canViewUser } = useDemoDomain();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'All roles'>('All roles');
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'All statuses'>('All statuses');
   const [orgFilter, setOrgFilter] = useState<string>('All organizations');
 
-  const organizations = useMemo(() => {
-    const orgs = Array.from(new Set(demoUsers.map(u => u.organization)));
-    return ['All organizations', ...orgs];
-  }, []);
+  const scopedUsers = demoUsers
+    .filter(canViewUser)
+    .map((user) => ({
+      ...user,
+      organization: getOrganizationDisplayName(user.organizationId),
+      warehouseAccess: user.role === 'System Administrator'
+        ? 'All warehouses'
+        : getWarehouseDisplayNames(user.warehouseIds).join(', ') || 'No warehouse assignment',
+    }));
 
-  const filteredUsers = useMemo(() => {
-    return demoUsers.filter(user => {
-      const matchSearch = search.toLowerCase() === '' ||
-        user.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase());
+  const organizations = [
+    'All organizations',
+    ...Array.from(new Set(scopedUsers.map((user) => user.organization))),
+  ];
 
-      const matchRole = roleFilter === 'All roles' || user.role === roleFilter;
-      const matchStatus = statusFilter === 'All statuses' || user.status === statusFilter;
-      const matchOrg = orgFilter === 'All organizations' || user.organization === orgFilter;
+  const normalizedSearch = search.toLowerCase();
+  const filteredUsers = scopedUsers.filter((user) => {
+    const matchSearch = normalizedSearch === ''
+      || user.fullName.toLowerCase().includes(normalizedSearch)
+      || user.email.toLowerCase().includes(normalizedSearch);
 
-      return matchSearch && matchRole && matchStatus && matchOrg;
-    });
-  }, [search, roleFilter, statusFilter, orgFilter]);
+    const matchRole = roleFilter === 'All roles' || user.role === roleFilter;
+    const matchStatus = statusFilter === 'All statuses' || user.status === statusFilter;
+    const matchOrg = orgFilter === 'All organizations' || user.organization === orgFilter;
+
+    return matchSearch && matchRole && matchStatus && matchOrg;
+  });
 
   const clearFilters = () => {
     setSearch('');
@@ -35,10 +50,10 @@ export function UsersAccessPage() {
     setOrgFilter('All organizations');
   };
 
-  const totalUsers = demoUsers.length;
-  const activeUsers = demoUsers.filter(u => u.status === 'Active').length;
-  const inactiveUsers = demoUsers.filter(u => u.status === 'Inactive').length;
-  const supplierAccounts = demoUsers.filter(u => u.accountType === 'Supplier').length;
+  const totalUsers = scopedUsers.length;
+  const activeUsers = scopedUsers.filter(u => u.status === 'Active').length;
+  const inactiveUsers = scopedUsers.filter(u => u.status === 'Inactive').length;
+  const supplierAccounts = scopedUsers.filter(u => u.accountType === 'Supplier').length;
 
   return (
     <div className="max-w-7xl mx-auto w-full">
@@ -47,13 +62,15 @@ export function UsersAccessPage() {
           <h1 className="text-2xl font-bold text-[#000A32]">Users & access</h1>
           <p className="text-[#023466] mt-1">Manage accounts, roles, organizations and warehouse access.</p>
         </div>
-        <Link
-          to="/users/invite"
-          className="bg-[#023466] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#000A32] transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-[#023466] outline-none"
-        >
-          <UserPlus size={20} />
-          Invite user
-        </Link>
+        {canPerformAction('invite-user') && (
+          <Link
+            to="/users/invite"
+            className="bg-[#023466] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#000A32] transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-[#023466] outline-none"
+          >
+            <UserPlus size={20} />
+            Invite user
+          </Link>
+        )}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -118,11 +135,7 @@ export function UsersAccessPage() {
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#7FA5D0] focus:border-[#023466] outline-none"
             >
               <option value="All roles">All roles</option>
-              <option value="Administrator">Administrator</option>
-              <option value="Warehouse">Warehouse</option>
-              <option value="Security">Security</option>
-              <option value="Warehouse manager">Warehouse manager</option>
-              <option value="Supplier">Supplier</option>
+              {uiMvpRoles.map((role) => <option key={role} value={role}>{role}</option>)}
             </select>
 
             <select

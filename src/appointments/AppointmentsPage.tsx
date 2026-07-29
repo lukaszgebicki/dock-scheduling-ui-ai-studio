@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { CalendarClock, Search, X } from 'lucide-react';
 import {
   demoSupplierOrganizations,
@@ -9,6 +9,7 @@ import {
   type WarehouseId,
 } from '../users/demoAccessScope';
 import { demoAppointments, type AppointmentStatus } from './demoAppointments';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 
 const appointmentStatuses: readonly AppointmentStatus[] = [
   'Scheduled',
@@ -36,28 +37,34 @@ function formatPlannedDate(date: string): string {
 }
 
 export function AppointmentsPage() {
+  const {
+    canViewAppointment,
+    canViewSupplierOrganization,
+    canViewWarehouse,
+  } = useDemoDomain();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<WarehouseId | 'all'>('all');
   const [supplierFilter, setSupplierFilter] = useState<SupplierOrganizationId | 'all'>('all');
 
-  const filteredAppointments = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+  const scopedAppointments = demoAppointments.filter(canViewAppointment);
+  const scopedWarehouses = demoWarehouses.filter((warehouse) => canViewWarehouse(warehouse.id));
+  const scopedSuppliers = demoSupplierOrganizations
+    .filter((supplier) => canViewSupplierOrganization(supplier.id));
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredAppointments = scopedAppointments.filter((appointment) => {
+    const supplier = getSupplierOrganizationById(appointment.supplierOrganizationId);
+    const warehouse = getWarehouseById(appointment.warehouseId);
+    const matchesSearch = normalizedSearch.length === 0
+      || appointment.reference.toLowerCase().includes(normalizedSearch)
+      || supplier.displayName.toLowerCase().includes(normalizedSearch)
+      || warehouse.displayName.toLowerCase().includes(normalizedSearch);
 
-    return demoAppointments.filter((appointment) => {
-      const supplier = getSupplierOrganizationById(appointment.supplierOrganizationId);
-      const warehouse = getWarehouseById(appointment.warehouseId);
-      const matchesSearch = normalizedSearch.length === 0
-        || appointment.reference.toLowerCase().includes(normalizedSearch)
-        || supplier.displayName.toLowerCase().includes(normalizedSearch)
-        || warehouse.displayName.toLowerCase().includes(normalizedSearch);
-
-      return matchesSearch
-        && (statusFilter === 'all' || appointment.status === statusFilter)
-        && (warehouseFilter === 'all' || appointment.warehouseId === warehouseFilter)
-        && (supplierFilter === 'all' || appointment.supplierOrganizationId === supplierFilter);
-    });
-  }, [searchTerm, statusFilter, supplierFilter, warehouseFilter]);
+    return matchesSearch
+      && (statusFilter === 'all' || appointment.status === statusFilter)
+      && (warehouseFilter === 'all' || appointment.warehouseId === warehouseFilter)
+      && (supplierFilter === 'all' || appointment.supplierOrganizationId === supplierFilter);
+  });
 
   const hasActiveFilters = searchTerm.trim() !== ''
     || statusFilter !== 'all'
@@ -119,7 +126,7 @@ export function AppointmentsPage() {
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">All warehouses</option>
-              {demoWarehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.displayName}</option>)}
+              {scopedWarehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.displayName}</option>)}
             </select>
           </div>
 
@@ -132,14 +139,14 @@ export function AppointmentsPage() {
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">All suppliers</option>
-              {demoSupplierOrganizations.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.displayName}</option>)}
+              {scopedSuppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.displayName}</option>)}
             </select>
           </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-4 border-t border-gray-100 pt-4">
           <p className="text-sm text-gray-600" role="status" aria-live="polite">
-            Showing <span className="font-medium text-gray-900">{filteredAppointments.length}</span> of {demoAppointments.length} appointments
+            Showing <span className="font-medium text-gray-900">{filteredAppointments.length}</span> of {scopedAppointments.length} appointments
           </p>
           {hasActiveFilters && (
             <button

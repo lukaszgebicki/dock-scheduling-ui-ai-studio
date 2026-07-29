@@ -1,43 +1,48 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { Building2, Warehouse, Layers, AlertCircle, Plus, Search } from 'lucide-react';
 import { demoSupplierOrganizations, demoSupplierAssignments, getWarehouseDisplayNames } from '../users/demoAccessScope';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 
 export function SupplierOrganizationsPage() {
+  const { canPerformAction, canViewSupplierOrganization, canViewWarehouse } = useDemoDomain();
   const [searchTerm, setSearchTerm] = useState('');
+  const scopedOrganizations = demoSupplierOrganizations
+    .filter((organization) => canViewSupplierOrganization(organization.id));
+  let warehouseAssignments = 0;
+  let multiWarehouseOrganizations = 0;
+  let organizationsWithoutAccess = 0;
 
-  const summary = useMemo(() => {
-    const totalOrganizations = demoSupplierOrganizations.length;
-    let warehouseAssignments = 0;
-    let multiWarehouseOrganizations = 0;
-    let organizationsWithoutAccess = 0;
+  scopedOrganizations.forEach((organization) => {
+    const assignedIds = demoSupplierAssignments[organization.id].filter(canViewWarehouse);
+    warehouseAssignments += assignedIds.length;
+    if (assignedIds.length > 1) {
+      multiWarehouseOrganizations += 1;
+    }
+    if (assignedIds.length === 0) {
+      organizationsWithoutAccess += 1;
+    }
+  });
 
-    demoSupplierOrganizations.forEach((org) => {
-      const assignedIds = demoSupplierAssignments[org.id] ?? [];
-      warehouseAssignments += assignedIds.length;
-      if (assignedIds.length > 1) {
-        multiWarehouseOrganizations += 1;
-      }
-      if (assignedIds.length === 0) {
-        organizationsWithoutAccess += 1;
-      }
+  const summary = {
+    totalOrganizations: scopedOrganizations.length,
+    warehouseAssignments,
+    multiWarehouseOrganizations,
+    organizationsWithoutAccess,
+  };
+  const term = searchTerm.trim().toLowerCase();
+  const filteredOrganizations = scopedOrganizations
+    .filter((organization) =>
+      organization.displayName.toLowerCase().includes(term)
+      || organization.id.toLowerCase().includes(term))
+    .map((organization) => {
+      const warehouseIdsForOrganization = demoSupplierAssignments[organization.id]
+        .filter(canViewWarehouse);
+      return {
+        ...organization,
+        warehouseNames: getWarehouseDisplayNames(warehouseIdsForOrganization),
+      };
     });
-
-    return { totalOrganizations, warehouseAssignments, multiWarehouseOrganizations, organizationsWithoutAccess };
-  }, []);
-
-  const filteredOrganizations = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return demoSupplierOrganizations
-      .filter((org) => org.displayName.toLowerCase().includes(term) || org.id.toLowerCase().includes(term))
-      .map((org) => {
-        const warehouseIdsForOrg = demoSupplierAssignments[org.id] ?? [];
-        return {
-          ...org,
-          warehouseNames: getWarehouseDisplayNames(warehouseIdsForOrg),
-        };
-      });
-  }, [searchTerm]);
 
   return (
     <div className="mx-auto min-w-0 max-w-7xl">
@@ -48,7 +53,7 @@ export function SupplierOrganizationsPage() {
             Manage supplier organizations and their inherited warehouse access.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        {canPerformAction('add-supplier-organization') && <div className="mt-4 sm:mt-0">
           <Link
             to="/supplier-organizations/new"
             aria-label="Add supplier organization"
@@ -57,7 +62,7 @@ export function SupplierOrganizationsPage() {
             <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add supplier organization
           </Link>
-        </div>
+        </div>}
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

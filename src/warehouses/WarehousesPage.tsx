@@ -1,47 +1,46 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { Building2, Plus, Search, Building } from 'lucide-react';
 import { demoWarehouses, demoSupplierOrganizations, demoSupplierAssignments } from '../users/demoAccessScope';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 
 export function WarehousesPage() {
+  const {
+    canPerformAction,
+    canViewSupplierOrganization,
+    canViewWarehouse,
+  } = useDemoDomain();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const summary = useMemo(() => {
-    const totalWarehouses = demoWarehouses.length;
-    const supplierOrganizations = demoSupplierOrganizations.length;
-    let organizationAssignments = 0;
-
-    Object.values(demoSupplierAssignments).forEach((warehouseIds) => {
-      organizationAssignments += warehouseIds.length;
-    });
-
-    const unassignedWarehouses = demoWarehouses.filter((warehouse) => {
-      return !Object.values(demoSupplierAssignments).some((warehouseIds) => warehouseIds.includes(warehouse.id));
-    }).length;
-
-    return {
-      totalWarehouses,
-      supplierOrganizations,
-      organizationAssignments,
-      unassignedWarehouses
-    };
-  }, []);
-
-  const filteredWarehouses = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return demoWarehouses.filter((w) =>
-      w.displayName.toLowerCase().includes(term) || w.id.includes(term)
-    ).map((warehouse) => {
-      const orgs = demoSupplierOrganizations.filter((org) => {
-        const assignedIds = demoSupplierAssignments[org.id] || [];
-        return assignedIds.includes(warehouse.id);
-      });
+  const scopedWarehouses = demoWarehouses
+    .filter((warehouse) => canViewWarehouse(warehouse.id));
+  const scopedOrganizations = demoSupplierOrganizations
+    .filter((organization) => canViewSupplierOrganization(organization.id));
+  const organizationAssignments = scopedOrganizations.reduce(
+    (total, organization) => total + demoSupplierAssignments[organization.id]
+      .filter((warehouseId) => canViewWarehouse(warehouseId)).length,
+    0,
+  );
+  const unassignedWarehouses = scopedWarehouses.filter((warehouse) =>
+    !scopedOrganizations.some((organization) =>
+      demoSupplierAssignments[organization.id].includes(warehouse.id))).length;
+  const summary = {
+    totalWarehouses: scopedWarehouses.length,
+    supplierOrganizations: scopedOrganizations.length,
+    organizationAssignments,
+    unassignedWarehouses,
+  };
+  const term = searchTerm.trim().toLowerCase();
+  const filteredWarehouses = scopedWarehouses
+    .filter((warehouse) =>
+      warehouse.displayName.toLowerCase().includes(term) || warehouse.id.includes(term))
+    .map((warehouse) => {
+      const organizations = scopedOrganizations.filter((organization) =>
+        demoSupplierAssignments[organization.id].includes(warehouse.id));
       return {
         ...warehouse,
-        organizations: orgs
+        organizations,
       };
     });
-  }, [searchTerm]);
 
   return (
     <div className="mx-auto min-w-0 max-w-7xl">
@@ -52,7 +51,7 @@ export function WarehousesPage() {
             Manage warehouse locations available for access configuration.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        {canPerformAction('add-warehouse') && <div className="mt-4 sm:mt-0">
           <Link
             to="/warehouses/new"
             aria-label="Add warehouse"
@@ -61,7 +60,7 @@ export function WarehousesPage() {
             <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add warehouse
           </Link>
-        </div>
+        </div>}
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

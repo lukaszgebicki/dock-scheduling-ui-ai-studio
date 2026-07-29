@@ -3,16 +3,20 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { WarehousesPage } from './WarehousesPage';
+import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+import type { DemoActorId } from '../demoDomain/demoDomain';
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-function renderPage() {
+function renderPage(initialActorId: DemoActorId = 'system-administrator') {
   return render(
     <MemoryRouter>
-      <WarehousesPage />
+      <DemoDomainProvider initialActorId={initialActorId}>
+        <WarehousesPage />
+      </DemoDomainProvider>
     </MemoryRouter>,
   );
 }
@@ -215,5 +219,13 @@ describe('WarehousesPage', () => {
 
     expect(screen.getAllByText('nowy-kisielin-distribution-center')).toHaveLength(2);
     expect(screen.getAllByText('zielona-gora-plant')).toHaveLength(2);
+  });
+
+  it('17. limits a warehouse administrator to the assigned warehouse and hides Add warehouse;', () => {
+    renderPage('warehouse-administrator');
+
+    expect(screen.getAllByText('Nowy Kisielin Distribution Center')).toHaveLength(2);
+    expect(screen.queryByText('Zielona Góra Plant')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Add warehouse' })).toBeNull();
   });
 });
