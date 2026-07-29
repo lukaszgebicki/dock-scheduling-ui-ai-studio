@@ -30,12 +30,56 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ## Active and queued
 
-`UI-MVP-ADMIN-CONFIG-1` is the next controlled candidate in the approved
-[UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md). It is not
-`READY`, and the plan is traceability only. A separate activation and
-machine-readable contract bound to the then-current exact `main` SHA
-must define its BDP and AC scope, acceptance criteria, allowed paths,
-and delivery controls before implementation.
+### UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration
+
+- State: `READY`.
+- Risk class: Class B.
+- Objective: extend current warehouse and supplier administration into
+  one coherent demonstrational configuration model whose typed
+  local-state changes produce deterministic contracts for later booking,
+  calendar and lifecycle consumers.
+- Approved coverage: `BDP-CFG-001` levels 1–3, the configuration portion
+  of `BDP-BLOCK-001`, `BDP-WH-001`, the configuration portion of
+  `BDP-SUP-001`, the relevant assignment portion of `BDP-USR-001`, the
+  approval-configuration portion of `BDP-APR-001`, `AC-SYS-001`,
+  `AC-WAD-001`, `AC-WAD-002` and `AC-WAD-003`.
+- Minimum demonstrational consequences: working hours, active docks,
+  flow availability, capacity, required form fields, approval mode,
+  cut-off and supplier assignment are represented in typed local state.
+  Configuration changes are proven through focused consumers or explicit
+  contract fixtures. Every exception requires a reason and history entry.
+- Repository fit: extend the existing role-aware demo domain plus current
+  warehouse, supplier-organization and user-assignment administration.
+  Configuration outputs must be typed shared contracts rather than
+  isolated form-success mockups.
+- Future implementation paths: `src/app/AppRoutes.tsx`,
+  `src/app/AppRouter.test.tsx`, `src/app/AuthenticatedShell.tsx`,
+  `src/app/AuthenticatedShell.test.tsx`, files under `src/demoDomain/**`,
+  files under `src/warehouses/**`, files under
+  `src/supplierOrganizations/**`, `src/users/demoAccessScope.ts`,
+  `src/users/demoUsers.ts`, `src/users/InviteUserPage.tsx`,
+  `src/users/InviteUserPage.test.tsx`, `src/users/inviteUserSchema.ts`,
+  `src/users/UsersAccessPage.tsx`, `src/users/UsersAccessPage.test.tsx`,
+  `docs/codex/CURRENT_STATE.md` and `docs/codex/ROADMAP.md` only. The
+  exact implementation contract may narrow but must not expand this
+  boundary without separate approval.
+- Delivery: E4, `build_high`, separate `review_high` Reviewer, extended
+  context, quality-first token posture, complete validation,
+  `publish_feature`, and mandatory stop before merge.
+- Contract gate: after this activation is human-merged, create a
+  machine-readable issue contract bound to the resulting exact `main`
+  SHA before implementation.
+- Exit gate: configuration changes are proven through focused consumers
+  or explicit contract fixtures; they are not isolated form-success
+  mockups. Exceptions require a reason and history entry.
+- Cross-task boundary: this task may define and prove configuration
+  outputs, but it may not implement the Supplier booking wizard, calendar
+  or capacity UI, reservation engine, approval lifecycle actions,
+  appointment details, gate operations, notifications, dashboards/mobile
+  completion or standing appointments.
+- Authorization boundary: no authentication, backend, persistence, real
+  authorization, integration, dependency, CI, runner, deployment,
+  production-repository or section 24 work.
 
 No product, governance, security, or infrastructure task is currently
-approved as `READY` or active.
+approved as `READY` or active beyond `UI-MVP-ADMIN-CONFIG-1`.
