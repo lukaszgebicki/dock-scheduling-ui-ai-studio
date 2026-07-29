@@ -5,6 +5,8 @@ import {
   Menu, X, LayoutDashboard, Calendar, CalendarClock,
   Users, Building, Bell, ChevronDown, LogOut, Truck
 } from 'lucide-react';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import { getWarehouseDisplayNames, type DemoActorId } from '../demoDomain/demoDomain';
 
 interface BreadcrumbInfo {
   parent?: { label: string; to: string };
@@ -34,9 +36,18 @@ export function AuthenticatedShell() {
   const { logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const {
+    activeActor,
+    actors,
+    canAccessRoute,
+    setActiveActorId,
+  } = useDemoDomain();
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const isAppointmentsRoute = location.pathname.startsWith('/appointments');
+  const hasAdministrationRoute = canAccessRoute('/users')
+    || canAccessRoute('/warehouses')
+    || canAccessRoute('/supplier-organizations');
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col md:flex-row">
@@ -117,66 +128,100 @@ export function AuthenticatedShell() {
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Administration</h2>
-            <ul className="flex flex-col gap-1">
-              <li>
-                <Link
-                  to="/users"
-                  onClick={closeMobileMenu}
-                  aria-current={location.pathname.startsWith('/users') ? 'page' : undefined}
-                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
-                    location.pathname.startsWith('/users')
-                      ? 'bg-[#023466] text-white font-medium'
-                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
-                  }`}
-                >
-                  <Users size={18} />
-                  <span>Users & access</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/warehouses"
-                  onClick={closeMobileMenu}
-                  aria-current={location.pathname.startsWith('/warehouses') ? 'page' : undefined}
-                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
-                    location.pathname.startsWith('/warehouses')
-                      ? 'bg-[#023466] text-white font-medium'
-                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
-                  }`}
-                >
-                  <Building size={18} />
-                  <span>Warehouses</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/supplier-organizations"
-                  onClick={closeMobileMenu}
-                  aria-current={location.pathname.startsWith('/supplier-organizations') ? 'page' : undefined}
-                  className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
-                    location.pathname.startsWith('/supplier-organizations')
-                      ? 'bg-[#023466] text-white font-medium'
-                      : 'text-[#D9D9C4] hover:bg-[#023466]/50'
-                  }`}
-                >
-                  <Truck size={18} aria-hidden="true" />
-                  <span>Supplier organizations</span>
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {hasAdministrationRoute && (
+            <div>
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Administration</h2>
+              <ul className="flex flex-col gap-1">
+                {canAccessRoute('/users') && (
+                  <li>
+                    <Link
+                      to="/users"
+                      onClick={closeMobileMenu}
+                      aria-current={location.pathname.startsWith('/users') ? 'page' : undefined}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                        location.pathname.startsWith('/users')
+                          ? 'bg-[#023466] text-white font-medium'
+                          : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                      }`}
+                    >
+                      <Users size={18} />
+                      <span>Users & access</span>
+                    </Link>
+                  </li>
+                )}
+                {canAccessRoute('/warehouses') && (
+                  <li>
+                    <Link
+                      to="/warehouses"
+                      onClick={closeMobileMenu}
+                      aria-current={location.pathname.startsWith('/warehouses') ? 'page' : undefined}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                        location.pathname.startsWith('/warehouses')
+                          ? 'bg-[#023466] text-white font-medium'
+                          : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                      }`}
+                    >
+                      <Building size={18} />
+                      <span>Warehouses</span>
+                    </Link>
+                  </li>
+                )}
+                {canAccessRoute('/supplier-organizations') && (
+                  <li>
+                    <Link
+                      to="/supplier-organizations"
+                      onClick={closeMobileMenu}
+                      aria-current={location.pathname.startsWith('/supplier-organizations') ? 'page' : undefined}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                        location.pathname.startsWith('/supplier-organizations')
+                          ? 'bg-[#023466] text-white font-medium'
+                          : 'text-[#D9D9C4] hover:bg-[#023466]/50'
+                      }`}
+                    >
+                      <Truck size={18} aria-hidden="true" />
+                      <span>Supplier organizations</span>
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-[#023466] bg-[#000620]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-[#7FA5D0] text-[#000A32] flex items-center justify-center font-bold">DA</div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-[#7FA5D0] text-[#000A32] flex items-center justify-center font-bold">
+              {activeActor.displayName
+                .split(' ')
+                .map((name) => name[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-white leading-tight">Demo administrator</span>
-              <span className="text-xs text-gray-400">System administrator</span>
+              <span className="text-sm font-medium text-white leading-tight">{activeActor.displayName}</span>
+              <span className="text-xs text-gray-400">{activeActor.role}</span>
             </div>
           </div>
+          <label htmlFor="demo-role-context" className="block text-xs font-semibold text-gray-300">
+            Demo access context
+          </label>
+          <select
+            id="demo-role-context"
+            value={activeActor.id}
+            onChange={(event) => setActiveActorId(event.target.value as DemoActorId)}
+            aria-describedby="demo-role-context-help"
+            className="mt-1 w-full rounded border border-white/20 bg-[#000A32] px-2 py-1.5 text-xs text-white"
+          >
+            {actors.map((actor) => (
+              <option key={actor.id} value={actor.id}>
+                {actor.role} — {actor.displayName}
+              </option>
+            ))}
+          </select>
+          <p id="demo-role-context-help" className="mb-4 mt-1 text-[11px] leading-4 text-gray-400">
+            UI-only demonstration. This does not change authentication or authorization.
+          </p>
           <button
             type="button"
             onClick={() => void logout()}
@@ -223,7 +268,11 @@ export function AuthenticatedShell() {
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden sm:flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-sm">
               <Building size={16} className="text-gray-500" />
-              <span className="font-medium text-gray-700">All warehouses</span>
+              <span className="font-medium text-gray-700">
+                {activeActor.role === 'System Administrator'
+                  ? 'All warehouses'
+                  : getWarehouseDisplayNames(activeActor.warehouseIds).join(', ')}
+              </span>
               <ChevronDown size={14} className="text-gray-500 ml-1" />
             </div>
             <button type="button" className="text-gray-500 hover:text-[#000A32] transition-colors relative" aria-label="Notifications">

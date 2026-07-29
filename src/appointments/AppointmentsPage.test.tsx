@@ -3,6 +3,25 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AppointmentsPage } from './AppointmentsPage';
+import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import type { DemoActorId } from '../demoDomain/demoDomain';
+
+function renderPage(initialActorId: DemoActorId = 'system-administrator') {
+  return render(
+    <DemoDomainProvider initialActorId={initialActorId}>
+      <AppointmentsPage />
+    </DemoDomainProvider>,
+  );
+}
+
+function SwitchToSecurityOfficer() {
+  const { setActiveActorId } = useDemoDomain();
+  return (
+    <button type="button" onClick={() => setActiveActorId('security-officer')}>
+      Switch to Security Officer
+    </button>
+  );
+}
 
 afterEach(() => cleanup());
 
@@ -13,7 +32,7 @@ function expectResultCount(text: string) {
 
 describe('AppointmentsPage', () => {
   it('renders the complete appointment overview', () => {
-    render(<AppointmentsPage />);
+    renderPage();
 
     expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
     expectResultCount('Showing 8 of 8 appointments');
@@ -23,7 +42,7 @@ describe('AppointmentsPage', () => {
   });
 
   it('filters by status, warehouse and supplier with AND semantics', () => {
-    render(<AppointmentsPage />);
+    renderPage();
 
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'Confirmed' } });
     fireEvent.change(screen.getByLabelText('Warehouse'), { target: { value: 'zielona-gora-plant' } });
@@ -36,7 +55,7 @@ describe('AppointmentsPage', () => {
   });
 
   it('searches by reference, supplier and warehouse', () => {
-    render(<AppointmentsPage />);
+    renderPage();
 
     const search = screen.getByLabelText('Search');
     fireEvent.change(search, { target: { value: 'APT-2026-006' } });
@@ -51,7 +70,7 @@ describe('AppointmentsPage', () => {
   });
 
   it('shows an empty state and clears all filters', () => {
-    render(<AppointmentsPage />);
+    renderPage();
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'not-found' } });
     expect(screen.getByRole('heading', { name: 'No appointments found' })).toBeDefined();
@@ -64,7 +83,7 @@ describe('AppointmentsPage', () => {
   });
 
   it('uses accessible table headings and labeled controls', () => {
-    render(<AppointmentsPage />);
+    renderPage();
 
     const table = screen.getByRole('table');
     expect(within(table).getByRole('columnheader', { name: 'Appointment' })).toBeDefined();
@@ -72,5 +91,42 @@ describe('AppointmentsPage', () => {
     expect(screen.getByLabelText('Status').tagName).toBe('SELECT');
     expect(screen.getByLabelText('Warehouse').tagName).toBe('SELECT');
     expect(screen.getByLabelText('Supplier').tagName).toBe('SELECT');
+  });
+
+  it('scopes a supplier user to its organization and assigned warehouses', () => {
+    renderPage('supplier-user');
+
+    expectResultCount('Showing 3 of 3 appointments');
+    expect(screen.getAllByText('APT-2026-003')).toHaveLength(2);
+    expect(screen.getAllByText('APT-2026-005')).toHaveLength(2);
+    expect(screen.getAllByText('APT-2026-008')).toHaveLength(2);
+    expect(screen.queryByText('Northstar Packaging')).toBeNull();
+    expect(screen.queryByText('Baltic Freight')).toBeNull();
+    expect(screen.getAllByRole('option', { name: 'Vistula Materials' })).toHaveLength(1);
+  });
+
+  it('clears out-of-scope filters when the demo actor changes', () => {
+    render(
+      <DemoDomainProvider>
+        <SwitchToSecurityOfficer />
+        <AppointmentsPage />
+      </DemoDomainProvider>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Warehouse'), {
+      target: { value: 'zielona-gora-plant' },
+    });
+    fireEvent.change(screen.getByLabelText('Supplier'), {
+      target: { value: 'baltic-freight' },
+    });
+    expectResultCount('Showing 2 of 8 appointments');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to Security Officer' }));
+
+    expect(screen.getByLabelText('Warehouse')).toHaveProperty('value', 'all');
+    expect(screen.getByLabelText('Supplier')).toHaveProperty('value', 'all');
+    expect(screen.queryByRole('option', { name: 'Zielona Góra Plant' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Baltic Freight' })).toBeNull();
+    expectResultCount('Showing 4 of 4 appointments');
   });
 });

@@ -3,8 +3,17 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { AuthenticatedShell } from './AuthenticatedShell';
+import { AuthenticatedShell as Shell } from './AuthenticatedShell';
 import { useAuth } from '../auth/useAuth';
+import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+
+function AuthenticatedShell() {
+  return (
+    <DemoDomainProvider>
+      <Shell />
+    </DemoDomainProvider>
+  );
+}
 
 vi.mock('../auth/useAuth', () => ({
   useAuth: vi.fn(),
@@ -161,5 +170,38 @@ describe('AuthenticatedShell', () => {
     const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
     expect(within(breadcrumb).getByText('Scheduling').textContent).toBe('Scheduling');
     expect(within(breadcrumb).getByText('Appointments').textContent).toBe('Appointments');
+  });
+
+  it('9. exposes six explicit demo role contexts and explains their UI-only effect', () => {
+    render(
+      <MemoryRouter initialEntries={['/users']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const selector = screen.getByLabelText('Demo access context');
+    expect(within(selector).getAllByRole('option')).toHaveLength(6);
+    expect(selector.getAttribute('aria-describedby')).toBe('demo-role-context-help');
+    expect(screen.getByText(/does not change authentication or authorization/i).textContent)
+      .toBe('UI-only demonstration. This does not change authentication or authorization.');
+  });
+
+  it('10. changes visible navigation to the selected role matrix', () => {
+    render(
+      <MemoryRouter initialEntries={['/appointments']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText('Demo access context'), {
+      target: { value: 'supplier-user' },
+    });
+
+    expect(screen.getByRole('link', { name: 'Appointments' }).getAttribute('href'))
+      .toBe('/appointments');
+    expect(screen.queryByText('Administration')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Users & access' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Warehouses' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Supplier organizations' })).toBeNull();
   });
 });

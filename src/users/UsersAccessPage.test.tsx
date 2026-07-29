@@ -5,16 +5,29 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { UsersAccessPage } from './UsersAccessPage';
 import { demoUsers } from './demoUsers';
+import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import type { DemoActorId } from '../demoDomain/demoDomain';
+
+function SwitchToSupplierAdministrator() {
+  const { setActiveActorId } = useDemoDomain();
+  return (
+    <button type="button" onClick={() => setActiveActorId('supplier-administrator')}>
+      Switch to Supplier Administrator
+    </button>
+  );
+}
 
 describe('UsersAccessPage', () => {
   afterEach(() => {
     cleanup();
   });
 
-  const renderPage = () => {
+  const renderPage = (initialActorId: DemoActorId = 'system-administrator') => {
     return render(
       <MemoryRouter>
-        <UsersAccessPage />
+        <DemoDomainProvider initialActorId={initialActorId}>
+          <UsersAccessPage />
+        </DemoDomainProvider>
       </MemoryRouter>
     );
   };
@@ -30,6 +43,8 @@ describe('UsersAccessPage', () => {
       // Find elements by text
       expect(screen.getAllByText(user.fullName).length).toBeGreaterThan(0);
     });
+    expect(screen.getAllByText('All warehouses')).toHaveLength(2);
+    expect(screen.getAllByText('No warehouse assignment')).toHaveLength(2);
   });
 
   it('3. name search filters the dataset', () => {
@@ -53,7 +68,7 @@ describe('UsersAccessPage', () => {
   it('5. role filter works', () => {
     renderPage();
     const roleSelect = screen.getByLabelText('Filter by role');
-    fireEvent.change(roleSelect, { target: { value: 'Security' } });
+    fireEvent.change(roleSelect, { target: { value: 'Security Officer' } });
 
     expect(screen.getAllByText('Charlie Davis').length).toBeGreaterThan(0);
     expect(screen.queryByText('Alice Smith')).toBeNull();
@@ -82,7 +97,7 @@ describe('UsersAccessPage', () => {
     const searchInput = screen.getByPlaceholderText('Search name or email');
     const roleSelect = screen.getByLabelText('Filter by role');
 
-    fireEvent.change(roleSelect, { target: { value: 'Warehouse' } });
+    fireEvent.change(roleSelect, { target: { value: 'Warehouse Operator' } });
     // Bob Jones and Henry Ford are Warehouse
     expect(screen.getAllByText('Bob Jones').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Henry Ford').length).toBeGreaterThan(0);
@@ -131,5 +146,49 @@ describe('UsersAccessPage', () => {
     const inviteLink = screen.getByRole('link', { name: /Invite user/i });
     expect(inviteLink.getAttribute('aria-disabled')).not.toBe('true');
     expect(inviteLink.getAttribute('href')).toBe('/users/invite');
+  });
+
+  it('13. scopes supplier administration to its own organization', () => {
+    renderPage('supplier-administrator');
+
+    expect(screen.getAllByText('Eve Northstar')).toHaveLength(2);
+    expect(screen.queryByText('Grace Vistula')).toBeNull();
+    expect(screen.queryByText('Demo Administrator')).toBeNull();
+    expect(screen.getByRole('link', { name: /Invite user/i }).getAttribute('href'))
+      .toBe('/users/invite');
+  });
+
+  it('14. hides invite for a warehouse administrator while retaining warehouse-scoped users', () => {
+    renderPage('warehouse-administrator');
+
+    expect(screen.queryByRole('link', { name: /Invite user/i })).toBeNull();
+    expect(screen.getAllByText('Alice Smith')).toHaveLength(2);
+    expect(screen.getAllByText('Eve Northstar')).toHaveLength(2);
+    expect(screen.queryByText('Bob Jones')).toBeNull();
+  });
+
+  it('15. clears an out-of-scope organization filter when the demo actor changes', () => {
+    render(
+      <MemoryRouter>
+        <DemoDomainProvider>
+          <SwitchToSupplierAdministrator />
+          <UsersAccessPage />
+        </DemoDomainProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Filter by organization'), {
+      target: { value: 'Baltic Freight' },
+    });
+    expect(screen.getAllByText('Frank Baltic')).toHaveLength(2);
+    expect(screen.queryByText('Eve Northstar')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to Supplier Administrator' }));
+
+    expect(screen.getByLabelText('Filter by organization'))
+      .toHaveProperty('value', 'All organizations');
+    expect(screen.queryByRole('option', { name: 'Baltic Freight' })).toBeNull();
+    expect(screen.queryByText('Frank Baltic')).toBeNull();
+    expect(screen.getAllByText('Eve Northstar')).toHaveLength(2);
   });
 });
