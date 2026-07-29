@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-29 at
-`85bddbdd81c22cceb7f27f257c731b28327ced82`.
+`2557d2bc1a21f59fa6f38dc653bd628c64bcff91`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `85bddbdd81c22cceb7f27f257c731b28327ced82`, after human merge of
-  the role and demo-domain foundation pull request #37.
+  `2557d2bc1a21f59fa6f38dc653bd628c64bcff91`, after human merge of
+  the UI MVP foundation state-update pull request #38.
 
 ## Merged milestones
 
@@ -38,6 +38,7 @@ Verified on 2026-07-29 at
 | UI-MVP-SPEC-1 — onboard approved UI MVP specification | PR #31, human-merged |
 | UI-MVP-SPEC-1-STATE — post-onboarding state update | PR #33, human-merged |
 | UI-MVP-FOUNDATION-1 — role and demo-domain foundation | PR #37, human-merged |
+| UI-MVP-FOUNDATION-1-STATE — post-foundation state update | PR #38, human-merged |
 
 ## Routes
 
@@ -141,16 +142,22 @@ autonomy, and no profile permits merge.
 
 ## Next controlled task
 
-`UI-MVP-FOUNDATION-1` is `DONE`; PR #37 was human-merged. The six-role
-UI-only foundation, stable typed demo-domain identities and assignments,
-role-aware navigation, route and action guards, and existing-data scope
-filters are present on `main`. Existing demo authentication remains
-unchanged, and the active demonstration context does not imply real
-authentication or authorization.
+`UI-MVP-ADMIN-CONFIG-1` is the only next approved task and is documented
+as `READY` in [ROADMAP.md](ROADMAP.md) after this activation is
+human-merged. Its approved coverage is `BDP-CFG-001` levels 1–3, the
+configuration portions of `BDP-BLOCK-001`, `BDP-SUP-001` and
+`BDP-APR-001`, `BDP-WH-001`, the relevant assignment portion of
+`BDP-USR-001`, and `AC-SYS-001`, `AC-WAD-001`, `AC-WAD-002` and
+`AC-WAD-003`.
 
-`UI-MVP-ADMIN-CONFIG-1` is the next controlled candidate in the approved
-[UI MVP implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md), but it is not
-`READY` and has no active implementation contract. A separate activation
-and machine-readable contract bound to the then-current exact `main` SHA
-are required before implementation. No product, governance, security, or
-infrastructure task is currently approved as `READY` or active.
+The task is Class B and limited to a coherent UI-only warehouse,
+supplier and rule-configuration model in typed local state. Configuration
+outputs must have deterministic focused consumers or contract fixtures,
+and every exception requires a reason and history entry. The task may
+define later-feature inputs, but it may not implement booking, calendar
+or capacity UI, reservation behavior, approval lifecycle actions, or
+other later-task experiences. A separate machine-readable implementation
+contract bound to the exact `main` SHA after this activation is
+human-merged remains required. Authentication, backend, persistence,
+real authorization, integrations, dependencies, CI, runner, deployment,
+section 24 and the production repository remain outside the boundary.
