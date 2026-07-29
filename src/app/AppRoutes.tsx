@@ -13,8 +13,10 @@ import { UsersAccessPage } from '../users/UsersAccessPage';
 import { InviteUserPage } from '../users/InviteUserPage';
 import { WarehousesPage } from '../warehouses/WarehousesPage';
 import { AddWarehousePage } from '../warehouses/AddWarehousePage';
+import { WarehouseConfigurationPage } from '../warehouses/WarehouseConfigurationPage';
 import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrganizationsPage';
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
+import { SupplierConfigurationPage } from '../supplierOrganizations/SupplierConfigurationPage';
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
@@ -68,6 +70,14 @@ export function AppRoutes() {
               element={<DemoActionGuard action="add-warehouse"><AddWarehousePage /></DemoActionGuard>}
             />
             <Route
+              path="/warehouses/:warehouseId/configuration"
+              element={(
+                <DemoActionGuard action="configure-warehouse">
+                  <WarehouseConfigurationPage />
+                </DemoActionGuard>
+              )}
+            />
+            <Route
               path="/supplier-organizations"
               element={(
                 <DemoRouteGuard route="/supplier-organizations">
@@ -80,6 +90,14 @@ export function AppRoutes() {
               element={(
                 <DemoActionGuard action="add-supplier-organization">
                   <AddSupplierOrganizationPage />
+                </DemoActionGuard>
+              )}
+            />
+            <Route
+              path="/supplier-organizations/:supplierOrganizationId/configuration"
+              element={(
+                <DemoActionGuard action="configure-supplier-organization">
+                  <SupplierConfigurationPage />
                 </DemoActionGuard>
               )}
             />

@@ -3,8 +3,10 @@ import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, ArrowLeft, CheckCircle } from 'lucide-react';
-import { warehouseSchema, type WarehouseFormData } from './warehouseSchema';
+import { createWarehouseSchema, type WarehouseFormData } from './warehouseSchema';
 import { createWarehouseId } from './warehouseSlug';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import { asWarehouseId } from '../demoDomain/demoDomain';
 
 interface SuccessState {
   name: string;
@@ -13,6 +15,7 @@ interface SuccessState {
 
 export function AddWarehousePage() {
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
+  const { configuration, createWarehouseDraft } = useDemoDomain();
 
   const {
     register,
@@ -21,7 +24,7 @@ export function AddWarehousePage() {
     reset,
     formState: { errors },
   } = useForm<WarehouseFormData>({
-    resolver: zodResolver(warehouseSchema),
+    resolver: zodResolver(createWarehouseSchema(configuration.warehouses)),
     defaultValues: {
       name: '',
     },
@@ -32,9 +35,11 @@ export function AddWarehousePage() {
   const generatedId = createWarehouseId(nameValue || '');
 
   const onSubmit = (data: WarehouseFormData) => {
+    const id = createWarehouseId(data.name);
+    createWarehouseDraft(asWarehouseId(id), data.name.trim());
     setSuccessState({
       name: data.name.trim(),
-      id: createWarehouseId(data.name),
+      id,
     });
   };
 
@@ -64,8 +69,10 @@ export function AddWarehousePage() {
             <div className="ml-4">
               <h1 className="text-lg font-medium text-green-800">Warehouse prepared</h1>
               <div className="mt-2 text-sm text-green-700">
-                <p>The warehouse details were validated successfully.</p>
-                <p className="mt-1 font-semibold">Demo mode: no warehouse was created and no data was saved.</p>
+                <p>The warehouse draft is ready for configuration.</p>
+                <p className="mt-1 font-semibold">
+                  Demo mode: this change exists only in local memory and will reset on reload.
+                </p>
               </div>
 
               <div className="mt-6 border-t border-green-200 pt-6">
@@ -93,6 +100,12 @@ export function AddWarehousePage() {
                 >
                   Prepare another warehouse
                 </button>
+                <Link
+                  to={`/warehouses/${successState.id}/configuration`}
+                  className="rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-600"
+                >
+                  Configure warehouse
+                </Link>
                 <Link
                   to="/warehouses"
                   className="rounded-md bg-green-50 px-3 py-2 text-sm font-semibold text-green-700 shadow-sm ring-1 ring-inset ring-green-600/20 hover:bg-green-100"

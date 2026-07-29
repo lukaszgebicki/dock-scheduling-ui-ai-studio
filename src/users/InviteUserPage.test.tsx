@@ -11,6 +11,8 @@ import { AuthContext, AuthContextValue } from '../auth/AuthContext';
 import { demoAuthApi } from '../demo/demoAuthApi';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { demoUsers } from './demoUsers';
+import { createInviteUserSchema } from './inviteUserSchema';
+import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
 import {
   demoSupplierAssignments,
   getSupplierWarehouseDisplayNames,
@@ -770,5 +772,53 @@ describe('InviteUserPage Implementation', () => {
     expect(demoUsers).toEqual(usersSnapshot);
     expect(demoUsers.some((user) => user.email === 'no.persist@example.com')).toBe(false);
     expect(screen.getByRole('heading', { name: 'Invitation prepared' })).toBeDefined();
+  });
+
+  it('51. inactive suppliers cannot receive new user assignments.', () => {
+    const result = createInviteUserSchema(['baltic-freight']).safeParse({
+      fullName: 'Supplier User',
+      email: 'supplier.user@example.com',
+      role: 'Supplier',
+      organization: 'northstar-packaging',
+      warehouseAccess: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({
+        path: ['organization'],
+        message: 'This supplier organization cannot receive new user assignments.',
+      }),
+    ]);
+  });
+
+  it('52. Supplier Administrator can assign only Supplier users in its own organization.', () => {
+    render(
+      <DemoDomainProvider initialActorId="supplier-administrator">
+        <MemoryRouter>
+          <InviteUserPage />
+        </MemoryRouter>
+      </DemoDomainProvider>,
+    );
+
+    const role = screen.getByLabelText('Role') as HTMLSelectElement;
+    expect(Array.from(role.options).map((option) => option.value)).toEqual(['', 'Supplier']);
+    fireEvent.change(role, { target: { value: 'Supplier' } });
+    const organization = screen.getByLabelText('Organization') as HTMLSelectElement;
+    expect(Array.from(organization.options).map((option) => option.value)).toEqual([
+      '',
+      'northstar-packaging',
+    ]);
+
+    expect(createInviteUserSchema(
+      ['northstar-packaging'],
+      ['Supplier'],
+    ).safeParse({
+      fullName: 'Internal User',
+      email: 'internal.user@example.com',
+      role: 'Administrator',
+      organization: 'Pernod Ricard Poland',
+      warehouseAccess: [],
+    }).success).toBe(false);
   });
 });

@@ -3,20 +3,39 @@ import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Info, CheckCircle2 } from 'lucide-react';
-import { inviteUserSchema, InviteUserFormData } from './inviteUserSchema';
+import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import type { SupplierOrganizationId } from '../demoDomain/demoDomain';
+import {
+  createInviteUserSchema,
+  inviteUserRoles,
+  InviteUserFormData,
+  type InviteUserRole,
+} from './inviteUserSchema';
 import { demoUsers } from './demoUsers';
 import {
   demoWarehouses,
   demoSupplierOrganizations,
   getSupplierOrganizationById,
-  getSupplierWarehouseDisplayNames,
-  getWarehouseDisplayNames,
   isSupplierOrganizationId,
 } from './demoAccessScope';
 
 export function InviteUserPage() {
+  const { activeActor, configuration, getWarehouseDisplayNames } = useDemoDomain();
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedData, setSubmittedData] = useState<InviteUserFormData | null>(null);
+  const assignableRoles: readonly InviteUserRole[] =
+    activeActor.role === 'System Administrator' ? inviteUserRoles : ['Supplier'];
+  const assignableSupplierOrganizations = demoSupplierOrganizations.filter((organization) =>
+    configuration.suppliers.some((supplier) =>
+      supplier.organizationId === organization.id
+      && supplier.status === 'active'
+      && (activeActor.role === 'System Administrator'
+        || activeActor.supplierOrganizationId === supplier.organizationId)));
+  const getSupplierWarehouseDisplayNames = (organizationId: SupplierOrganizationId) => {
+    const warehouseIds = configuration.suppliers.find((supplier) =>
+      supplier.organizationId === organizationId)?.warehouseIds ?? [];
+    return getWarehouseDisplayNames(warehouseIds);
+  };
 
   const {
     register,
@@ -27,7 +46,10 @@ export function InviteUserPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<InviteUserFormData>({
-    resolver: zodResolver(inviteUserSchema),
+    resolver: zodResolver(createInviteUserSchema(
+      assignableSupplierOrganizations.map((organization) => organization.id),
+      assignableRoles,
+    )),
     defaultValues: {
       fullName: '',
       email: '',
@@ -282,11 +304,7 @@ export function InviteUserPage() {
                     }`}
                   >
                     <option value="">Select...</option>
-                    <option value="Administrator">Administrator</option>
-                    <option value="Warehouse">Warehouse</option>
-                    <option value="Security">Security</option>
-                    <option value="Warehouse manager">Warehouse manager</option>
-                    <option value="Supplier">Supplier</option>
+                    {assignableRoles.map((role) => <option key={role} value={role}>{role}</option>)}
                   </select>
                   {errors.role && (
                     <p id="role-error" className="mt-1.5 text-sm text-red-600" role="alert">
@@ -310,7 +328,7 @@ export function InviteUserPage() {
                       }`}
                     >
                       <option value="">Select...</option>
-                      {demoSupplierOrganizations.map(org => (
+                      {assignableSupplierOrganizations.map(org => (
                         <option key={org.id} value={org.id}>{org.displayName}</option>
                       ))}
                     </select>

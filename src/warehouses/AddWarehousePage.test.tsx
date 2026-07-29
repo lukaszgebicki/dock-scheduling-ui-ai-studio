@@ -213,10 +213,12 @@ describe('AddWarehousePage tests', () => {
     renderPage();
     await submitValidWarehouse('  New Valid Warehouse  ');
 
-    expect(screen.getByText('The warehouse details were validated successfully.').textContent)
-      .toBe('The warehouse details were validated successfully.');
-    expect(screen.getByText('Demo mode: no warehouse was created and no data was saved.').textContent)
-      .toBe('Demo mode: no warehouse was created and no data was saved.');
+    expect(screen.getByText('The warehouse draft is ready for configuration.').textContent)
+      .toBe('The warehouse draft is ready for configuration.');
+    expect(screen.getByText('Demo mode: this change exists only in local memory and will reset on reload.').textContent)
+      .toBe('Demo mode: this change exists only in local memory and will reset on reload.');
+    expect(screen.getByRole('link', { name: 'Configure warehouse' }).getAttribute('href'))
+      .toBe('/warehouses/new-valid-warehouse/configuration');
     expect(screen.getByText('New Valid Warehouse').textContent).toBe('New Valid Warehouse');
     expect(screen.getByText('new-valid-warehouse').textContent).toBe('new-valid-warehouse');
     expect(screen.getByText('Not configured').textContent).toBe('Not configured');

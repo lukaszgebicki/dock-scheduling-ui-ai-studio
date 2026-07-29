@@ -27,6 +27,8 @@ const actions: readonly DemoAction[] = [
   'invite-user',
   'add-warehouse',
   'add-supplier-organization',
+  'configure-warehouse',
+  'configure-supplier-organization',
 ];
 
 describe('demo domain contract', () => {
@@ -117,7 +119,7 @@ describe('demo domain contract', () => {
   it('enforces the exact action visibility matrix', () => {
     const expected: Record<(typeof demoActors)[number]['id'], readonly DemoAction[]> = {
       'system-administrator': actions,
-      'warehouse-administrator': [],
+      'warehouse-administrator': ['configure-warehouse'],
       'warehouse-operator': [],
       'security-officer': [],
       'supplier-administrator': ['invite-user'],

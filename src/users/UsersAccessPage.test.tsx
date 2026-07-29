@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { UsersAccessPage } from './UsersAccessPage';
 import { demoUsers } from './demoUsers';
@@ -13,6 +13,21 @@ function SwitchToSupplierAdministrator() {
   return (
     <button type="button" onClick={() => setActiveActorId('supplier-administrator')}>
       Switch to Supplier Administrator
+    </button>
+  );
+}
+
+function MoveNorthstarSupplier() {
+  const { configuration, publishSupplier } = useDemoDomain();
+  const supplier = configuration.suppliers.find((candidate) =>
+    candidate.organizationId === 'northstar-packaging');
+  if (!supplier) throw new Error('Expected Northstar configuration.');
+  return (
+    <button
+      type="button"
+      onClick={() => publishSupplier({ ...supplier, warehouseIds: ['zielona-gora-plant'] })}
+    >
+      Move Northstar
     </button>
   );
 }
@@ -190,5 +205,22 @@ describe('UsersAccessPage', () => {
     expect(screen.queryByRole('option', { name: 'Baltic Freight' })).toBeNull();
     expect(screen.queryByText('Frank Baltic')).toBeNull();
     expect(screen.getAllByText('Eve Northstar')).toHaveLength(2);
+  });
+
+  it('16. renders supplier-user warehouse access from current configuration', () => {
+    render(
+      <MemoryRouter>
+        <DemoDomainProvider>
+          <MoveNorthstarSupplier />
+          <UsersAccessPage />
+        </DemoDomainProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move Northstar' }));
+    const row = screen.getAllByText('Eve Northstar')[0].closest('tr');
+    if (!row) throw new Error('Expected Eve Northstar table row.');
+    expect(within(row).getByText('Zielona Góra Plant')).not.toBeNull();
+    expect(within(row).queryByText('Nowy Kisielin Distribution Center')).toBeNull();
   });
 });
