@@ -1,15 +1,16 @@
 # Verified current state
 
-Verified on 2026-07-30 at
-`e4168c3b4a6644ca483d0f3d6576e6d1ef73b534`.
+Verified on 2026-07-31 at
+`5ae722ddb519cf62f157b7c710aed5994176dd10`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534`, after human merge of
-  the UI MVP admin-configuration pull request #42.
+  `5ae722ddb519cf62f157b7c710aed5994176dd10`, after human merge of
+  the weekly-planning activation governance-bootstrap pull request #47
+  for issue #46.
 
 ## Merged milestones
 
@@ -40,6 +41,7 @@ Verified on 2026-07-30 at
 | UI-MVP-FOUNDATION-1 — role and demo-domain foundation | PR #37, human-merged |
 | UI-MVP-FOUNDATION-1-STATE — post-foundation state update | PR #38, human-merged |
 | UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration | PR #42, human-merged at `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534` |
+| Weekly-planning activation governance bootstrap | PR #47 / issue #46, human-merged at `5ae722ddb519cf62f157b7c710aed5994176dd10` |
 
 ## Routes
 
@@ -147,6 +149,29 @@ open PR and preserved the human merge gate. The fixed profiles remain
 `build_high`, and `review_high`; E0–E4 separately control execution
 autonomy, and no profile permits merge.
 
+## Approved weekly-planning decision
+
+The following complete `BDR-TRN-001` decision was approved by Łukasz
+Gębicki on 2026-07-31:
+
+- Supplier provides both `tractorRegistration` and
+  `trailerOrContainerRegistration` when reserving an appointment.
+- Both values are part of the Supplier reservation contract and are
+  required to complete the reservation.
+- An authorized Administrator may create, correct or update either value
+  at any time.
+- Administrator changes must be explicit and auditable.
+- Friday SKU import must not silently overwrite transport values entered
+  during reservation; any difference requires explicit Administrator
+  reconciliation.
+- This decision supersedes any earlier weekly-planning assumption that
+  exact transport-field mandatory status is deferred until Friday SKU
+  enrichment.
+- The `warehouse + loadCarrierType + goodsCategory` matrix may still be
+  used for downstream validation and Administrator-added or imported
+  deliveries, but it does not remove the two transport fields from the
+  Supplier reservation step.
+
 ## Next controlled task
 
 `UI-MVP-ADMIN-CONFIG-1` is `DONE`; PR #42 was human-merged at exact
@@ -155,11 +180,19 @@ local-only warehouse, Supplier and rule-configuration model, scoped
 configuration routes, deterministic consumer contracts, exception
 reasons and local history are present on `main`.
 
-`UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE` is only the next candidate for
-separate controlled activation. It is not `READY`, has no active
-contract, and does not make the external weekly-planning package
-canonical. A separate human-controlled activation and exact-SHA contract
-are required before any documentation onboarding. No product,
-governance, security, infrastructure or source implementation task is
-currently approved as `READY` or active. `UI-MVP-WEEKLY-PLANNING-SPEC-1`
-and `UI-MVP-BOOKING-1` remain inactive and unauthorized.
+After human merge of this activation,
+`UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE` is complete and
+`UI-MVP-WEEKLY-PLANNING-SPEC-1` is the sole next `READY` task documented
+in [ROADMAP.md](ROADMAP.md). Its documentation-only purpose is to create
+canonical Business Decision Pack v0.3 and reconcile traceability,
+implementation sequencing, decision authority and governance with the
+approved weekly-planning model and `BDR-TRN-001`.
+
+The external weekly-planning v0.2 package remains approved input, not
+canonical repository authority. The onboarding task requires a separate
+Class C issue contract bound to the exact `main` SHA produced by human
+merge of this activation. BDP v0.2 remains historical evidence, section
+24 remains excluded, and all work remains frontend-only and local or
+in-memory with no backend, persistence, ERP/WMS/SAP integration,
+deployment or production-repository access. `UI-MVP-BOOKING-1` and every
+source implementation task remain inactive and unauthorized.
