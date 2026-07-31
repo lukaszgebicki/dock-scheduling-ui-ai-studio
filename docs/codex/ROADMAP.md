@@ -31,14 +31,20 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ## Active and queued
 
-`UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE` is only the next candidate for
-separate controlled activation. It is not `READY`, and no
-weekly-planning package decision is canonical through this state update.
-A separate human-controlled activation and machine-readable contract
-bound to the then-current exact `main` SHA are required before
-documentation onboarding.
+### UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding
+
+- State: `READY`.
+- Risk class: Class C.
+- Objective: record approved Business Owner decision `BDR-TRN-001` and activate `UI-MVP-WEEKLY-PLANNING-SPEC-1` as the sole next documentation-onboarding task without creating BDP v0.3 or activating source implementation in this activation.
+- Allowed later execution paths: `docs/codex/CURRENT_STATE.md` and `docs/codex/ROADMAP.md` only.
+- Class C authorization: ChatGPT Project Lead explicitly authorizes issue #45 to update the two named governance paths for this activation only. The issue contract must use non-empty compatible `classCAuthorizations` and carry the `class-c-approved` label.
+- Contract gate: issue #45 must be rebound to the exact `main` SHA produced by the human merge of the manual governance-bootstrap PR before runner execution resumes.
+- Product boundary: the external weekly-planning v0.2 package remains approved input but is not canonical repository authority through this activation. `UI-MVP-WEEKLY-PLANNING-SPEC-1` performs the later controlled onboarding.
+- Source boundary: `UI-MVP-BOOKING-1` and every source implementation task remain inactive and unauthorized.
+- Exclusions: preserve BDP v0.2 as historical evidence, section 24 exclusions, frontend-only local/in-memory scope, no backend, persistence, ERP/WMS/SAP integration, deployment or production-repository access.
+- Delivery boundary: one Class C documentation-only PR, complete validation and independent review, mandatory stop before merge. Human merge remains required.
 
 `UI-MVP-WEEKLY-PLANNING-SPEC-1`, `UI-MVP-BOOKING-1` and every other
 source implementation task remain inactive and unauthorized. No product,
-governance, security, infrastructure or source implementation task is
-currently approved as `READY` or active.
+security, infrastructure or source implementation task is currently
+approved as `READY` or active.
