@@ -28,23 +28,47 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-SPEC-1 — onboard approved UI MVP specification | DONE; PR #31 human-merged |
 | UI-MVP-FOUNDATION-1 — role and demo-domain foundation | DONE; PR #37 human-merged |
 | UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration | DONE; PR #42 human-merged at `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534` |
+| Weekly-planning activation governance bootstrap | DONE; PR #47 / issue #46 human-merged at `5ae722ddb519cf62f157b7c710aed5994176dd10` |
+| UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding | DONE after human merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding
+This transition is effective only after human merge of the activation PR.
+
+### UI-MVP-WEEKLY-PLANNING-SPEC-1 — onboard weekly-planning specification
 
 - State: `READY`.
 - Risk class: Class C.
-- Objective: record approved Business Owner decision `BDR-TRN-001` and activate `UI-MVP-WEEKLY-PLANNING-SPEC-1` as the sole next documentation-onboarding task without creating BDP v0.3 or activating source implementation in this activation.
-- Allowed later execution paths: `docs/codex/CURRENT_STATE.md` and `docs/codex/ROADMAP.md` only.
-- Class C authorization: ChatGPT Project Lead explicitly authorizes issue #45 to update the two named governance paths for this activation only. The issue contract must use non-empty compatible `classCAuthorizations` and carry the `class-c-approved` label.
-- Contract gate: issue #45 must be rebound to the exact `main` SHA produced by the human merge of the manual governance-bootstrap PR before runner execution resumes.
-- Product boundary: the external weekly-planning v0.2 package remains approved input but is not canonical repository authority through this activation. `UI-MVP-WEEKLY-PLANNING-SPEC-1` performs the later controlled onboarding.
-- Source boundary: `UI-MVP-BOOKING-1` and every source implementation task remain inactive and unauthorized.
-- Exclusions: preserve BDP v0.2 as historical evidence, section 24 exclusions, frontend-only local/in-memory scope, no backend, persistence, ERP/WMS/SAP integration, deployment or production-repository access.
-- Delivery boundary: one Class C documentation-only PR, complete validation and independent review, mandatory stop before merge. Human merge remains required.
+- Objective: create canonical Business Decision Pack v0.3 and reconcile
+  traceability, implementation sequencing, decision authority and
+  governance for the approved weekly-planning model without changing
+  application behavior.
+- Approved authority: the external weekly-planning v0.2 package is
+  approved input, not canonical repository authority. `BDR-TRN-001` in
+  [CURRENT_STATE.md](CURRENT_STATE.md) requires both transport fields in
+  the Supplier reservation contract, permits explicit and auditable
+  Administrator changes at any time, and prohibits silent import
+  overwrite.
+- Onboarding scope: reconcile only the approved weekly-planning inputs and
+  `BDR-TRN-001` identified by issue #45 across canonical BDP v0.3,
+  traceability, implementation sequencing, decision authority and
+  governance. Those inputs remain non-canonical until the onboarding task
+  is separately contracted, completed, reviewed and human-merged; this
+  activation does not make them repository requirements or authorize
+  implementation.
+- Contract gate: after this activation is human-merged, create a separate
+  machine-readable Class C issue contract bound to the resulting exact
+  `main` SHA. That contract must enumerate the exact documentation paths
+  authorized for onboarding.
+- Historical and source boundary: BDP v0.2 remains historical evidence,
+  section 24 remains excluded, and `UI-MVP-BOOKING-1` plus every source
+  implementation task remain inactive and unauthorized.
+- Technical boundary: frontend-only local or in-memory scope; no backend,
+  persistence, ERP/WMS/SAP integration, deployment or production-
+  repository access.
+- Delivery boundary: documentation-only onboarding with complete
+  validation, separate independent review and mandatory stop before human
+  merge.
 
-`UI-MVP-WEEKLY-PLANNING-SPEC-1`, `UI-MVP-BOOKING-1` and every other
-source implementation task remain inactive and unauthorized. No product,
-security, infrastructure or source implementation task is currently
-approved as `READY` or active.
+No other product, governance, security, infrastructure or source
+implementation task is currently approved as `READY` or active.
