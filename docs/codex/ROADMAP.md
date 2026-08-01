@@ -30,32 +30,40 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration | DONE; PR #42 human-merged at `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534` |
 | Weekly-planning activation governance bootstrap | DONE; PR #47 / issue #46 human-merged at `5ae722ddb519cf62f157b7c710aed5994176dd10` |
 | UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding | DONE; PR #48 merged at `c994089bf87b820425949149c083e795288ad521` |
-| UI-MVP-WEEKLY-PLANNING-SPEC-1 — onboard weekly-planning specification | DONE after human merge of this documentation PR |
+| UI-MVP-WEEKLY-PLANNING-SPEC-1 — onboard weekly-planning specification | DONE; PR #50 human-merged at `70d49fa76923cc06b9435c8ba5730d5e07304ade` |
+| UI-MVP-FLOW-ROUTING-1-ACTIVATE — activate capability routing foundation | DONE after human merge of this activation PR |
 
 ## Active and queued
 
-This transition is effective only after human merge of the issue #49
-documentation PR. Until then, the pre-merge roadmap on `main` remains
-authoritative and this branch does not mark its own work complete.
-
 ### UI-MVP-FLOW-ROUTING-1 — capability and optional-role routing
 
-- State: candidate only; not `READY`.
-- Risk class: expected Class B; a later activation contract must confirm it.
+- State: `READY`.
+- Risk class: Class B.
 - Objective: define capability-based participation for the six existing
   global role types with explicit `RUN`, `SKIP`, `DELEGATE` and `BLOCK`
   outcomes before any weekly-planning consumer is implemented.
-- Boundary: missing Supplier uses `SKIP` without a placeholder; missing
-  mandatory participation uses authorized delegation or block. Routing may
-  not invent roles, data access, lifecycle transitions, persistence or
-  integration behavior.
-- Activation gate: a separate human-approved activation and exact-SHA task
-  contract must move this candidate to `READY` after issue #49 is merged.
-- Dependency boundary: transport rules, revised booking, extended calendar,
-  Admin import, weekly planning, lifecycle/gate consumers, list/details,
-  reporting, notification, dashboard and standing tasks remain inactive.
+- Product authority: Business Decision Pack v0.3 requirement `BDP-FLOW-001`,
+  accepted decision `DCF-028`, and scenarios `AC-FLOW-001` through
+  `AC-FLOW-007`.
+- Boundary: missing Supplier participation uses `SKIP` without a placeholder;
+  missing mandatory participation uses only configured authorized delegation
+  or `BLOCK`. Routing must not invent roles, data access, lifecycle transitions,
+  automatic approval, persistence or integration behavior.
+- Implementation boundary: establish the reusable typed capability-routing
+  foundation only. Do not implement transport rules, revised booking,
+  calendar, import, weekly planning, lifecycle or gate consumers, list/details,
+  reporting, notifications, dashboard or standing appointments.
+- Contract gate: execution requires a separate machine-readable Class B issue
+  contract bound to the exact `main` SHA produced by human merge of this
+  activation PR, plus an external worktree, complete validation, independent
+  review and a mandatory stop before human merge.
+- Technical boundary: frontend-only local or in-memory scope; no backend,
+  persistence, ERP/WMS/SAP integration, deployment or production-repository
+  access.
 
-No other product, governance, security, infrastructure or source
-implementation task is currently approved as `READY` or active. After the
-current documentation task is human-merged, no implementation task is
-`READY` until a separate activation is approved.
+`UI-MVP-TRANSPORT-RULES-1`, `UI-MVP-BOOKING-1`,
+`UI-MVP-CALENDAR-CAPACITY-1`, `UI-MVP-ADMIN-IMPORT-1`,
+`UI-MVP-WEEKLY-PLANNING-1`, lifecycle and gate consumers,
+`UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining source tasks
+remain inactive and unauthorized. No other product, governance, security or
+infrastructure task is `READY` or active.
