@@ -1,16 +1,15 @@
 # Verified current state
 
 Verified on 2026-07-31 at
-`5ae722ddb519cf62f157b7c710aed5994176dd10`.
+`c994089bf87b820425949149c083e795288ad521`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `5ae722ddb519cf62f157b7c710aed5994176dd10`, after human merge of
-  the weekly-planning activation governance-bootstrap pull request #47
-  for issue #46.
+  `c994089bf87b820425949149c083e795288ad521`, the verified merge commit
+  for weekly-planning specification activation pull request #48.
 
 ## Merged milestones
 
@@ -42,6 +41,7 @@ Verified on 2026-07-31 at
 | UI-MVP-FOUNDATION-1-STATE — post-foundation state update | PR #38, human-merged |
 | UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration | PR #42, human-merged at `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534` |
 | Weekly-planning activation governance bootstrap | PR #47 / issue #46, human-merged at `5ae722ddb519cf62f157b7c710aed5994176dd10` |
+| UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding | PR #48, merge commit `c994089bf87b820425949149c083e795288ad521` |
 
 ## Routes
 
@@ -180,19 +180,25 @@ local-only warehouse, Supplier and rule-configuration model, scoped
 configuration routes, deterministic consumer contracts, exception
 reasons and local history are present on `main`.
 
-After human merge of this activation,
-`UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE` is complete and
-`UI-MVP-WEEKLY-PLANNING-SPEC-1` is the sole next `READY` task documented
-in [ROADMAP.md](ROADMAP.md). Its documentation-only purpose is to create
-canonical Business Decision Pack v0.3 and reconcile traceability,
-implementation sequencing, decision authority and governance with the
-approved weekly-planning model and `BDR-TRN-001`.
+The post-merge state recorded below is effective only after human merge of
+the issue #49 documentation pull request. Until then, the verified baseline
+and pre-merge state on `main` remain authoritative.
 
-The external weekly-planning v0.2 package remains approved input, not
-canonical repository authority. The onboarding task requires a separate
-Class C issue contract bound to the exact `main` SHA produced by human
-merge of this activation. BDP v0.2 remains historical evidence, section
-24 remains excluded, and all work remains frontend-only and local or
-in-memory with no backend, persistence, ERP/WMS/SAP integration,
-deployment or production-repository access. `UI-MVP-BOOKING-1` and every
-source implementation task remain inactive and unauthorized.
+After that human merge, `UI-MVP-WEEKLY-PLANNING-SPEC-1` is `DONE` and
+Business Decision Pack v0.3 is canonical on `main`. The completed Class C
+task was bound to exact baseline
+`c994089bf87b820425949149c083e795288ad521` and changed no application
+behavior. BDP v0.2 remains unchanged historical evidence, while section 24
+remains excluded.
+
+After that human merge, `UI-MVP-FLOW-ROUTING-1` is the sole next candidate,
+but it is not `READY` or authorized. It requires separate human activation
+and a complete Class B contract bound to the resulting exact `main` SHA.
+It must establish capability-based `RUN`, `SKIP`, `DELEGATE` and `BLOCK`
+behavior before transport, booking, import or weekly-planning consumers.
+
+`UI-MVP-BOOKING-1`, `UI-MVP-TRANSPORT-RULES-1`,
+`UI-MVP-ADMIN-IMPORT-1`, `UI-MVP-WEEKLY-PLANNING-1` and every other source
+implementation task remain inactive and unauthorized. All scope remains
+frontend-only and local or in-memory with no backend, persistence,
+ERP/WMS/SAP integration, deployment or production-repository access.

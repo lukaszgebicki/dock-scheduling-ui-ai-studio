@@ -2,12 +2,14 @@
 
 ## Authority and execution boundary
 
-This plan sequences the approved Business Decision Pack UI MVP v0.2 into
+This plan sequences the approved Business Decision Pack UI MVP v0.3 into
 controlled repository tasks. It does not authorize implementation by itself.
 
 - Business Owner: Łukasz Gębicki.
-- Approval date: 2026-07-28.
-- Product source: `../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md`.
+- Approval date: 2026-07-31.
+- Product source: `../product/UI_MVP_BUSINESS_DECISION_PACK_v0.3.md`.
+- Historical source: `../product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md` remains
+  unchanged evidence and is not the current authority.
 - Traceability source: `../product/UI_MVP_TRACEABILITY.md`.
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Repository type: frontend-only UI sandbox with demonstrational local state.
@@ -30,8 +32,103 @@ controlled repository tasks. It does not authorize implementation by itself.
 7. Stop on any conflict between the approved BDP, current repository behavior
    and an active contract.
 8. Preserve all section 24 exclusions.
+9. Treat weekly-planning sections 29–30 and `BDR-TRN-001` as controlling any
+   conflicting earlier booking or transport assumption.
 
 ## Controlled sequence
+
+The following dependency order is canonical after Business Decision Pack v0.3.
+Only the first item may become the next implementation candidate, and even that
+requires a separate activation, `READY` state and exact-SHA task contract.
+Completing or planning one item does not activate the next.
+
+### 1. UI-MVP-FLOW-ROUTING-1 — capability and optional-role routing
+
+Define the approved capabilities and deterministic `RUN`, `SKIP`, `DELEGATE`
+and `BLOCK` outcomes for the six existing global role types. A missing Supplier
+must use `SKIP`, never a placeholder; a missing mandatory actor must produce an
+authorized delegation or block. This foundation must not add roles, lifecycle
+transitions, data access or persistence.
+
+**Coverage:** BDP-FLOW-001 and AC-FLOW-001–007.
+
+### 2. UI-MVP-TRANSPORT-RULES-1 — transport contract and readiness
+
+Model both Supplier reservation fields as unconditionally required and keep the
+`warehouse + loadCarrierType + goodsCategory` matrix limited to downstream
+readiness and Administrator-added or imported deliveries. Administrator changes
+and import reconciliation must be explicit and auditable.
+
+**Coverage:** BDP-TRN-001 and AC-TRN-001–003.
+
+### 3. Revised UI-MVP-BOOKING-1 — restricted Supplier reservation
+
+Implement the W-to-W+1 flow for one Supplier, warehouse, week, PO and slot,
+fixed `deliveryPartKey` `"1"`, no SKU entry and no split UI. The two transport
+fields are required before completion. The five-step BDP-BOOK-001 flow remains
+outside weekly planning unless separately contracted.
+
+**Coverage:** BDP-BOOK-002, relevant BDP-WPL-001, AC-SUP-006–008 and the
+booking-facing transport rules.
+
+### 4. Extended UI-MVP-CALENDAR-CAPACITY-1 — PO planning calendar
+
+Extend approved capacity behavior with role-safe PO cards, planning state and
+the exact keyboard-accessible action `Pokaż zawartość dostawy`. No import may
+silently move a slot.
+
+**Coverage:** BDP-CAL-001, BDP-CAL-002, AC-CAL-002–004 and applicable existing
+capacity scenarios.
+
+### 5. UI-MVP-ADMIN-IMPORT-1 — Friday delivery-details import
+
+Provide local demonstrational import only for System Administrator and assigned
+Warehouse Administrator scope. Classify accepted, rejected, unmatched and
+conflicting rows; do not imply persistence or ERP/WMS/SAP integration.
+
+**Coverage:** BDP-IMP-001, AC-ADM-001–004 and AC-ADM-006–009.
+
+### 6. UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue
+
+Join exact matching, PO headers with zero-to-many SKU lines, explicit booking
+origins, planning statuses, unmatched scheduling and Administrator conflict
+resolution. Planning status must remain independent of appointment lifecycle.
+
+**Coverage:** BDP-WPL-001, BDP-DATA-001, BDP-MATCH-001, AC-ADM-002,
+AC-ADM-004–007 and the integrated Supplier/calendar scenarios.
+
+### 7. Lifecycle and gate routing consumers
+
+Revise `UI-MVP-LIFECYCLE-1` and `UI-MVP-GATE-OPS-1` only through separately
+contracted consumer tasks. They consume capabilities and planning readiness but
+may not infer new transitions or let readiness authorize execution.
+
+### 8. Extended UI-MVP-LIST-DETAILS-1 — planning-aware details
+
+Expose approved PO/SKU, origin, planning state, transport reconciliation and
+audit information through role-scoped list/detail patterns. Slot-affecting and
+transport changes remain controlled actions.
+
+### 9. UI-MVP-REPORTING-1 — PO/SKU reports and local exports
+
+Deliver the weekly all-delivery report, monthly Slipsheet and role-scoped local
+CSV/XLSX exports with planned dates and PO/SKU data.
+
+**Coverage:** BDP-REP-001 and AC-REP-001–004.
+
+### 10. Remaining notification, dashboard and standing work
+
+Only after the earlier dependencies are stable may separately contracted tasks
+complete notification/exception states, dashboards/mobile and standing
+appointments. Section 24 exclusions remain unchanged.
+
+## Historical pre-v0.3 task descriptions
+
+The entries below preserve the earlier task detail as planning history. Where
+they conflict with the numbered sequence above, Business Decision Pack v0.3 and
+the numbered sequence control. Already merged tasks remain historical facts;
+unmerged task descriptions are not active and do not grant implementation
+permission.
 
 ### UI-MVP-FOUNDATION-1 — role and demo-domain foundation
 
@@ -357,14 +454,16 @@ expired unconfirmed occurrences release capacity.
 After all required implementation tasks are human-merged, create a dedicated
 read-only/product-review task that evaluates:
 
-- all 20 BDP identifiers;
-- all 14 AC scenarios;
+- all 29 BDP identifiers;
+- all 43 AC scenarios;
 - section 22 exceptional states;
 - section 23 mobile coverage;
 - section 24 exclusions;
 - section 25 screen inventory;
 - section 27 Definition of Done;
 - section 28 downstream configuration consequences.
+- sections 29–30 weekly-planning decisions and scenarios;
+- `BDR-TRN-001` conflict resolution and the controlled dependency sequence.
 
 This review may identify gaps but may not silently add implementation scope.
 Every repair requires a separate contracted task.
