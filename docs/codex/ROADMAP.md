@@ -29,46 +29,33 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-FOUNDATION-1 — role and demo-domain foundation | DONE; PR #37 human-merged |
 | UI-MVP-ADMIN-CONFIG-1 — warehouse and rule configuration | DONE; PR #42 human-merged at `e4168c3b4a6644ca483d0f3d6576e6d1ef73b534` |
 | Weekly-planning activation governance bootstrap | DONE; PR #47 / issue #46 human-merged at `5ae722ddb519cf62f157b7c710aed5994176dd10` |
-| UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding | DONE after human merge of this activation PR |
+| UI-MVP-WEEKLY-PLANNING-SPEC-1-ACTIVATE — activate specification onboarding | DONE; PR #48 merged at `c994089bf87b820425949149c083e795288ad521` |
+| UI-MVP-WEEKLY-PLANNING-SPEC-1 — onboard weekly-planning specification | DONE after human merge of this documentation PR |
 
 ## Active and queued
 
-This transition is effective only after human merge of the activation PR.
+This transition is effective only after human merge of the issue #49
+documentation PR. Until then, the pre-merge roadmap on `main` remains
+authoritative and this branch does not mark its own work complete.
 
-### UI-MVP-WEEKLY-PLANNING-SPEC-1 — onboard weekly-planning specification
+### UI-MVP-FLOW-ROUTING-1 — capability and optional-role routing
 
-- State: `READY`.
-- Risk class: Class C.
-- Objective: create canonical Business Decision Pack v0.3 and reconcile
-  traceability, implementation sequencing, decision authority and
-  governance for the approved weekly-planning model without changing
-  application behavior.
-- Approved authority: the external weekly-planning v0.2 package is
-  approved input, not canonical repository authority. `BDR-TRN-001` in
-  [CURRENT_STATE.md](CURRENT_STATE.md) requires both transport fields in
-  the Supplier reservation contract, permits explicit and auditable
-  Administrator changes at any time, and prohibits silent import
-  overwrite.
-- Onboarding scope: reconcile only the approved weekly-planning inputs and
-  `BDR-TRN-001` identified by issue #45 across canonical BDP v0.3,
-  traceability, implementation sequencing, decision authority and
-  governance. Those inputs remain non-canonical until the onboarding task
-  is separately contracted, completed, reviewed and human-merged; this
-  activation does not make them repository requirements or authorize
-  implementation.
-- Contract gate: after this activation is human-merged, create a separate
-  machine-readable Class C issue contract bound to the resulting exact
-  `main` SHA. That contract must enumerate the exact documentation paths
-  authorized for onboarding.
-- Historical and source boundary: BDP v0.2 remains historical evidence,
-  section 24 remains excluded, and `UI-MVP-BOOKING-1` plus every source
-  implementation task remain inactive and unauthorized.
-- Technical boundary: frontend-only local or in-memory scope; no backend,
-  persistence, ERP/WMS/SAP integration, deployment or production-
-  repository access.
-- Delivery boundary: documentation-only onboarding with complete
-  validation, separate independent review and mandatory stop before human
-  merge.
+- State: candidate only; not `READY`.
+- Risk class: expected Class B; a later activation contract must confirm it.
+- Objective: define capability-based participation for the six existing
+  global role types with explicit `RUN`, `SKIP`, `DELEGATE` and `BLOCK`
+  outcomes before any weekly-planning consumer is implemented.
+- Boundary: missing Supplier uses `SKIP` without a placeholder; missing
+  mandatory participation uses authorized delegation or block. Routing may
+  not invent roles, data access, lifecycle transitions, persistence or
+  integration behavior.
+- Activation gate: a separate human-approved activation and exact-SHA task
+  contract must move this candidate to `READY` after issue #49 is merged.
+- Dependency boundary: transport rules, revised booking, extended calendar,
+  Admin import, weekly planning, lifecycle/gate consumers, list/details,
+  reporting, notification, dashboard and standing tasks remain inactive.
 
 No other product, governance, security, infrastructure or source
-implementation task is currently approved as `READY` or active.
+implementation task is currently approved as `READY` or active. After the
+current documentation task is human-merged, no implementation task is
+`READY` until a separate activation is approved.

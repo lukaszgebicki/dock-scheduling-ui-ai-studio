@@ -49,16 +49,22 @@ policy instead of copying it into task notes or pull requests.
 
 ## Product specification sources
 
-- [UI MVP Business Decision Pack v0.2](docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md)
+- [UI MVP Business Decision Pack v0.3](docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.3.md)
   is the approved canonical source for UI MVP business behavior.
+- [UI MVP Business Decision Pack v0.2](docs/product/UI_MVP_BUSINESS_DECISION_PACK_v0.2.md)
+  remains unchanged historical evidence and is not the current authority.
 - [UI MVP traceability](docs/product/UI_MVP_TRACEABILITY.md) maps approved BDP
   requirements and AC scenarios to controlled implementation tasks.
 - [UI MVP implementation plan](docs/codex/UI_MVP_IMPLEMENTATION_PLAN.md) defines
   the approved delivery sequence; it does not authorize a task by itself.
 
-The Business Decision Pack was approved by Łukasz Gębicki on 2026-07-28.
-Every source occurrence of `REKOMENDACJA DO ZATWIERDZENIA` is interpreted as
-`APPROVED`. Section 24 remains excluded from UI MVP.
+Business Decision Pack v0.3, including the approved weekly-planning decisions
+and `BDR-TRN-001`, was approved by Łukasz Gębicki on 2026-07-31. Every source
+occurrence of `REKOMENDACJA DO ZATWIERDZENIA` inherited from v0.2 is interpreted
+as `APPROVED`. Section 24 remains excluded from UI MVP. For weekly-planning
+conflicts, sections 29–30 control: both Supplier transport fields are required
+at reservation, while the transport matrix is limited to downstream readiness
+and Administrator-added or imported deliveries.
 
 Codex must implement only the BDP identifiers, numbered sections, and AC
 identifiers explicitly named in the active exact-SHA task contract. Planning
@@ -68,6 +74,12 @@ When the Business Decision Pack, current repository behavior, and active task
 contract conflict or leave material business behavior ambiguous, stop and return
 the conflict to the Project Lead. Do not invent a transition, permission,
 persistence effect, integration, role, entity, workflow, or excluded feature.
+
+The implementation order in
+[UI MVP implementation plan](docs/codex/UI_MVP_IMPLEMENTATION_PLAN.md) is a
+dependency plan only. `UI-MVP-FLOW-ROUTING-1` is the first possible candidate;
+it and every later task still require separate activation, exact-SHA contract,
+external worktree, validation, independent review, pull request and human merge.
 
 ## Required commands
 
