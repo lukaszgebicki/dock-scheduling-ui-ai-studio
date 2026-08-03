@@ -86,7 +86,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/readable day-and-time cards/)).toBeDefined();
     expect(screen.getByText('Next Supplier appointment')).toBeDefined();
     const section = resultSection();
-    expect(within(section).getAllByText(/Vistula Materials/).length).toBe(0);
+    expect(within(section).queryAllByText(/Vistula Materials/)).toHaveLength(0);
     expect(within(section).getByText('APT-WPL-003')).toBeDefined();
     expect(within(section).getByText('APT-NW-2026-001')).toBeDefined();
     expect(within(section).queryByText('APT-WPL-002')).toBeNull();
