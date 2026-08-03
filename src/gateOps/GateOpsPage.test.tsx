@@ -11,14 +11,29 @@ import {
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { initialDemoConfiguration } from '../demoDomain/configuration';
 import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
-import type { DemoActorId } from '../demoDomain/demoDomain';
+import {
+  demoUsers,
+  type DemoActorId,
+  type DemoUser,
+} from '../demoDomain/demoDomain';
 import { GateOpsGuard } from './GateOpsGuard';
 import { GateOpsPage } from './GateOpsPage';
 
-function renderRoute(actorId: DemoActorId) {
+const activeSecurityWorkflowUsers: readonly DemoUser[] = demoUsers.map((user) =>
+  user.id === 'u-4'
+    ? { ...user, status: 'Active', lastActive: 'Active Security test fixture' }
+    : user);
+
+function renderRoute(
+  actorId: DemoActorId,
+  workflowUsers: readonly DemoUser[] = demoUsers,
+) {
   return render(
     <MemoryRouter initialEntries={['/gate-operations']}>
-      <DemoDomainProvider initialActorId={actorId}>
+      <DemoDomainProvider
+        initialActorId={actorId}
+        initialWorkflowUsers={workflowUsers}
+      >
         <Routes>
           <Route path="/gate-operations" element={<GateOpsGuard><GateOpsPage /></GateOpsGuard>} />
           <Route path="/appointments" element={<h1>Appointments fallback</h1>} />
@@ -27,6 +42,10 @@ function renderRoute(actorId: DemoActorId) {
       </DemoDomainProvider>
     </MemoryRouter>,
   );
+}
+
+function renderActiveSecurityRoute() {
+  return renderRoute('security-officer', activeSecurityWorkflowUsers);
 }
 
 function articleFor(po: string): HTMLElement {
@@ -44,7 +63,6 @@ afterEach(() => {
 
 describe('GateOpsPage', () => {
   it.each<DemoActorId>([
-    'security-officer',
     'warehouse-operator',
     'warehouse-administrator',
   ])('allows a routed direct route for %s', (actorId) => {
@@ -52,18 +70,24 @@ describe('GateOpsPage', () => {
     expect(screen.getByRole('heading', { name: 'Gate operations' })).toBeDefined();
   });
 
+  it('allows an active configured Security Officer through the same canonical routing', () => {
+    renderActiveSecurityRoute();
+    expect(screen.getByRole('heading', { name: 'Gate operations' })).toBeDefined();
+  });
+
   it.each<DemoActorId>([
+    'security-officer',
     'system-administrator',
     'supplier-administrator',
     'supplier-user',
-  ])('fails closed on the direct route for %s', (actorId) => {
+  ])('fails closed on the direct route for unavailable or unauthorized actor %s', (actorId) => {
     renderRoute(actorId);
     expect(screen.queryByRole('heading', { name: 'Gate operations' })).toBeNull();
     expect(screen.getByRole('heading', { name: /fallback/i })).toBeDefined();
   });
 
   it('shows only the Security workweek and gate-safe appointment fields', () => {
-    renderRoute('security-officer');
+    renderActiveSecurityRoute();
     expect(screen.getByText('Search result count: 2')).toBeDefined();
     expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
     expect(screen.getByRole('heading', { name: 'PO-DEMO-3001' })).toBeDefined();
@@ -74,7 +98,7 @@ describe('GateOpsPage', () => {
   });
 
   it('uses exact search and never fuzzy-matches', () => {
-    renderRoute('security-officer');
+    renderActiveSecurityRoute();
     fireEvent.change(screen.getByLabelText('Exact gate search'), {
       target: { value: 'northstar pack' },
     });
@@ -88,8 +112,8 @@ describe('GateOpsPage', () => {
     expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
   });
 
-  it('lets Security check in with RUN routing and keeps lifecycle and slot unchanged', () => {
-    renderRoute('security-officer');
+  it('lets active Security check in with RUN routing and keeps lifecycle and slot unchanged', () => {
+    renderActiveSecurityRoute();
     const article = articleFor('PO-DEMO-1001');
     expect(within(article).getByText((_content, element) =>
       element?.tagName === 'P'
@@ -104,12 +128,21 @@ describe('GateOpsPage', () => {
     expect(screen.getByText(/CHECK_IN · planning-northstar-1001 · EXPECTED → CHECKED_IN · RUN/)).toBeDefined();
   });
 
-  it('lets the routed Warehouse Administrator assign an explicit dock and complete the exact sequence', () => {
-    renderRoute('warehouse-administrator');
-    const article = articleFor('PO-DEMO-1001');
+  it('lets the routed Warehouse Operator complete the exact delegated gate sequence', () => {
+    renderRoute('warehouse-operator');
+    const article = articleFor('PO-DEMO-2001');
+    fireEvent.change(screen.getByLabelText('Arrival timestamp'), {
+      target: { value: '2026-08-11T10:00' },
+    });
+    fireEvent.change(screen.getByLabelText('Gate tractor registration'), {
+      target: { value: 'TR-300' },
+    });
+    fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), {
+      target: { value: 'TRL-400' },
+    });
     fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
 
-    const dockId = initialDemoConfiguration.warehouses[0].docks[0].id;
+    const dockId = initialDemoConfiguration.warehouses[1].docks[0].id;
     fireEvent.change(screen.getByLabelText('Explicit dock'), { target: { value: dockId } });
     fireEvent.click(within(article).getByRole('button', { name: 'Assign selected dock' }));
     expect(within(article).getByText(dockId)).toBeDefined();
@@ -122,7 +155,7 @@ describe('GateOpsPage', () => {
 
     expect(within(article).getByText('Operational: CHECKED_OUT')).toBeDefined();
     expect(within(article).getByText('CONFIRMED')).toBeDefined();
-    expect(screen.getByText(/CHECK_OUT · planning-northstar-1001 · COMPLETED → CHECKED_OUT · DELEGATE/)).toBeDefined();
+    expect(screen.getByText(/CHECK_OUT · planning-baltic-2001 · COMPLETED → CHECKED_OUT · DELEGATE/)).toBeDefined();
   });
 
   it('requires human confirmation before No Show and leaves the record visible', () => {
@@ -137,7 +170,7 @@ describe('GateOpsPage', () => {
   });
 
   it('preserves Supplier registrations when Security corrects gate-observed evidence', () => {
-    renderRoute('security-officer');
+    renderActiveSecurityRoute();
     const article = articleFor('PO-DEMO-1001');
     fireEvent.change(screen.getByLabelText('Gate tractor registration'), { target: { value: 'GATE-TR-9' } });
     fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), { target: { value: 'GATE-TRL-9' } });
@@ -149,7 +182,7 @@ describe('GateOpsPage', () => {
   });
 
   it('creates an unannounced PENDING_DECISION record without slot, dock, capacity or lifecycle', () => {
-    renderRoute('security-officer');
+    renderActiveSecurityRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Create pending-decision visit' }));
     expect(screen.getByText(/PO-UNANNOUNCED-1 · PENDING_DECISION · no slot\/dock\/capacity\/lifecycle/)).toBeDefined();
     expect(screen.getByRole('status').textContent).toContain('no slot, dock, capacity or lifecycle status');
@@ -159,7 +192,7 @@ describe('GateOpsPage', () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
     const storageSpy = vi.spyOn(Storage.prototype, 'setItem');
-    renderRoute('security-officer');
+    renderActiveSecurityRoute();
     const article = articleFor('PO-DEMO-1001');
     fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
 
