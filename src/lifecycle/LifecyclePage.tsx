@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { planningAppointments } from '../calendar/planningCalendar';
+import {
+  planningAppointments,
+  type PlanningAppointment,
+} from '../calendar/planningCalendar';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import {
   approveAppointment,
@@ -10,6 +13,7 @@ import {
   requestAppointmentData,
   rescheduleAppointment,
   restoreCancelledAppointment,
+  submitDraftAppointment,
   type LifecycleActionResult,
   type LifecycleAppointment,
   type LifecycleState,
@@ -46,7 +50,11 @@ function routingRequest(
   };
 }
 
-export function LifecyclePage() {
+export function LifecyclePage({
+  initialAppointments = planningAppointments,
+}: {
+  initialAppointments?: readonly PlanningAppointment[];
+}) {
   const {
     activeActor,
     configuration,
@@ -55,7 +63,7 @@ export function LifecyclePage() {
     canPerformWorkflowAction,
   } = useDemoDomain();
   const [state, setState] = useState<LifecycleState>(() =>
-    createLifecycleState(planningAppointments));
+    createLifecycleState(initialAppointments));
   const [reason, setReason] = useState('Reviewed lifecycle evidence');
   const [plannedDate, setPlannedDate] = useState('2026-08-13');
   const [plannedTime, setPlannedTime] = useState('09:00');
@@ -71,13 +79,20 @@ export function LifecyclePage() {
     setMessage(result.error ?? success);
   };
 
+  const submit = (appointment: LifecycleAppointment) => {
+    applyResult(
+      submitDraftAppointment(state, appointment.id, activeActor, reason, configuration),
+      'Draft submitted locally after slot and scope validation. No approval or gate action was inferred.',
+    );
+  };
+
   const evaluate = (appointment: LifecycleAppointment) => {
     const decision = resolveWorkflow(routingRequest(appointment, 'approve'));
     applyResult(
       evaluateSubmittedAppointment(
         state,
         appointment.id,
-        activeActor.userId,
+        activeActor,
         reason,
         configuration,
         decision,
@@ -128,7 +143,14 @@ export function LifecyclePage() {
 
   const cancel = (appointment: LifecycleAppointment) => {
     applyResult(
-      cancelAppointment(state, appointment.id, activeActor, reason),
+      cancelAppointment(
+        state,
+        appointment.id,
+        activeActor,
+        reason,
+        referenceDateTime,
+        configuration,
+      ),
       'Appointment cancelled locally. The visible record remains and projected capacity was released.',
     );
   };
@@ -235,11 +257,12 @@ export function LifecyclePage() {
                 </span>
               </div>
 
-              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
+              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-5">
                 <div><dt className="font-semibold text-gray-700">Planning readiness</dt><dd>{appointment.planningState}</dd></div>
                 <div><dt className="font-semibold text-gray-700">Change state</dt><dd>{appointment.changeStatus}</dd></div>
                 <div><dt className="font-semibold text-gray-700">Operational evidence</dt><dd>{appointment.operationalStatus}</dd></div>
                 <div><dt className="font-semibold text-gray-700">Booking origin</dt><dd>{appointment.bookingOrigin}</dd></div>
+                <div><dt className="font-semibold text-gray-700">Late cancellation</dt><dd>{appointment.lateCancellation ? 'Yes' : 'No'}</dd></div>
               </dl>
 
               {showRoutingEvidence && appointment.appointmentStatus === 'PENDING_APPROVAL' && (
@@ -251,6 +274,11 @@ export function LifecyclePage() {
               )}
 
               <div className="mt-4 flex flex-wrap gap-3">
+                {appointment.appointmentStatus === 'DRAFT' && canChange && (
+                  <button type="button" onClick={() => submit(appointment)} className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+                    Submit draft appointment
+                  </button>
+                )}
                 {appointment.appointmentStatus === 'SUBMITTED'
                   && (activeActor.role === 'System Administrator' || activeActor.role === 'Warehouse Administrator') && (
                   <button type="button" onClick={() => evaluate(appointment)} className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
