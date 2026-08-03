@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import {
@@ -17,6 +17,9 @@ import {
   type WorkspaceSafeField,
 } from './appointmentWorkspace';
 import { useAppointmentWorkspace } from './AppointmentWorkspaceProvider';
+
+const defaultEditReason = 'Correct approved local detail evidence';
+const defaultCommentReason = 'Add explicit local comment evidence';
 
 function displayFieldValue(
   record: NonNullable<ReturnType<ReturnType<typeof useAppointmentWorkspace>['getVisibleRecord']>>,
@@ -62,11 +65,21 @@ export function AppointmentDetailsPage() {
   const record = getVisibleRecord(appointmentId);
   const [editField, setEditField] = useState<WorkspaceSafeField | ''>('');
   const [editValue, setEditValue] = useState('');
-  const [editReason, setEditReason] = useState('Correct approved local detail evidence');
+  const [editReason, setEditReason] = useState(defaultEditReason);
   const [commentVisibility, setCommentVisibility] = useState<WorkspaceCommentVisibility | ''>('');
   const [commentText, setCommentText] = useState('');
-  const [commentReason, setCommentReason] = useState('Add explicit local comment evidence');
+  const [commentReason, setCommentReason] = useState(defaultCommentReason);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEditField('');
+    setEditValue('');
+    setEditReason(defaultEditReason);
+    setCommentVisibility('');
+    setCommentText('');
+    setCommentReason(defaultCommentReason);
+    setMessage(null);
+  }, [activeActor.id, appointmentId]);
 
   const warehouse = record
     ? configuration.warehouses.find((candidate) => candidate.id === record.warehouseId)
