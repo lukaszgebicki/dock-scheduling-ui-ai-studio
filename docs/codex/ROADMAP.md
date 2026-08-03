@@ -52,55 +52,61 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-LIST-DETAILS-1 — planning-aware appointment list and details | DONE; PR #91 squash-merged at `ab47046a4b25e5f91e9b5aa9c36e0115c9833beb` |
 | UI-MVP-REPORTING-1-ACTIVATE — activate PO/SKU reports and local exports | DONE; PR #93 squash-merged at `0af25155ade24489578015e6029b9175cd9c7555` |
 | UI-MVP-REPORTING-1 — PO/SKU reports and local exports | DONE; PR #95 squash-merged at `607881b521f0846104bdf56432547b6f5a010585` |
-| UI-MVP-NOTIFICATIONS-STATES-1-ACTIVATE — activate notifications and exceptional states | DONE after merge of this activation PR |
+| UI-MVP-NOTIFICATIONS-STATES-1-ACTIVATE — activate notifications and exceptional states | DONE; PR #97 squash-merged at `f356ebca056d4a46c480c765684cfbeb8a41c496` |
+| UI-MVP-NOTIFICATIONS-STATES-1 — local notifications and exceptional states | DONE; PR #99 squash-merged at `02e7ac4eefcf87daccaeb393dfa0f9b6bb930a5c` |
+| UI-MVP-DASH-MOBILE-1-ACTIVATE — activate dashboards and responsive role views | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-NOTIFICATIONS-STATES-1 — notifications and exceptional states
+### UI-MVP-DASH-MOBILE-1 — role dashboards and responsive web views
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: add actor-scoped, local demonstrational in-app notifications,
-  e-mail-status simulation and reusable exceptional-state presentations with
-  safe next actions.
-- Product authority: `BDP-NOT-001`, BDP section 22 and the existing role,
-  organization, warehouse, appointment, lifecycle, planning, gate and reporting
-  boundaries.
-- Event boundary: supported notification demonstrations may cover creation,
-  submitted, pending approval, confirmed, rejected, changes requested, slot
-  proposed, rescheduled, cancelled, reminder, missing data, late arrival,
-  no-show and shared comment.
-- Recipient boundary: local recipient previews may include author, Supplier
-  primary contact, Supplier Administrator, Warehouse Operator, Warehouse
-  Administrator, Security Officer and explicit additional addresses only when
-  the active actor and event scope permit them.
-- Preference boundary: critical cancellation, reschedule, rejection, required
-  action and safety notifications cannot be disabled. Noncritical events may
-  simulate immediate, hourly digest or daily digest frequency.
-- Data boundary: every notification is derived from actor-visible records and
-  approved event fields. Supplier actors never receive another organization’s
-  records, Internal Notes, technical audit metadata, import diagnostics,
-  source-row/batch lineage or Administrator-only reconciliation reasoning.
-- Exceptional-state boundary: provide separate presentations for no
-  appointments, no filter results, no slots, no assigned warehouses, no
-  permission, unavailable appointment, reservation conflict, expired session,
-  save error, connection loss, stale data, forbidden action, expired hold,
-  upload error, unavailable configuration and blocked Supplier. Every state
-  must identify a safe next action and must not fabricate success or durable
-  recovery.
-- Technical boundary: all notification and state behavior remains local and
-  demonstrational. No real e-mail, SMS, backend, API, persistence, browser
-  storage, scheduled job, external delivery, ERP/WMS/SAP integration,
-  deployment or production-repository access is authorized.
-- Mutation boundary: notification preferences and previews are local UI state
-  only. They may not mutate appointment, planning, lifecycle/change,
-  operational, transport, capacity, slot, dock, gate, approval, cancellation,
-  reschedule or reporting data.
+- Objective: add role-scoped operational dashboards and responsive web
+  presentations that expose approved KPI meaning and safe navigation without
+  inventing operational data or new business actions.
+- Product authority: `BDP-DASH-001`, `BDP-MOB-001`, BDP sections 16, 23 and 25,
+  plus existing actor, organization, warehouse, appointment, lifecycle,
+  planning, gate, reporting and notification contracts.
+- Warehouse Operator boundary: current indicators may include today's
+  appointments, expected in the next hour, appointments in the active week,
+  vehicles on site, at dock, late, action required and potential No Show.
+- Warehouse Administrator boundary: may additionally include pending approval,
+  slot and dock utilization, cancellations, manual overrides, average service
+  time and average waiting time only where those values are derivable from
+  existing actor-visible records; unavailable metrics must be explicitly
+  labelled unavailable rather than fabricated.
+- Supplier boundary: show only the active Supplier organization's next
+  appointment, required actions, pending approval, upcoming visits and scoped
+  history.
+- Security boundary: provide a responsive gate-oriented summary and safe links
+  to already authorized search/check-in/check-out workflows; do not expose
+  planning, reporting or other organizations' data.
+- KPI interaction boundary: each actionable KPI links to an already authorized
+  route with an explicit local filter definition. Navigation cannot broaden
+  actor scope, silently mutate data or grant a capability.
+- Mobile boundary: responsive web only. Supplier date/time selection uses a
+  day-and-time list rather than a compressed desktop calendar. Operator uses an
+  agenda. Full dock grids remain desktop/tablet. Warehouse Administrator gets
+  overview and basic actions; complex calendar configuration may recommend
+  desktop.
+- Data boundary: KPI calculations consume actor-visible workspace records and
+  existing configuration/workflow decisions only. Supplier actors never receive
+  another organization’s records, Internal Notes, audit metadata, import
+  diagnostics, source-row/batch lineage or Administrator-only reasoning.
+- Technical boundary: no native app, real camera/storage upload, QR, OCR, plate
+  recognition, geofencing, ETA, backend, API, persistence, browser storage,
+  integration, deployment or production-repository access is authorized.
+- Mutation boundary: dashboards and responsive presentations are read-only
+  consumers. Existing authorized actions may only be reached through their
+  existing guards and contracts; no new lifecycle, gate, dock, capacity,
+  approval, cancellation, reschedule, notification or reporting mutation is
+  introduced.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus complete validation, Simplification Pass, independent review and
   controlled publication.
 
-`UI-MVP-DASH-MOBILE-1`, `UI-MVP-STANDING-1` and every other remaining source
-or product-review task remain inactive and unauthorized. No other product,
-governance, security or infrastructure task is `READY` or active.
+`UI-MVP-STANDING-1`, final product review and every other remaining source task
+remain inactive and unauthorized. No other product, governance, security or
+infrastructure task is `READY` or active.
