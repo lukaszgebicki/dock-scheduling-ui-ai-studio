@@ -135,10 +135,10 @@ describe('GateOpsPage', () => {
       target: { value: '2026-08-11T10:00' },
     });
     fireEvent.change(screen.getByLabelText('Gate tractor registration'), {
-      target: { value: 'TR-300' },
+      target: { value: 'TR-210' },
     });
     fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), {
-      target: { value: 'TRL-400' },
+      target: { value: 'TRL-220' },
     });
     fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Check in appointment' }));
 
