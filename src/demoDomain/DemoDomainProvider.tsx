@@ -109,6 +109,7 @@ function getConfiguredUser(
 function createContextValue(
   baseActor: DemoActor,
   configuration: DemoConfigurationState,
+  workflowUsers: readonly DemoUser[],
   setActiveActorId: (id: DemoActorId) => void,
   createWarehouseDraft: (id: WarehouseId, displayName: string) => void,
   publishWarehouse: (
@@ -118,7 +119,7 @@ function createContextValue(
   publishSupplier: (supplier: SupplierConfiguration) => void,
 ): DemoDomainContextValue {
   const activeActor = getConfiguredActor(baseActor, configuration);
-  const configuredUsers = demoUsers.map((user) => getConfiguredUser(user, configuration));
+  const configuredUsers = workflowUsers.map((user) => getConfiguredUser(user, configuration));
   const resolveWorkflow = (request: ContextWorkflowRoutingRequest) =>
     resolveWorkflowRouting({ ...request, actors: configuredUsers });
   const activeActorCanUseWorkflow = (request: ContextWorkflowRoutingRequest) =>
@@ -161,6 +162,7 @@ const DemoDomainContext = createContext<DemoDomainContextValue>(
   createContextValue(
     getDemoActor('system-administrator'),
     initialDemoConfiguration,
+    demoUsers,
     () => undefined,
     () => undefined,
     () => undefined,
@@ -168,9 +170,14 @@ const DemoDomainContext = createContext<DemoDomainContextValue>(
   ),
 );
 
-export function DemoDomainProvider({ children, initialActorId = 'system-administrator' }: {
+export function DemoDomainProvider({
+  children,
+  initialActorId = 'system-administrator',
+  initialWorkflowUsers = demoUsers,
+}: {
   children: React.ReactNode;
   initialActorId?: DemoActorId;
+  initialWorkflowUsers?: readonly DemoUser[];
 }) {
   const [activeActorId, setActiveActorId] = useState<DemoActorId>(initialActorId);
   const [configuration, setConfiguration] = useState(initialDemoConfiguration);
@@ -203,6 +210,7 @@ export function DemoDomainProvider({ children, initialActorId = 'system-administ
     <DemoDomainContext.Provider value={createContextValue(
       baseActor,
       configuration,
+      initialWorkflowUsers,
       setActiveActorId,
       createWarehouseDraft,
       publishWarehouse,
