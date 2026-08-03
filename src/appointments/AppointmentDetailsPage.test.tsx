@@ -91,7 +91,8 @@ describe('AppointmentDetailsPage', () => {
     fireEvent.change(screen.getByLabelText('Comment visibility'), { target: { value: 'SHARED_COMMENT' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add local comment' }));
     expect(screen.getByRole('status').textContent).toContain('local memory only');
-    expect(screen.getByText((_content, element) =>
+    const commentsSection = screen.getByRole('heading', { name: 'Comments' }).closest('section')!;
+    expect(within(commentsSection).getByText((_content, element) =>
       element?.tagName === 'LI'
       && element.textContent?.includes('Shared arrival clarification') === true)).toBeDefined();
     expect(screen.getByText(/ADD_COMMENT · SHARED_COMMENT/)).toBeDefined();
