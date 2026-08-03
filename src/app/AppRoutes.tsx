@@ -40,6 +40,7 @@ import { GateOpsPage } from '../gateOps/GateOpsPage';
 import { ReportingGuard } from '../reporting/ReportingGuard';
 import { ReportingPage } from '../reporting/ReportingPage';
 import { canAccessReporting } from '../reporting/reportingDomain';
+import { NotificationsPage } from '../notifications/NotificationsPage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -102,6 +103,9 @@ function AppointmentsRoutePage() {
         <Link to="/calendar" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
           Open PO planning calendar
         </Link>
+        <Link to="/notifications" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+          Open notifications and states
+        </Link>
         {canOpenReporting && (
           <Link to="/reports" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
             Open PO/SKU reports
@@ -161,6 +165,7 @@ export function AppRoutes() {
               <Route path="/gate-operations" element={<GateOpsGuard><GateOpsPage /></GateOpsGuard>} />
               <Route path="/calendar" element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>} />
               <Route path="/reports" element={<ReportingGuard><ReportingPage /></ReportingGuard>} />
+              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/imports/friday-details" element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>} />
               <Route path="/weekly-planning" element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>} />
               <Route path="/users" element={<DemoRouteGuard route="/users"><UsersAccessPage /></DemoRouteGuard>} />
