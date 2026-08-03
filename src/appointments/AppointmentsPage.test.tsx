@@ -145,7 +145,7 @@ describe('AppointmentsPage', () => {
     expectResultCount('Showing 4 of 4 appointments');
   });
 
-  it('clears stale filters, saved views and hidden data when the actor changes', () => {
+  it('clears stale filters, saved views, columns and hidden data when the actor changes', () => {
     render(
       <MemoryRouter>
         <DemoDomainProvider>
@@ -163,6 +163,10 @@ describe('AppointmentsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Switch actor' }));
     expectResultCount('Showing 2 of 2 appointments');
+    const supplierTable = screen.getByRole('table');
+    expect(within(supplierTable).queryByRole('columnheader', { name: 'Supplier' })).toBeNull();
+    expect(within(supplierTable).queryByRole('columnheader', { name: 'Planning state' })).toBeNull();
+    expect(within(supplierTable).queryByRole('columnheader', { name: 'Booking origin' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Supplier' })).toBeNull();
     expect(screen.getByRole('combobox', { name: 'Available saved views' }).querySelectorAll('option')).toHaveLength(1);
     expect(screen.queryByText('Baltic Freight')).toBeNull();
