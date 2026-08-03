@@ -44,48 +44,62 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-ADMIN-IMPORT-1 — local Friday PO import preview | DONE; PR #75 squash-merged at `c492ba9f28c764f0432dffc46b89fdf207f02c37` |
 | UI-MVP-WEEKLY-PLANNING-1-ACTIVATE — activate exact enrichment and planning queue | DONE; PR #77 squash-merged at `e75364948958b5e9b9b6b054246987caaece0053` |
 | UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue | DONE; PR #79 squash-merged at `c8e9e5af3d891ea7438afc1e69637e4b5f18cf59` |
-| UI-MVP-LIFECYCLE-1-ACTIVATE — activate capability-routed lifecycle consumer | DONE after merge of this activation PR |
+| UI-MVP-LIFECYCLE-1-ACTIVATE — activate capability-routed lifecycle consumer | DONE; PR #81 squash-merged at `56385131cfa88976f7e19eb3f763a73aa8121951` |
+| UI-MVP-LIFECYCLE-1 — capability-routed lifecycle transitions | DONE; PR #83 squash-merged at `3b0552a6a095da1cd2248f7d6b6e60850a6261d0` |
+| UI-MVP-GATE-OPS-1-ACTIVATE — activate operator and Security workflows | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-LIFECYCLE-1 — capability-routed lifecycle transitions
+### UI-MVP-GATE-OPS-1 — operator and Security workflows
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: consume the approved capability routing, configuration, planning
-  readiness and capacity projections through constrained local appointment
-  lifecycle transitions without introducing gate execution or persistence.
-- Product authority: `BDP-STAT-001`, `BDP-APR-001`, `BDP-EDIT-001`,
-  `BDP-CAN-001`, applicable `BDP-VAL-001`, scenarios `AC-WAD-003`,
-  `AC-SUP-003` through `AC-SUP-005`, `AC-FLOW-005`, and only the lifecycle
-  portion of `AC-WOP-002`.
-- Status boundary: preserve the approved planning, change and operational status
-  categories as independent typed state. Planning readiness and imported detail
-  state cannot authorize an appointment lifecycle transition.
-- Transition boundary: expose only transitions present in the canonical status
-  matrix. No inferred transition, physical deletion, implicit rollback or status
-  jump is permitted.
-- Routing boundary: approval, rejection and request-data actions must consume the
-  existing capability decision. A missing required approver must delegate only
-  to an authorized fallback or `BLOCK`; it must never produce silent
-  auto-approval.
-- Change boundary: pre/post-confirmation edits, reschedule and cancellation must
-  follow approved actor and cut-off rules. Material actions require explicit
-  reason and immutable in-memory before/after evidence.
-- Capacity boundary: a reschedule preserves the old slot until the new compatible
-  slot is explicitly accepted. Cancellation releases local projected capacity
-  and remains visible. No automatic move, capacity override or hidden recovery
-  action is implied.
-- Scope boundary: System Administrator acts globally; assigned Warehouse
-  Administrator and optional Warehouse Operator capabilities remain warehouse-
-  scoped; Supplier actions remain organization-scoped. Security receives no
-  lifecycle consumer actions in this task.
-- Implementation boundary: implement only typed provider/component memory,
-  capability-controlled lifecycle consumers, approved transition validation,
-  controlled reschedule/cancellation consequences, history evidence and focused
-  accessible UI/tests. Do not implement gate operations, check-in/check-out,
-  dock assignment, notifications, reporting, durable persistence, backend or
-  integrations.
+- Objective: consume the existing capability routing, lifecycle evidence,
+  configuration and calendar projection through constrained local gate and
+  warehouse-operation workflows without introducing durable effects.
+- Product authority: `BDP-OPS-001`, sections 13.1 through 13.5, operational
+  transitions from the canonical status matrix, applicable `BDP-VAL-001`,
+  scenarios `AC-WOP-001`, the operational portion of `AC-WOP-002`,
+  `AC-SEC-001`, `AC-SEC-002`, `AC-FLOW-006` and `AC-FLOW-007`.
+- Routing boundary: use exactly the existing capabilities and steps for
+  `CHECK_IN`, `CHECK_OUT`, `ASSIGN_DOCK`, `CHANGE_DOCK`,
+  `PROGRESS_OPERATION` and `CONFIRM_NO_SHOW`. Navigation, visible actions,
+  direct routes and execution must share the same `RUN`, `DELEGATE` or `BLOCK`
+  decision and selected actor.
+- Actor boundary: Security Officer is primary for gate check-in/out and sees
+  only the approved warehouse horizon and limited gate data. Warehouse Operator
+  is primary for docks, operational progression and confirmed No Show.
+  Warehouse Administrator may act only when selected as the existing fallback.
+  No additional fallback identity may be invented.
+- Status boundary: operational status remains independent from lifecycle,
+  planning and change status. Gate actions cannot approve, reject, reschedule,
+  cancel, restore or otherwise repair lifecycle state.
+- Transition boundary: check-out before check-in, Completed before Unloading and
+  every operational status jump outside the canonical sequence fail closed and
+  create no success history.
+- Arrival boundary: scoped search uses approved identifiers; an eligible check-in
+  records Early, On Time or Late arrival evidence without moving the slot.
+  Early arrival may enter waiting but early service remains an Operator decision.
+- Dock boundary: assignment and change require a currently active compatible
+  dock and explicit before/after evidence. Existing configuration, blocks and
+  scope remain authoritative; no automatic move or hidden override is implied.
+- No-show boundary: a potential No Show is only an alert/evidence state until an
+  authorized human confirms it. Confirmation releases local projected capacity,
+  remains visible and must not physically delete the record.
+- Unannounced boundary: a gate user may create only a local demonstrational
+  unannounced-visit record containing required gate fields and route it for
+  decision. It must not silently become CONFIRMED, receive a dock/capacity,
+  bypass approval or masquerade as a Supplier booking.
+- Evidence boundary: registration correction, gate notes, dock changes and all
+  material gate actions require explicit actor, reason and immutable in-memory
+  before/after evidence. Supplier-origin transport values and reconciliation
+  evidence must not be silently erased.
+- Implementation boundary: implement typed provider/component memory,
+  capability-controlled gate consumers, scoped search, operational progression,
+  arrival classification, dock/no-show consequences, unannounced decision
+  records and accessible focused UI/tests. Do not implement lifecycle approval
+  or change actions, notifications, OCR/ANPR, reporting, document storage,
+  durable persistence, backend or integrations.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus an external worktree, complete validation, independent review and
@@ -94,7 +108,6 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
   sessionStorage, IndexedDB, cookies, network APIs, deployment or production-
   repository access.
 
-`UI-MVP-GATE-OPS-1`, extended `UI-MVP-LIST-DETAILS-1`,
-`UI-MVP-REPORTING-1` and all remaining source tasks remain inactive and
-unauthorized. No other product, governance, security or infrastructure task is
-`READY` or active.
+Extended `UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining source
+tasks remain inactive and unauthorized. No other product, governance, security
+or infrastructure task is `READY` or active.
