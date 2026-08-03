@@ -16,7 +16,7 @@ export type WeeklyPlanningQueueState =
 
 export interface WeeklyPlanningHistoryEntry {
   id: string;
-  action: 'ATTACH_DETAILS' | 'SCHEDULE_UNRESERVED' | 'RESOLVE_AMBIGUOUS' | 'REPLACE_DETAILS';
+  action: 'ATTACH_DETAILS' | 'SCHEDULE_UNRESERVED' | 'RESOLVE_AMBIGUOUS' | 'RESOLVE_TRANSPORT' | 'REPLACE_DETAILS';
   actorId: string;
   reason: string;
   groupFingerprint: string;
@@ -44,49 +44,8 @@ export interface WeeklyPlanningActionResult {
   error: string | null;
 }
 
-interface ImportedTransport {
-  tractorRegistration: string;
-  trailerOrContainerRegistration: string;
-}
-
-function importedTransport(group: FridayImportGroup): ImportedTransport | null {
-  try {
-    const parsed = JSON.parse(group.fingerprint) as { transport?: Partial<ImportedTransport> };
-    const tractorRegistration = parsed.transport?.tractorRegistration;
-    const trailerOrContainerRegistration = parsed.transport?.trailerOrContainerRegistration;
-    if (typeof tractorRegistration !== 'string' || typeof trailerOrContainerRegistration !== 'string') return null;
-    return { tractorRegistration, trailerOrContainerRegistration };
-  } catch {
-    return null;
-  }
-}
-
-function normalized(value: string): string {
-  return value.trim().replace(/\s+/g, ' ').toUpperCase();
-}
-
-function transportConflictsFor(
-  group: FridayImportGroup,
-  target: PlanningAppointment,
-): FridayImportGroup['transportConflicts'] {
-  const transport = importedTransport(group);
-  if (!transport) return [{
-    field: 'tractorRegistration',
-    existingValue: target.tractorRegistration,
-    importedValue: 'MISSING_IMPORT_EVIDENCE',
-  }];
-  return ([
-    ['tractorRegistration', target.tractorRegistration, transport.tractorRegistration],
-    ['trailerOrContainerRegistration', target.trailerOrContainerRegistration, transport.trailerOrContainerRegistration],
-  ] as const)
-    .filter(([, existingValue, importedValue]) => importedValue.length > 0 && normalized(existingValue) !== normalized(importedValue))
-    .map(([field, existingValue, importedValue]) => ({ field, existingValue, importedValue }));
-}
-
 function queueState(group: FridayImportGroup): WeeklyPlanningQueueState {
-  if (group.outcome === 'EXACT_MATCH') {
-    return group.transportConflicts.length > 0 ? 'TRANSPORT_CONFLICT' : 'EXACT_READY';
-  }
+  if (group.outcome === 'EXACT_MATCH') return group.transportConflicts.length ? 'TRANSPORT_CONFLICT' : 'EXACT_READY';
   if (group.outcome === 'NO_MATCH') return 'UNSCHEDULED';
   if (group.outcome === 'AMBIGUOUS_MATCH') return 'AMBIGUOUS';
   if (group.outcome === 'DUPLICATE_IMPORT') return 'DUPLICATE';
@@ -184,17 +143,13 @@ export function attachExactDetails(
   const item = state.queue.find((candidate) => candidate.group.fingerprint === fingerprint);
   if (!item || item.state !== 'EXACT_READY') return { state, error: 'The selected group is not ready for exact enrichment.' };
   if (item.group.matchedAppointmentIds.length !== 1) return { state, error: 'Exact enrichment requires exactly one target.' };
-  if (item.group.transportConflicts.length > 0) return { state, error: 'Transport conflicts must be resolved without overwriting Supplier values.' };
+  if (item.group.transportConflicts.length) return { state, error: 'Transport conflicts must be resolved without overwriting Supplier values.' };
 
   const targetId = item.group.matchedAppointmentIds[0];
   const target = state.appointments.find((appointment) => appointment.id === targetId);
   if (!target) return { state, error: 'The exact target is missing.' };
-  if (state.appliedFingerprints.includes(fingerprint) && !replaceExisting) {
-    return { state, error: 'This exact evidence was already applied.' };
-  }
-  if (target.skuLines.length > 0 && !replaceExisting) {
-    return { state, error: 'Existing SKU details require an explicit replacement action.' };
-  }
+  if (state.appliedFingerprints.includes(fingerprint) && !replaceExisting) return { state, error: 'This exact evidence was already applied.' };
+  if (target.skuLines.length && !replaceExisting) return { state, error: 'Existing SKU details require an explicit replacement action.' };
 
   const before = snapshot(target);
   const updated: PlanningAppointment = {
@@ -207,15 +162,17 @@ export function attachExactDetails(
   const appointments = state.appointments.map((appointment) => appointment.id === targetId ? updated : appointment);
   const nextItem = { ...item, appliedAppointmentId: targetId };
   const action = replaceExisting ? 'REPLACE_DETAILS' : 'ATTACH_DETAILS';
-  const nextState: WeeklyPlanningState = {
-    appointments,
-    queue: replaceQueueItem(state.queue, fingerprint, nextItem),
-    history: [...state.history, historyEntry(state, action, actorId, reason.trim(), fingerprint, targetId, before, snapshot(updated))],
-    appliedFingerprints: state.appliedFingerprints.includes(fingerprint)
-      ? state.appliedFingerprints
-      : [...state.appliedFingerprints, fingerprint],
+  return {
+    error: null,
+    state: {
+      appointments,
+      queue: replaceQueueItem(state.queue, fingerprint, nextItem),
+      history: [...state.history, historyEntry(state, action, actorId, reason.trim(), fingerprint, targetId, before, snapshot(updated))],
+      appliedFingerprints: state.appliedFingerprints.includes(fingerprint)
+        ? state.appliedFingerprints
+        : [...state.appliedFingerprints, fingerprint],
+    },
   };
-  return { state: nextState, error: null };
 }
 
 export function resolveAmbiguousTarget(
@@ -230,44 +187,98 @@ export function resolveAmbiguousTarget(
   if (!reason.trim()) return { state, error: 'A reason is required.' };
   const item = state.queue.find((candidate) => candidate.group.fingerprint === fingerprint);
   if (!item || item.state !== 'AMBIGUOUS') return { state, error: 'The selected group is not ambiguous.' };
-  if (!item.group.matchedAppointmentIds.includes(targetAppointmentId)) {
-    return { state, error: 'The selected target is not one of the exact candidates.' };
-  }
+  if (!item.group.matchedAppointmentIds.includes(targetAppointmentId)) return { state, error: 'The selected target is not one of the exact candidates.' };
   const target = state.appointments.find((appointment) => appointment.id === targetAppointmentId);
   if (!target) return { state, error: 'The selected target is missing.' };
-  const transportConflicts = transportConflictsFor(item.group, target);
+
+  const transportConflicts = ([
+    ['tractorRegistration', target.tractorRegistration, item.group.transport.tractorRegistration],
+    ['trailerOrContainerRegistration', target.trailerOrContainerRegistration, item.group.transport.trailerOrContainerRegistration],
+  ] as const)
+    .filter(([, existingValue, importedValue]) => importedValue && importedValue.toUpperCase() !== existingValue.toUpperCase())
+    .map(([field, existingValue, importedValue]) => ({ field, existingValue, importedValue }));
   const resolvedGroup: FridayImportGroup = {
     ...item.group,
     outcome: 'EXACT_MATCH',
     matchedAppointmentIds: [targetAppointmentId],
     transportConflicts,
-    diagnostics: [
-      ...item.group.diagnostics,
-      `Administrator selected ${targetAppointmentId}.`,
-      ...(transportConflicts.length > 0 ? ['Selected target has a transport reconciliation conflict; Supplier values remain unchanged.'] : []),
-    ],
+    diagnostics: [...item.group.diagnostics, `Administrator selected ${targetAppointmentId}.`],
   };
   const nextItem: WeeklyPlanningQueueItem = {
     group: resolvedGroup,
-    state: transportConflicts.length > 0 ? 'TRANSPORT_CONFLICT' : 'EXACT_READY',
+    state: transportConflicts.length ? 'TRANSPORT_CONFLICT' : 'EXACT_READY',
     selectedTargetId: targetAppointmentId,
     appliedAppointmentId: null,
   };
-  const nextState: WeeklyPlanningState = {
-    ...state,
-    queue: replaceQueueItem(state.queue, fingerprint, nextItem),
-    history: [...state.history, historyEntry(
-      state,
-      'RESOLVE_AMBIGUOUS',
-      actorId,
-      reason.trim(),
-      fingerprint,
-      targetAppointmentId,
-      JSON.stringify(item.group.matchedAppointmentIds),
-      JSON.stringify({ selectedTargetId: targetAppointmentId, transportConflicts }),
-    )],
+  return {
+    error: null,
+    state: {
+      ...state,
+      queue: replaceQueueItem(state.queue, fingerprint, nextItem),
+      history: [...state.history, historyEntry(
+        state,
+        'RESOLVE_AMBIGUOUS',
+        actorId,
+        reason.trim(),
+        fingerprint,
+        targetAppointmentId,
+        JSON.stringify({ candidates: item.group.matchedAppointmentIds }),
+        JSON.stringify({ selectedTargetId: targetAppointmentId, resultingState: nextItem.state }),
+      )],
+    },
   };
-  return { state: nextState, error: null };
+}
+
+export function resolveTransportConflictKeepingSupplierValues(
+  state: WeeklyPlanningState,
+  fingerprint: string,
+  actorId: string,
+  reason: string,
+  authorized: boolean,
+): WeeklyPlanningActionResult {
+  if (!authorized) return { state, error: 'The active actor is not authorized to resolve planning conflicts.' };
+  if (!reason.trim()) return { state, error: 'A reason is required.' };
+  const item = state.queue.find((candidate) => candidate.group.fingerprint === fingerprint);
+  if (!item || item.state !== 'TRANSPORT_CONFLICT') return { state, error: 'The selected group has no unresolved transport conflict.' };
+  if (item.group.matchedAppointmentIds.length !== 1) return { state, error: 'Transport resolution requires exactly one selected target.' };
+  const targetId = item.group.matchedAppointmentIds[0];
+  const target = state.appointments.find((appointment) => appointment.id === targetId);
+  if (!target) return { state, error: 'The selected target is missing.' };
+
+  const before = JSON.stringify({
+    target: snapshot(target),
+    importedTransport: item.group.transport,
+    conflicts: item.group.transportConflicts,
+  });
+  const resolvedGroup: FridayImportGroup = {
+    ...item.group,
+    transportConflicts: [],
+    diagnostics: [...item.group.diagnostics, 'Administrator retained the existing Supplier transport values; imported transport was not applied.'],
+  };
+  const nextItem: WeeklyPlanningQueueItem = { ...item, group: resolvedGroup, state: 'EXACT_READY' };
+  const after = JSON.stringify({
+    target: snapshot(target),
+    importedTransport: item.group.transport,
+    decision: 'KEEP_SUPPLIER_VALUES',
+    resultingState: 'EXACT_READY',
+  });
+  return {
+    error: null,
+    state: {
+      ...state,
+      queue: replaceQueueItem(state.queue, fingerprint, nextItem),
+      history: [...state.history, historyEntry(
+        state,
+        'RESOLVE_TRANSPORT',
+        actorId,
+        reason.trim(),
+        fingerprint,
+        targetId,
+        before,
+        after,
+      )],
+    },
+  };
 }
 
 export function scheduleUnreservedDelivery(
@@ -284,14 +295,12 @@ export function scheduleUnreservedDelivery(
   if (!reason.trim()) return { state, error: 'A reason is required.' };
   const item = state.queue.find((candidate) => candidate.group.fingerprint === fingerprint);
   if (!item || item.state !== 'UNSCHEDULED') return { state, error: 'The selected group is not in the unscheduled queue.' };
-  if (item.appliedAppointmentId || state.appliedFingerprints.includes(fingerprint)) {
-    return { state, error: 'This unmatched evidence was already scheduled.' };
-  }
+  if (state.appliedFingerprints.includes(fingerprint) || item.appliedAppointmentId) return { state, error: 'This unmatched evidence was already scheduled.' };
   if (!plannedDate || !/^\d{2}:\d{2}$/.test(plannedTime)) return { state, error: 'An explicit date and time are required.' };
-  const transport = importedTransport(item.group);
-  if (!transport || !transport.tractorRegistration || !transport.trailerOrContainerRegistration) {
-    return { state, error: 'Imported transport evidence is missing; scheduling fails closed.' };
+  if (!item.group.transport.tractorRegistration || !item.group.transport.trailerOrContainerRegistration) {
+    return { state, error: 'Both imported transport registrations are required for an ADMIN_ADDED record.' };
   }
+
   const warehouseId = item.group.identity.warehouseCode.toLowerCase() as PlanningAppointment['warehouseId'];
   const supplierOrganizationId = item.group.identity.supplierCode.toLowerCase() as PlanningAppointment['supplierOrganizationId'];
   const candidate: PlanningAppointment = {
@@ -305,33 +314,34 @@ export function scheduleUnreservedDelivery(
     plannedTime,
     bookingOrigin: 'ADMIN_ADDED',
     planningState: 'DETAILS_ATTACHED',
-    appointmentStatus: 'SUBMITTED',
-    tractorRegistration: transport.tractorRegistration,
-    trailerOrContainerRegistration: transport.trailerOrContainerRegistration,
+    appointmentStatus: 'UNSCHEDULED',
+    tractorRegistration: item.group.transport.tractorRegistration,
+    trailerOrContainerRegistration: item.group.transport.trailerOrContainerRegistration,
     skuLines: toSkuLines(item.group),
     importDiagnostic: 'NO_MATCH',
     batchLineage: item.group.fingerprint,
   };
   const projected = buildPlanningCalendar([...state.appointments, candidate], warehouses)
     .find((card) => card.appointment.id === candidate.id);
-  if (!projected || projected.conflict) {
-    return { state, error: projected?.conflict?.message ?? 'Capacity configuration could not be evaluated.' };
-  }
+  if (!projected || projected.conflict) return { state, error: projected?.conflict?.message ?? 'Capacity configuration could not be evaluated.' };
+
   const nextItem = { ...item, appliedAppointmentId: candidate.id };
-  const nextState: WeeklyPlanningState = {
-    appointments: [...state.appointments, candidate],
-    queue: replaceQueueItem(state.queue, fingerprint, nextItem),
-    history: [...state.history, historyEntry(
-      state,
-      'SCHEDULE_UNRESERVED',
-      actorId,
-      reason.trim(),
-      fingerprint,
-      candidate.id,
-      'UNSCHEDULED',
-      snapshot(candidate),
-    )],
-    appliedFingerprints: [...state.appliedFingerprints, fingerprint],
+  return {
+    error: null,
+    state: {
+      appointments: [...state.appointments, candidate],
+      queue: replaceQueueItem(state.queue, fingerprint, nextItem),
+      history: [...state.history, historyEntry(
+        state,
+        'SCHEDULE_UNRESERVED',
+        actorId,
+        reason.trim(),
+        fingerprint,
+        candidate.id,
+        'UNSCHEDULED',
+        snapshot(candidate),
+      )],
+      appliedFingerprints: [...state.appliedFingerprints, fingerprint],
+    },
   };
-  return { state: nextState, error: null };
 }
