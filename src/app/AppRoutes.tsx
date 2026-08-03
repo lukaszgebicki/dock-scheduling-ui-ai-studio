@@ -23,6 +23,8 @@ import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookin
 import { PlanningCalendarPage } from '../calendar/PlanningCalendarPage';
 import { FridayImportGuard, getAuthorizedFridayImportWarehouseIds } from '../import/FridayImportGuard';
 import { FridayImportPage } from '../import/FridayImportPage';
+import { WeeklyPlanningGuard, getAuthorizedWeeklyPlanningWarehouseIds } from '../weeklyPlanning/WeeklyPlanningGuard';
+import { WeeklyPlanningPage } from '../weeklyPlanning/WeeklyPlanningPage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -49,6 +51,10 @@ function AppointmentsRoutePage() {
     activeActor.warehouseIds,
     canAccessWorkflowRoute,
   ).length > 0;
+  const canOpenWeeklyPlanning = getAuthorizedWeeklyPlanningWarehouseIds(
+    activeActor.warehouseIds,
+    canAccessWorkflowRoute,
+  ).length > 0;
 
   return (
     <>
@@ -59,6 +65,14 @@ function AppointmentsRoutePage() {
         >
           Open PO planning calendar
         </Link>
+        {canOpenWeeklyPlanning && (
+          <Link
+            to="/weekly-planning"
+            className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+          >
+            Open weekly planning queue
+          </Link>
+        )}
         {canPreviewFridayImport && (
           <Link
             to="/imports/friday-details"
@@ -118,6 +132,10 @@ export function AppRoutes() {
             <Route
               path="/imports/friday-details"
               element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>}
+            />
+            <Route
+              path="/weekly-planning"
+              element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>}
             />
             <Route
               path="/users"
