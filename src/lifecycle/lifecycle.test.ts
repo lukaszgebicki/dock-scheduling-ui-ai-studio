@@ -143,6 +143,34 @@ describe('lifecycle domain', () => {
     expect(blocked.state.history).toHaveLength(0);
   });
 
+  it('supports explicit DELEGATE approval without inventing a fallback identity', () => {
+    const actorsWithoutPrimary = demoUsers.filter((user) => user.id !== 'u-2');
+    const delegatedDecision = decision('approve', actorsWithoutPrimary);
+    expect(delegatedDecision.outcome).toBe('DELEGATE');
+    expect(delegatedDecision.selectedActor?.id).toBe('u-1');
+
+    const initial = createLifecycleState(planningAppointments);
+    const pending = evaluateSubmittedAppointment(
+      initial,
+      'planning-northstar-1001',
+      getDemoActor('system-administrator'),
+      'Use authorized fallback',
+      initialDemoConfiguration,
+      delegatedDecision,
+    );
+    expect(pending.error).toBeNull();
+
+    const approved = approveAppointment(
+      pending.state,
+      'planning-northstar-1001',
+      'u-1',
+      'Delegated approval',
+      delegatedDecision,
+    );
+    expect(approved.error).toBeNull();
+    expect(appointment(approved.state).appointmentStatus).toBe('CONFIRMED');
+  });
+
   it('routes approval, rejection and request-data to the selected actor only', () => {
     const initial = createLifecycleState(planningAppointments);
     const pending = evaluateSubmittedAppointment(
@@ -175,6 +203,16 @@ describe('lifecycle domain', () => {
     expect(appointment(requested.state).appointmentStatus).toBe('PENDING_APPROVAL');
     expect(appointment(requested.state).changeStatus).toBe('SUPPLIER_ACTION_REQUIRED');
 
+    const repeatedRequest = requestAppointmentData(
+      requested.state,
+      'planning-northstar-1001',
+      'u-2',
+      'Repeat request',
+      decision('request-data'),
+    );
+    expect(repeatedRequest.error).toContain('already required');
+    expect(repeatedRequest.state).toBe(requested.state);
+
     const approved = approveAppointment(
       requested.state,
       'planning-northstar-1001',
@@ -200,8 +238,9 @@ describe('lifecycle domain', () => {
     expect(rejected.state.history.at(-1)?.after).toContain('REJECTED');
   });
 
-  it('fails closed for invalid transitions and ambiguous configuration', () => {
+  it('fails closed for invalid transitions and missing, duplicated or incompatible configuration', () => {
     const initial = createLifecycleState(planningAppointments);
+    const systemAdministrator = getDemoActor('system-administrator');
     const invalidApprove = approveAppointment(
       initial,
       'planning-northstar-1001',
@@ -212,23 +251,50 @@ describe('lifecycle domain', () => {
     expect(invalidApprove.error).toContain('PENDING_APPROVAL');
     expect(invalidApprove.state).toBe(initial);
 
-    const ambiguousConfiguration = {
-      ...initialDemoConfiguration,
-      warehouses: [
-        ...initialDemoConfiguration.warehouses,
-        initialDemoConfiguration.warehouses[0],
-      ],
-    };
-    const ambiguous = evaluateSubmittedAppointment(
+    const missingSupplier = evaluateSubmittedAppointment(
       initial,
       'planning-northstar-1001',
-      getDemoActor('system-administrator'),
-      'Evaluate configuration',
-      ambiguousConfiguration,
+      systemAdministrator,
+      'Missing supplier configuration',
+      { ...initialDemoConfiguration, suppliers: [] },
       decision('approve'),
     );
-    expect(ambiguous.error).toContain('ambiguous');
-    expect(ambiguous.state).toBe(initial);
+    expect(missingSupplier.error).toContain('Supplier configuration is missing');
+    expect(missingSupplier.state).toBe(initial);
+
+    const duplicatedWarehouse = evaluateSubmittedAppointment(
+      initial,
+      'planning-northstar-1001',
+      systemAdministrator,
+      'Duplicate warehouse configuration',
+      {
+        ...initialDemoConfiguration,
+        warehouses: [
+          ...initialDemoConfiguration.warehouses,
+          initialDemoConfiguration.warehouses[0],
+        ],
+      },
+      decision('approve'),
+    );
+    expect(duplicatedWarehouse.error).toContain('ambiguous');
+    expect(duplicatedWarehouse.state).toBe(initial);
+
+    const incompatibleFlow = evaluateSubmittedAppointment(
+      initial,
+      'planning-northstar-1001',
+      systemAdministrator,
+      'Unsupported flow',
+      {
+        ...initialDemoConfiguration,
+        suppliers: initialDemoConfiguration.suppliers.map((supplier) =>
+          supplier.organizationId === 'northstar-packaging'
+            ? { ...supplier, allowedFlows: [] }
+            : supplier),
+      },
+      decision('approve'),
+    );
+    expect(incompatibleFlow.error).toContain('flow is incompatible');
+    expect(incompatibleFlow.state).toBe(initial);
   });
 
   it('reschedules before cut-off atomically and keeps the original slot on conflict', () => {
@@ -268,7 +334,7 @@ describe('lifecycle domain', () => {
     expect(moved.state.history[0].after).toContain('2026-08-13');
   });
 
-  it('creates a request after cut-off without moving the Supplier slot', () => {
+  it('creates one request after cut-off without moving the Supplier slot', () => {
     const initial = createLifecycleState(planningAppointments);
     const supplier = getDemoActor('supplier-administrator');
     const original = appointment(initial);
@@ -280,7 +346,7 @@ describe('lifecycle domain', () => {
       'Request after cut-off',
       '2026-08-13',
       '09:00',
-      '2026-08-10T02:00:00Z',
+      '2026-08-10T02:00',
       initialDemoConfiguration,
     );
     expect(requested.error).toBeNull();
@@ -288,9 +354,22 @@ describe('lifecycle domain', () => {
     expect(appointment(requested.state).plannedTime).toBe(original.plannedTime);
     expect(appointment(requested.state).changeStatus).toBe('RESCHEDULE_REQUESTED');
     expect(requested.state.history[0].action).toBe('REQUEST_RESCHEDULE');
+
+    const repeated = rescheduleAppointment(
+      requested.state,
+      original.id,
+      supplier,
+      'Repeat request',
+      '2026-08-14',
+      '10:00',
+      '2026-08-10T02:00',
+      initialDemoConfiguration,
+    );
+    expect(repeated.error).toContain('already requested');
+    expect(repeated.state).toBe(requested.state);
   });
 
-  it('enforces organization scope, cancellation release, late flag, idempotency and System Administrator restore', () => {
+  it('enforces organization scope, cancellation release, late flag and idempotency', () => {
     const initial = createLifecycleState(planningAppointments);
     const wrongSupplier = getDemoActor('supplier-user');
     const blocked = cancelAppointment(
@@ -310,7 +389,7 @@ describe('lifecycle domain', () => {
       'planning-northstar-1001',
       supplier,
       'Delivery withdrawn after cut-off',
-      '2026-08-10T02:00:00Z',
+      '2026-08-10T02:00',
       initialDemoConfiguration,
     );
     expect(cancelled.error).toBeNull();
@@ -323,15 +402,28 @@ describe('lifecycle domain', () => {
       'planning-northstar-1001',
       supplier,
       'Repeat cancellation',
-      '2026-08-10T02:00:00Z',
+      '2026-08-10T02:00',
       initialDemoConfiguration,
     );
     expect(repeated.error).toContain('does not allow');
     expect(repeated.state).toBe(cancelled.state);
     expect(repeated.state.history).toHaveLength(1);
+  });
+
+  it('allows only System Administrator restore and revalidates the original slot fail-closed', () => {
+    const initial = createLifecycleState(planningAppointments);
+    const supplier = getDemoActor('supplier-administrator');
+    const cancelled = cancelAppointment(
+      initial,
+      'planning-northstar-1001',
+      supplier,
+      'Delivery withdrawn',
+      '2026-08-09T00:00:00Z',
+      initialDemoConfiguration,
+    ).state;
 
     const nonAdminRestore = restoreCancelledAppointment(
-      cancelled.state,
+      cancelled,
       'planning-northstar-1001',
       supplier,
       'Not authorized',
@@ -339,8 +431,28 @@ describe('lifecycle domain', () => {
     );
     expect(nonAdminRestore.error).toContain('System Administrator');
 
+    const noActiveDockConfiguration = {
+      ...initialDemoConfiguration,
+      warehouses: initialDemoConfiguration.warehouses.map((warehouse) =>
+        warehouse.id === warehouseId
+          ? {
+            ...warehouse,
+            docks: warehouse.docks.map((dock) => ({ ...dock, active: false })),
+          }
+          : warehouse),
+    };
+    const conflicted = restoreCancelledAppointment(
+      cancelled,
+      'planning-northstar-1001',
+      getDemoActor('system-administrator'),
+      'Try unavailable slot',
+      noActiveDockConfiguration,
+    );
+    expect(conflicted.error).toContain('active dock');
+    expect(conflicted.state).toBe(cancelled);
+
     const restored = restoreCancelledAppointment(
-      cancelled.state,
+      cancelled,
       'planning-northstar-1001',
       getDemoActor('system-administrator'),
       'Dedicated correction',
