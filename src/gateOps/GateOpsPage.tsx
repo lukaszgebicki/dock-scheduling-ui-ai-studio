@@ -26,14 +26,16 @@ import {
 } from './gateOps';
 import { getAuthorizedGateWarehouseIds } from './GateOpsGuard';
 
-export const gateOpsAppointmentSeeds: readonly GateAppointmentSeed[] = planningAppointments.map((appointment) => ({
-  ...appointment,
-  appointmentStatus: 'CONFIRMED',
-  changeStatus: 'NO_CHANGE_REQUEST',
-  operationalStatus: 'EXPECTED',
-  flow: 'Material Delivery',
-  isAdr: appointment.id === 'planning-northstar-1001',
-}));
+export const gateOpsAppointmentSeeds: readonly GateAppointmentSeed[] = planningAppointments
+  .filter((appointment) => appointment.appointmentStatus === 'CONFIRMED')
+  .map((appointment) => ({
+    ...appointment,
+    appointmentStatus: 'CONFIRMED',
+    changeStatus: 'NO_CHANGE_REQUEST',
+    operationalStatus: 'EXPECTED',
+    flow: 'Material Delivery',
+    isAdr: false,
+  }));
 
 function requestFor(
   appointment: GateAppointment,
