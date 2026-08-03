@@ -36,7 +36,7 @@ function eligibilitySection(): HTMLElement {
 
 function createWarehouseAdminPreview() {
   fireEvent.click(screen.getByRole('checkbox', {
-    name: 'Standing eligible Northstar Logistics at Nowy Kisielin DC',
+    name: 'Standing eligible Northstar Packaging at Nowy Kisielin DC',
   }));
   fireEvent.click(screen.getByRole('button', { name: 'Create local series preview' }));
 }
@@ -52,7 +52,7 @@ describe('StandingAppointmentsPage', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined();
     const northstar = screen.getByRole('checkbox', {
-      name: 'Standing eligible Northstar Logistics at Nowy Kisielin DC',
+      name: 'Standing eligible Northstar Packaging at Nowy Kisielin DC',
     });
     expect(northstar).toHaveProperty('checked', false);
     expect(northstar).toHaveProperty('disabled', false);
@@ -120,7 +120,8 @@ describe('StandingAppointmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'End preview' }));
     expect(screen.getByText(/Series state:/).textContent).toContain('ENDED');
     expect(screen.getByRole('button', { name: 'End preview' })).toHaveProperty('disabled', true);
-    const firstCard = screen.getAllByRole('listitem')[0];
+    const occurrenceList = screen.getByRole('list', { name: 'Standing appointment occurrences' });
+    const firstCard = within(occurrenceList).getAllByRole('listitem')[0];
     expect(within(firstCard).getByRole('button', { name: 'Preview cancel occurrence' }))
       .toHaveProperty('disabled', true);
   });
@@ -130,7 +131,7 @@ describe('StandingAppointmentsPage', () => {
     const section = eligibilitySection();
     expect(within(section).getByText('Vistula Materials')).toBeDefined();
     expect(within(section).queryByText('Baltic Freight')).toBeNull();
-    expect(within(section).queryByText('Northstar Logistics')).toBeNull();
+    expect(within(section).queryByText('Northstar Packaging')).toBeNull();
     const eligible = screen.getByRole('checkbox', {
       name: 'Standing eligible Vistula Materials at Nowy Kisielin DC',
     });
@@ -177,7 +178,7 @@ describe('StandingAppointmentsPage', () => {
       name: 'Standing eligible Vistula Materials at Nowy Kisielin DC',
     });
     expect(supplierEligibility).toHaveProperty('checked', false);
-    expect(screen.queryByText('Northstar Logistics')).toBeNull();
+    expect(screen.queryByText('Northstar Packaging')).toBeNull();
   });
 
   it('performs no network, browser storage or source appointment mutation', () => {
