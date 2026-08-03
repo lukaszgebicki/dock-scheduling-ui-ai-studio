@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CalendarClock, Search, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
@@ -99,6 +99,21 @@ export function AppointmentsPage() {
   const [selectedSavedViewId, setSelectedSavedViewId] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
+  const renderedColumns = selectedColumns.filter((column) =>
+    allowedColumns.includes(column));
+  const effectiveColumns = renderedColumns.length > 0
+    ? renderedColumns
+    : allowedColumns;
+
+  useEffect(() => {
+    setSearchTerm('');
+    setFilters(emptyWorkspaceFilters);
+    setSelectedColumns(columnsForActor(activeActor));
+    setSavedViewName('');
+    setSelectedSavedViewId('');
+    setMessage(null);
+  }, [activeActor.id]);
+
   const filteredRecords = useMemo(() => filterWorkspaceRecords(
     visibleRecords,
     activeActor,
@@ -129,11 +144,12 @@ export function AppointmentsPage() {
     setSelectedColumns((current) => current.includes(column)
       ? current.filter((candidate) => candidate !== column)
       : workspaceColumnIds.filter((candidate) =>
-        candidate === column || current.includes(candidate)));
+        allowedColumns.includes(candidate)
+        && (candidate === column || current.includes(candidate))));
   };
 
   const saveCurrentView = () => {
-    const result = saveView(savedViewName, filters, selectedColumns);
+    const result = saveView(savedViewName, filters, effectiveColumns);
     setMessage(result.error ?? 'Saved view created in local memory only. Nothing was persisted.');
     if (result.savedView) {
       setSelectedSavedViewId(result.savedView.id);
@@ -219,7 +235,7 @@ export function AppointmentsPage() {
         <details className="mb-6 rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
           <summary className="cursor-pointer font-semibold text-gray-900">Column selector</summary>
           <div className="mt-3 flex flex-wrap gap-3">
-            {workspaceColumnIds.map((column) => <label key={column} className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" aria-label={`Column ${columnLabels[column]}`} checked={selectedColumns.includes(column)} onChange={() => toggleColumn(column)} />{columnLabels[column]}</label>)}
+            {workspaceColumnIds.filter((column) => allowedColumns.includes(column)).map((column) => <label key={column} className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" aria-label={`Column ${columnLabels[column]}`} checked={effectiveColumns.includes(column)} onChange={() => toggleColumn(column)} />{columnLabels[column]}</label>)}
           </div>
         </details>
       )}
@@ -228,9 +244,9 @@ export function AppointmentsPage() {
         <>
           <div className="hidden overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:block md:rounded-lg">
             <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50"><tr>{selectedColumns.map((column) => <th key={column} scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900">{columnLabels[column]}</th>)}<th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Action</th></tr></thead>
+              <thead className="bg-gray-50"><tr>{effectiveColumns.map((column) => <th key={column} scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900">{columnLabels[column]}</th>)}<th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Action</th></tr></thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredRecords.map((record) => <tr key={record.id}>{selectedColumns.map((column) => <td key={column} className="px-4 py-4 text-sm text-gray-700">{cellValue(record, column)}</td>)}<td className="whitespace-nowrap px-4 py-4 text-sm"><Link to={`/appointments/${record.id}`} aria-label={`Open appointment details ${record.systemReference}`} className="font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">Open appointment details</Link></td></tr>)}
+                {filteredRecords.map((record) => <tr key={record.id}>{effectiveColumns.map((column) => <td key={column} className="px-4 py-4 text-sm text-gray-700">{cellValue(record, column)}</td>)}<td className="whitespace-nowrap px-4 py-4 text-sm"><Link to={`/appointments/${record.id}`} aria-label={`Open appointment details ${record.systemReference}`} className="font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">Open appointment details</Link></td></tr>)}
               </tbody>
             </table>
           </div>
