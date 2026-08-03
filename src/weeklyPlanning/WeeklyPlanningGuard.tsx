@@ -3,6 +3,14 @@ import { Navigate } from 'react-router';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import type { WarehouseId } from '../demoDomain/demoDomain';
 
+export function getWeeklyPlanningWarehouseUniverse(
+  role: string,
+  assignedWarehouseIds: readonly WarehouseId[],
+  configuredWarehouseIds: readonly WarehouseId[],
+): readonly WarehouseId[] {
+  return role === 'System Administrator' ? configuredWarehouseIds : assignedWarehouseIds;
+}
+
 export function getAuthorizedWeeklyPlanningWarehouseIds(
   warehouseIds: readonly WarehouseId[],
   canAccess: (request: {
@@ -24,11 +32,15 @@ export function getAuthorizedWeeklyPlanningWarehouseIds(
 }
 
 export function WeeklyPlanningGuard({ children }: { children: React.ReactNode }) {
-  const { activeActor, canAccessWorkflowRoute, defaultRoute } = useDemoDomain();
-  const warehouseIds = getAuthorizedWeeklyPlanningWarehouseIds(
+  const { activeActor, configuration, canAccessWorkflowRoute, defaultRoute } = useDemoDomain();
+  const universe = getWeeklyPlanningWarehouseUniverse(
+    activeActor.role,
     activeActor.warehouseIds,
-    canAccessWorkflowRoute,
+    configuration.warehouses
+      .filter((warehouse) => warehouse.status === 'published')
+      .map((warehouse) => warehouse.id),
   );
+  const warehouseIds = getAuthorizedWeeklyPlanningWarehouseIds(universe, canAccessWorkflowRoute);
   if (warehouseIds.length === 0) return <Navigate to={defaultRoute} replace />;
   return <>{children}</>;
 }
