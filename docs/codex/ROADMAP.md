@@ -54,59 +54,57 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-REPORTING-1 — PO/SKU reports and local exports | DONE; PR #95 squash-merged at `607881b521f0846104bdf56432547b6f5a010585` |
 | UI-MVP-NOTIFICATIONS-STATES-1-ACTIVATE — activate notifications and exceptional states | DONE; PR #97 squash-merged at `f356ebca056d4a46c480c765684cfbeb8a41c496` |
 | UI-MVP-NOTIFICATIONS-STATES-1 — local notifications and exceptional states | DONE; PR #99 squash-merged at `02e7ac4eefcf87daccaeb393dfa0f9b6bb930a5c` |
-| UI-MVP-DASH-MOBILE-1-ACTIVATE — activate dashboards and responsive role views | DONE after merge of this activation PR |
+| UI-MVP-DASH-MOBILE-1-ACTIVATE — activate dashboards and responsive role views | DONE; PR #101 squash-merged at `3e39d6d5057f60415c64cbeed3177e5e1a36fb6d` |
+| UI-MVP-DASH-MOBILE-1 — role dashboards and responsive web views | DONE; PR #103 squash-merged at `06ea72d8e8f56d5d2004fd0fa06ab3de40c15ffc` |
+| UI-MVP-STANDING-1-ACTIVATE — activate standing appointment series | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-DASH-MOBILE-1 — role dashboards and responsive web views
+### UI-MVP-STANDING-1 — standing appointment series
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: add role-scoped operational dashboards and responsive web
-  presentations that expose approved KPI meaning and safe navigation without
-  inventing operational data or new business actions.
-- Product authority: `BDP-DASH-001`, `BDP-MOB-001`, BDP sections 16, 23 and 25,
-  plus existing actor, organization, warehouse, appointment, lifecycle,
-  planning, gate, reporting and notification contracts.
-- Warehouse Operator boundary: current indicators may include today's
-  appointments, expected in the next hour, appointments in the active week,
-  vehicles on site, at dock, late, action required and potential No Show.
-- Warehouse Administrator boundary: may additionally include pending approval,
-  slot and dock utilization, cancellations, manual overrides, average service
-  time and average waiting time only where those values are derivable from
-  existing actor-visible records; unavailable metrics must be explicitly
-  labelled unavailable rather than fabricated.
-- Supplier boundary: show only the active Supplier organization's next
-  appointment, required actions, pending approval, upcoming visits and scoped
-  history.
-- Security boundary: provide a responsive gate-oriented summary and safe links
-  to already authorized search/check-in/check-out workflows; do not expose
-  planning, reporting or other organizations' data.
-- KPI interaction boundary: each actionable KPI links to an already authorized
-  route with an explicit local filter definition. Navigation cannot broaden
-  actor scope, silently mutate data or grant a capability.
-- Mobile boundary: responsive web only. Supplier date/time selection uses a
-  day-and-time list rather than a compressed desktop calendar. Operator uses an
-  agenda. Full dock grids remain desktop/tablet. Warehouse Administrator gets
-  overview and basic actions; complex calendar configuration may recommend
-  desktop.
-- Data boundary: KPI calculations consume actor-visible workspace records and
-  existing configuration/workflow decisions only. Supplier actors never receive
-  another organization’s records, Internal Notes, audit metadata, import
-  diagnostics, source-row/batch lineage or Administrator-only reasoning.
-- Technical boundary: no native app, real camera/storage upload, QR, OCR, plate
-  recognition, geofencing, ETA, backend, API, persistence, browser storage,
-  integration, deployment or production-repository access is authorized.
-- Mutation boundary: dashboards and responsive presentations are read-only
-  consumers. Existing authorized actions may only be reached through their
-  existing guards and contracts; no new lifecycle, gate, dock, capacity,
-  approval, cancellation, reschedule, notification or reporting mutation is
-  introduced.
+- Objective: add local demonstrational eligibility, recurrence preview and
+  independent occurrence controls for standing appointments without reserving
+  capacity or persisting appointments.
+- Product authority: approved BDP section 4.5 plus existing role,
+  organization, warehouse, booking, capacity, lifecycle and Supplier-safety
+  contracts.
+- Eligibility boundary: Warehouse Administrator may locally manage eligibility
+  for Suppliers in assigned warehouses. Supplier Administrator may locally
+  manage eligibility only for its own organization. System Administrator may
+  inspect the full scoped demonstration but cannot silently substitute for an
+  eligibility decision assigned to those roles. Supplier User and Security
+  Officer cannot manage eligibility or series.
+- Definition boundary: a series requires weekday and time, weekly or biweekly
+  frequency, start date and exactly one termination rule: inclusive end date or
+  occurrence count.
+- Occurrence boundary: every generated occurrence is an independent local
+  preview item and independently reports compatibility, capacity/approval
+  readiness and conflict evidence available from existing configuration. No
+  occurrence reserves a slot or creates an appointment.
+- Exception boundary: one preview occurrence may be locally edited,
+  rescheduled or cancelled without changing other occurrences. A permitted
+  Administrator may locally pause or end the series. These controls affect only
+  the demonstration state.
+- Hold boundary: an unconfirmed occurrence may display an illustrative hold
+  expiry state, but no timer, background job, capacity release or notification
+  delivery is authorized.
+- Data boundary: Supplier actors never receive another organization’s records,
+  Internal Notes, technical audit metadata, import diagnostics,
+  source-row/batch lineage, hidden capacity details or Administrator-only
+  reasoning.
+- Technical boundary: no recurrence scheduler, backend, API, persistence,
+  browser storage, background task, real hold, integration, deployment or
+  production-repository access is authorized.
+- Mutation boundary: standing-series previews may not mutate existing
+  appointments, planning, lifecycle/change, operational, transport, capacity,
+  gate, reporting, notification, dashboard or configuration state.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus complete validation, Simplification Pass, independent review and
   controlled publication.
 
-`UI-MVP-STANDING-1`, final product review and every other remaining source task
-remain inactive and unauthorized. No other product, governance, security or
-infrastructure task is `READY` or active.
+Final product review and every other source or governance task remain inactive
+and unauthorized. No other product, governance, security or infrastructure
+task is `READY` or active.
