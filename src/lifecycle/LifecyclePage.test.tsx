@@ -95,7 +95,9 @@ describe('LifecyclePage', () => {
 
     fireEvent.click(within(article).getByRole('button', { name: 'Evaluate approval mode' }));
     expect(within(article).getByText('Lifecycle: PENDING_APPROVAL')).toBeDefined();
-    expect(within(article).getByText(/Approve route:/).textContent).toContain('RUN');
+    expect(within(article).getByText((_content, element) =>
+      element?.tagName === 'P'
+      && element.textContent?.includes('Approve route: RUN') === true)).toBeDefined();
     expect(within(article).getByRole('button', { name: 'Approve appointment' })).toBeDefined();
     expect(within(article).getByRole('button', { name: 'Reject appointment' })).toBeDefined();
     expect(within(article).getByRole('button', { name: 'Request appointment data' })).toBeDefined();
