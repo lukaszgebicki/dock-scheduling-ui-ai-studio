@@ -257,11 +257,10 @@ export function createRuntimeProcessRunner(
   { processRunner = runProcess } = {},
 ) {
   return async (executable, args, options = {}) => {
-    if (!sameExecutable(executable, tools.codex) || !args.includes("exec")) {
+    if (!sameExecutable(executable, tools.codex)) {
       return processRunner(executable, args, options);
     }
 
-    const normalizedArgs = normalizeCodexExecArguments(args);
     const runCodex = (codexArgs, codexOptions) =>
       tools.codexNodeLauncher
         ? processRunner(
@@ -270,6 +269,11 @@ export function createRuntimeProcessRunner(
             codexOptions,
           )
         : processRunner(executable, codexArgs, codexOptions);
+    if (!args.includes("exec")) {
+      return runCodex(args, options);
+    }
+
+    const normalizedArgs = normalizeCodexExecArguments(args);
     const initialBuilder =
       typeof options.input === "string" &&
       options.input.startsWith("Implement task ");
