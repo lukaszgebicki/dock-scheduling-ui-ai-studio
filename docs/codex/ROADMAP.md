@@ -42,41 +42,50 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-CALENDAR-CAPACITY-1 — PO planning calendar and capacity | DONE; PR #70 squash-merged at `327506b08462d498b387d50b6402650a600b7def` |
 | UI-MVP-ADMIN-IMPORT-1-ACTIVATE — activate local Friday PO import | DONE; PR #73 squash-merged at `6b18bdeecb0f6d725a26b457cce5e4e87e04df09` |
 | UI-MVP-ADMIN-IMPORT-1 — local Friday PO import preview | DONE; PR #75 squash-merged at `c492ba9f28c764f0432dffc46b89fdf207f02c37` |
-| UI-MVP-WEEKLY-PLANNING-1-ACTIVATE — activate exact enrichment and planning queue | DONE after merge of this activation PR |
+| UI-MVP-WEEKLY-PLANNING-1-ACTIVATE — activate exact enrichment and planning queue | DONE; PR #77 squash-merged at `e75364948958b5e9b9b6b054246987caaece0053` |
+| UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue | DONE; PR #79 squash-merged at `c8e9e5af3d891ea7438afc1e69637e4b5f18cf59` |
+| UI-MVP-LIFECYCLE-1-ACTIVATE — activate capability-routed lifecycle consumer | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue
+### UI-MVP-LIFECYCLE-1 — capability-routed lifecycle transitions
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: connect the approved Supplier reservation, Friday import preview,
-  PO/SKU calendar and capacity contracts through deterministic local planning
-  state without introducing appointment lifecycle execution or persistence.
-- Product authority: `BDP-WPL-001`, `BDP-DATA-001`, `BDP-MATCH-001`, applicable
-  `BDP-CAP-001` and `BDP-VAL-001`, scenarios `AC-ADM-002`, `AC-ADM-004` through
-  `AC-ADM-007`, and integrated Supplier/calendar scenarios.
-- Exact-enrichment boundary: only an exact five-field match may attach imported
-  zero-to-many SKU lines to the matching PO header. Slot, booking origin,
-  Supplier transport values and appointment lifecycle status remain unchanged.
-- Queue boundary: `NO_MATCH` creates local unscheduled planning evidence only,
-  with no fabricated slot or capacity. An `ADMIN_ADDED` appointment requires a
-  separately authorized `SCHEDULE_UNRESERVED_DELIVERY` action and a compatible
-  free slot.
-- Conflict boundary: ambiguous matches and enrichment/capacity conflicts remain
-  blocked until an authorized `RESOLVE_PLANNING_CONFLICT` action records an
-  explicit resolution. No silent attachment, replacement, transport overwrite,
-  move, cancellation, approval or override is permitted.
-- Status boundary: planning state is explicit and independent of appointment
-  lifecycle status. Readiness cannot authorize lifecycle or gate execution.
+- Objective: consume the approved capability routing, configuration, planning
+  readiness and capacity projections through constrained local appointment
+  lifecycle transitions without introducing gate execution or persistence.
+- Product authority: `BDP-STAT-001`, `BDP-APR-001`, `BDP-EDIT-001`,
+  `BDP-CAN-001`, applicable `BDP-VAL-001`, scenarios `AC-WAD-003`,
+  `AC-SUP-003` through `AC-SUP-005`, `AC-FLOW-005`, and only the lifecycle
+  portion of `AC-WOP-002`.
+- Status boundary: preserve the approved planning, change and operational status
+  categories as independent typed state. Planning readiness and imported detail
+  state cannot authorize an appointment lifecycle transition.
+- Transition boundary: expose only transitions present in the canonical status
+  matrix. No inferred transition, physical deletion, implicit rollback or status
+  jump is permitted.
+- Routing boundary: approval, rejection and request-data actions must consume the
+  existing capability decision. A missing required approver must delegate only
+  to an authorized fallback or `BLOCK`; it must never produce silent
+  auto-approval.
+- Change boundary: pre/post-confirmation edits, reschedule and cancellation must
+  follow approved actor and cut-off rules. Material actions require explicit
+  reason and immutable in-memory before/after evidence.
+- Capacity boundary: a reschedule preserves the old slot until the new compatible
+  slot is explicitly accepted. Cancellation releases local projected capacity
+  and remains visible. No automatic move, capacity override or hidden recovery
+  action is implied.
 - Scope boundary: System Administrator acts globally; assigned Warehouse
-  Administrator acts only in assigned warehouse scope. Supplier, Operator and
-  Security actors receive no import diagnostics or planning-resolution actions.
+  Administrator and optional Warehouse Operator capabilities remain warehouse-
+  scoped; Supplier actions remain organization-scoped. Security receives no
+  lifecycle consumer actions in this task.
 - Implementation boundary: implement only typed provider/component memory,
-  exact local enrichment, unmatched queue, compatible-slot scheduling for an
-  authorized Admin path, explicit conflict resolution and focused consumers.
-  Do not implement notifications, lifecycle/gate transitions, reporting,
-  durable persistence, backend or integrations.
+  capability-controlled lifecycle consumers, approved transition validation,
+  controlled reschedule/cancellation consequences, history evidence and focused
+  accessible UI/tests. Do not implement gate operations, check-in/check-out,
+  dock assignment, notifications, reporting, durable persistence, backend or
+  integrations.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus an external worktree, complete validation, independent review and
@@ -85,7 +94,7 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
   sessionStorage, IndexedDB, cookies, network APIs, deployment or production-
   repository access.
 
-Lifecycle and gate consumers, `UI-MVP-LIST-DETAILS-1`,
+`UI-MVP-GATE-OPS-1`, extended `UI-MVP-LIST-DETAILS-1`,
 `UI-MVP-REPORTING-1` and all remaining source tasks remain inactive and
 unauthorized. No other product, governance, security or infrastructure task is
 `READY` or active.
