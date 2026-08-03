@@ -46,68 +46,67 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue | DONE; PR #79 squash-merged at `c8e9e5af3d891ea7438afc1e69637e4b5f18cf59` |
 | UI-MVP-LIFECYCLE-1-ACTIVATE — activate capability-routed lifecycle consumer | DONE; PR #81 squash-merged at `56385131cfa88976f7e19eb3f763a73aa8121951` |
 | UI-MVP-LIFECYCLE-1 — capability-routed lifecycle transitions | DONE; PR #83 squash-merged at `3b0552a6a095da1cd2248f7d6b6e60850a6261d0` |
-| UI-MVP-GATE-OPS-1-ACTIVATE — activate operator and Security workflows | DONE after merge of this activation PR |
+| UI-MVP-GATE-OPS-1-ACTIVATE — activate operator and Security workflows | DONE; PR #85 squash-merged at `e98796157ecbf4d9e858a4e10b252ad7819f5b01` |
+| UI-MVP-GATE-OPS-1 — operator and Security workflows | DONE; PR #87 squash-merged at `bc4b11325a4f894c4227ea75eefaa487cce22221` |
+| UI-MVP-LIST-DETAILS-1-ACTIVATE — activate planning-aware appointment list and details | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-GATE-OPS-1 — operator and Security workflows
+### UI-MVP-LIST-DETAILS-1 — planning-aware appointment list and details
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: consume the existing capability routing, lifecycle evidence,
-  configuration and calendar projection through constrained local gate and
-  warehouse-operation workflows without introducing durable effects.
-- Product authority: `BDP-OPS-001`, sections 13.1 through 13.5, operational
-  transitions from the canonical status matrix, applicable `BDP-VAL-001`,
-  scenarios `AC-WOP-001`, the operational portion of `AC-WOP-002`,
-  `AC-SEC-001`, `AC-SEC-002`, `AC-FLOW-006` and `AC-FLOW-007`.
-- Routing boundary: use exactly the existing capabilities and steps for
-  `CHECK_IN`, `CHECK_OUT`, `ASSIGN_DOCK`, `CHANGE_DOCK`,
-  `PROGRESS_OPERATION` and `CONFIRM_NO_SHOW`. Navigation, visible actions,
-  direct routes and execution must share the same `RUN`, `DELEGATE` or `BLOCK`
-  decision and selected actor.
-- Actor boundary: Security Officer is primary for gate check-in/out and sees
-  only the approved warehouse horizon and limited gate data. Warehouse Operator
-  is primary for docks, operational progression and confirmed No Show.
-  Warehouse Administrator may act only when selected as the existing fallback.
-  No additional fallback identity may be invented.
-- Status boundary: operational status remains independent from lifecycle,
-  planning and change status. Gate actions cannot approve, reject, reschedule,
-  cancel, restore or otherwise repair lifecycle state.
-- Transition boundary: check-out before check-in, Completed before Unloading and
-  every operational status jump outside the canonical sequence fail closed and
-  create no success history.
-- Arrival boundary: scoped search uses approved identifiers; an eligible check-in
-  records Early, On Time or Late arrival evidence without moving the slot.
-  Early arrival may enter waiting but early service remains an Operator decision.
-- Dock boundary: assignment and change require a currently active compatible
-  dock and explicit before/after evidence. Existing configuration, blocks and
-  scope remain authoritative; no automatic move or hidden override is implied.
-- No-show boundary: a potential No Show is only an alert/evidence state until an
-  authorized human confirms it. Confirmation releases local projected capacity,
-  remains visible and must not physically delete the record.
-- Unannounced boundary: a gate user may create only a local demonstrational
-  unannounced-visit record containing required gate fields and route it for
-  decision. It must not silently become CONFIRMED, receive a dock/capacity,
-  bypass approval or masquerade as a Supplier booking.
-- Evidence boundary: registration correction, gate notes, dock changes and all
-  material gate actions require explicit actor, reason and immutable in-memory
-  before/after evidence. Supplier-origin transport values and reconciliation
-  evidence must not be silently erased.
-- Implementation boundary: implement typed provider/component memory,
-  capability-controlled gate consumers, scoped search, operational progression,
-  arrival classification, dock/no-show consequences, unannounced decision
-  records and accessible focused UI/tests. Do not implement lifecycle approval
-  or change actions, notifications, OCR/ANPR, reporting, document storage,
-  durable persistence, backend or integrations.
+- Objective: extend the existing appointment overview into role-scoped list and
+  detail consumers that expose approved PO/SKU, planning, lifecycle,
+  operational, transport and history evidence without creating new business
+  transitions or durable effects.
+- Product authority: `BDP-LIST-001`, `BDP-DET-001`, `BDP-DATA-001`, applicable
+  `BDP-CAL-002`, the safe-edit portion of `BDP-EDIT-001`, `AC-SUP-002` and
+  `AC-SUP-008`.
+- List boundary: internal and Supplier actors receive only their approved column
+  sets. Filters, global search and demonstrational saved views remain scoped to
+  the active actor, organization and warehouse visibility.
+- Detail boundary: expose the approved Overview, Delivery Data, Transport,
+  Orders and References, Quantities, Comments, Status History, Change History
+  and Audit Metadata projections only where the actor may see them. Documents
+  remain display-only fixtures; no storage behavior is authorized.
+- Planning boundary: show PO header, zero-to-many SKU lines, booking origin,
+  planning state and approved reconciliation outcomes without exposing import
+  diagnostics, source-row identifiers or batch lineage to Supplier actors.
+- Supplier-safety boundary: Supplier actors never see internal notes, technical
+  audit metadata, Security-only evidence, another organization’s data or
+  Administrator-only reconciliation diagnostics.
+- Search boundary: global search covers only approved identifiers and fields
+  visible to the active actor. It must not fuzzy-match hidden data or leak
+  records outside role, Supplier-organization or warehouse scope.
+- Saved-view boundary: saving, naming and choosing a default view is a local
+  demonstrational state only. No browser storage, backend persistence or claim
+  of durable personalization is permitted.
+- Comment boundary: Shared Comment and Internal Note are distinct typed choices.
+  Visibility must be selected explicitly before submission; Supplier actors may
+  never receive Internal Notes.
+- Edit boundary: inline changes are limited to safe fields explicitly permitted
+  by `BDP-EDIT-001` and require actor, reason and immutable local before/after
+  history. Slot-affecting, lifecycle, dock, capacity, approval, cancellation,
+  reschedule and transport-authority changes remain controlled by existing
+  consumers and may not be invented inside list/details.
+- Status boundary: planning, lifecycle/change and operational statuses remain
+  independent. Display readiness or a required-action label never authorizes a
+  transition and cannot fabricate success history.
+- Implementation boundary: use typed local provider/component memory and
+  established appointment, calendar, weekly-planning, lifecycle, gate and
+  transport evidence. Do not implement reporting/export, notifications,
+  dashboards, standing appointments, document upload, backend, APIs,
+  persistence or integrations.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
-  PR, plus an external worktree, complete validation, independent review and
-  controlled publication.
+  PR, plus an external worktree, complete validation, Simplification Pass,
+  independent review and controlled publication.
 - Technical boundary: frontend-only local or in-memory scope; no localStorage,
   sessionStorage, IndexedDB, cookies, network APIs, deployment or production-
   repository access.
 
-Extended `UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining source
-tasks remain inactive and unauthorized. No other product, governance, security
+`UI-MVP-REPORTING-1`, `UI-MVP-NOTIFICATIONS-STATES-1`,
+`UI-MVP-DASH-MOBILE-1`, `UI-MVP-STANDING-1` and every other remaining source
+task remain inactive and unauthorized. No other product, governance, security
 or infrastructure task is `READY` or active.
