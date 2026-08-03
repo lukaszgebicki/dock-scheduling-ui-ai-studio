@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { planningAppointments } from '../calendar/planningCalendar';
+import { planningAppointments, type PlanningAppointment } from '../calendar/planningCalendar';
 import { buildFridayImportPreview, createFridayImportTargets, fridayImportHeaders } from '../import/fridayImport';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import {
@@ -9,11 +9,18 @@ import {
 import {
   attachExactDetails,
   createWeeklyPlanningState,
+  resolveAmbiguousTarget,
+  resolveTransportConflictKeepingSupplierValues,
   scheduleUnreservedDelivery,
   type WeeklyPlanningState,
 } from './weeklyPlanning';
 
 const row = (values: readonly string[]) => values.join(',');
+const ambiguousAppointments: readonly PlanningAppointment[] = [
+  ...planningAppointments,
+  { ...planningAppointments[0], id: 'planning-ambiguous-a', purchaseOrderNumber: 'PO-AMBIG-1' },
+  { ...planningAppointments[0], id: 'planning-ambiguous-b', purchaseOrderNumber: 'PO-AMBIG-1' },
+];
 const demoCsv = [
   fridayImportHeaders.join(','),
   row([
@@ -24,6 +31,14 @@ const demoCsv = [
     'nowy-kisielin-distribution-center', 'northstar-packaging', 'PO-UNMATCHED-77', '2026-W33', '1',
     'SKU-N-2', 'Unmatched detail', '100', '1', 'EURO_PALLET', 'DRY_GOODS', 'Standard', 'TR-777', 'TRL-778',
   ]),
+  row([
+    'nowy-kisielin-distribution-center', 'northstar-packaging', 'PO-AMBIG-1', '2026-W33', '1',
+    'SKU-N-3', 'Ambiguous detail', '80', '1', 'EURO_PALLET', 'DRY_GOODS', 'Standard', 'TR-100', 'TRL-200',
+  ]),
+  row([
+    'nowy-kisielin-distribution-center', 'vistula-materials', 'PO-DEMO-3001', '2026-W33', '1',
+    'SKU-N-4', 'Transport conflict detail', '60', '1', 'EURO_PALLET', 'PACKAGING', 'Fragile', 'IMPORTED-TR', 'IMPORTED-CONT',
+  ]),
 ].join('\n');
 
 function initialState(): WeeklyPlanningState {
@@ -31,9 +46,9 @@ function initialState(): WeeklyPlanningState {
     fileName: 'friday-weekly-planning.csv',
     size: demoCsv.length,
     text: demoCsv,
-    targets: createFridayImportTargets(planningAppointments),
+    targets: createFridayImportTargets(ambiguousAppointments),
   });
-  return createWeeklyPlanningState(planningAppointments, preview.groups);
+  return createWeeklyPlanningState(ambiguousAppointments, preview.groups);
 }
 
 export function WeeklyPlanningPage() {
@@ -57,20 +72,48 @@ export function WeeklyPlanningPage() {
   const [reason, setReason] = useState('Reviewed local planning evidence');
   const [plannedDate, setPlannedDate] = useState('2026-08-13');
   const [plannedTime, setPlannedTime] = useState('09:00');
+  const [selectedTargets, setSelectedTargets] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
 
   const visibleQueue = state.queue.filter((item) =>
     authorizedWarehouseIds.includes(item.group.identity.warehouseCode.toLowerCase() as typeof authorizedWarehouseIds[number]));
 
+  const conflictAuthorized = (warehouseCode: string) => canPerformWorkflowAction({
+    step: 'ADMIN_RESOLVE_PLANNING_CONFLICT',
+    capability: 'RESOLVE_PLANNING_CONFLICT',
+    scope: { warehouseId: warehouseCode.toLowerCase() as typeof authorizedWarehouseIds[number] },
+  });
+
   const applyExact = (fingerprint: string, warehouseCode: string) => {
-    const authorized = canPerformWorkflowAction({
-      step: 'ADMIN_RESOLVE_PLANNING_CONFLICT',
-      capability: 'RESOLVE_PLANNING_CONFLICT',
-      scope: { warehouseId: warehouseCode.toLowerCase() as typeof authorizedWarehouseIds[number] },
-    });
-    const result = attachExactDetails(state, fingerprint, activeActor.userId, reason, authorized);
+    const result = attachExactDetails(state, fingerprint, activeActor.userId, reason, conflictAuthorized(warehouseCode));
     setState(result.state);
     setMessage(result.error ?? 'SKU details attached locally. Slot, booking origin, transport and lifecycle status were preserved.');
+  };
+
+  const resolveAmbiguous = (fingerprint: string, warehouseCode: string, candidates: readonly string[]) => {
+    const selected = selectedTargets[fingerprint] ?? candidates[0] ?? '';
+    const result = resolveAmbiguousTarget(
+      state,
+      fingerprint,
+      selected,
+      activeActor.userId,
+      reason,
+      conflictAuthorized(warehouseCode),
+    );
+    setState(result.state);
+    setMessage(result.error ?? `Exact target ${selected} selected locally. No SKU details were attached automatically.`);
+  };
+
+  const keepSupplierTransport = (fingerprint: string, warehouseCode: string) => {
+    const result = resolveTransportConflictKeepingSupplierValues(
+      state,
+      fingerprint,
+      activeActor.userId,
+      reason,
+      conflictAuthorized(warehouseCode),
+    );
+    setState(result.state);
+    setMessage(result.error ?? 'Supplier transport values were retained. Imported transport was not applied; SKU enrichment is now separately available.');
   };
 
   const schedule = (fingerprint: string, warehouseCode: string) => {
@@ -136,9 +179,44 @@ export function WeeklyPlanningPage() {
             <p className="mt-3 text-sm text-gray-700">{item.group.lines.length} SKU line(s). Planning status is independent of appointment lifecycle.</p>
             {item.group.diagnostics.length > 0 && (
               <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
-                {item.group.diagnostics.map((diagnostic) => <li key={diagnostic}>{diagnostic}</li>)}
+                {item.group.diagnostics.map((diagnostic, index) => <li key={`${diagnostic}-${index}`}>{diagnostic}</li>)}
               </ul>
             )}
+
+            {item.state === 'AMBIGUOUS' && (
+              <div className="mt-4 rounded-md border border-gray-300 p-4">
+                <p className="text-sm font-semibold text-gray-900">Exact candidates</p>
+                <label className="mt-2 block text-sm text-gray-700">
+                  Select exact target for {item.group.identity.purchaseOrderNumber}
+                  <select
+                    aria-label={`Exact target for ${item.group.identity.purchaseOrderNumber}`}
+                    value={selectedTargets[item.group.fingerprint] ?? item.group.matchedAppointmentIds[0] ?? ''}
+                    onChange={(event) => setSelectedTargets((current) => ({ ...current, [item.group.fingerprint]: event.target.value }))}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                  >
+                    {item.group.matchedAppointmentIds.map((candidate) => <option key={candidate} value={candidate}>{candidate}</option>)}
+                  </select>
+                </label>
+                <button type="button" onClick={() => resolveAmbiguous(item.group.fingerprint, item.group.identity.warehouseCode, item.group.matchedAppointmentIds)} className="mt-3 rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+                  Confirm exact target
+                </button>
+              </div>
+            )}
+
+            {item.state === 'TRANSPORT_CONFLICT' && (
+              <div className="mt-4 rounded-md border border-gray-300 p-4">
+                <p className="text-sm font-semibold text-gray-900">Transport differences</p>
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
+                  {item.group.transportConflicts.map((conflict) => (
+                    <li key={conflict.field}>{conflict.field}: Supplier {conflict.existingValue}; imported {conflict.importedValue}</li>
+                  ))}
+                </ul>
+                <button type="button" onClick={() => keepSupplierTransport(item.group.fingerprint, item.group.identity.warehouseCode)} className="mt-3 rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+                  Keep Supplier transport values
+                </button>
+              </div>
+            )}
+
             <div className="mt-4 flex flex-wrap gap-3">
               {item.state === 'EXACT_READY' && !item.appliedAppointmentId && (
                 <button type="button" onClick={() => applyExact(item.group.fingerprint, item.group.identity.warehouseCode)} className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
@@ -159,8 +237,19 @@ export function WeeklyPlanningPage() {
       <section className="mt-6 rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200" aria-labelledby="planning-history-title">
         <h2 id="planning-history-title" className="font-semibold text-gray-900">Immutable local history evidence</h2>
         {state.history.length === 0 ? <p className="mt-2 text-sm text-gray-600">No planning action has been applied.</p> : (
-          <ol className="mt-3 space-y-2 text-sm text-gray-700">
-            {state.history.map((entry) => <li key={entry.id}>{entry.action} · {entry.targetAppointmentId} · {entry.reason}</li>)}
+          <ol className="mt-3 space-y-3 text-sm text-gray-700">
+            {state.history.map((entry) => (
+              <li key={entry.id} className="rounded-md border border-gray-200 p-3">
+                <p className="font-semibold">{entry.action} · {entry.targetAppointmentId} · {entry.reason}</p>
+                <details className="mt-2">
+                  <summary className="cursor-pointer font-medium">Before and after evidence</summary>
+                  <p className="mt-2 font-semibold">Before</p>
+                  <pre className="mt-1 overflow-auto whitespace-pre-wrap text-xs">{entry.before}</pre>
+                  <p className="mt-2 font-semibold">After</p>
+                  <pre className="mt-1 overflow-auto whitespace-pre-wrap text-xs">{entry.after}</pre>
+                </details>
+              </li>
+            ))}
           </ol>
         )}
       </section>
