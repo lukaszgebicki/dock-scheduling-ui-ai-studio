@@ -108,65 +108,83 @@ function snapshot(appointment: LifecycleAppointment): string {
   });
 }
 
-function appendHistory(
+function success(
   state: LifecycleState,
-  appointment: LifecycleAppointment,
-  updated: LifecycleAppointment,
+  before: LifecycleAppointment,
+  after: LifecycleAppointment,
   action: LifecycleHistoryAction,
   actorId: string,
   reason: string,
-): LifecycleState {
+): LifecycleActionResult {
   const sequence = state.history.length + 1;
   return {
-    appointments: state.appointments.map((candidate) =>
-      candidate.id === updated.id ? updated : candidate),
-    history: [
-      ...state.history,
-      {
-        id: `lifecycle-history-${sequence.toString().padStart(3, '0')}`,
-        sequence,
-        appointmentId: appointment.id,
-        action,
-        actorId,
-        reason,
-        sourceStatus: appointment.appointmentStatus,
-        targetStatus: updated.appointmentStatus,
-        before: snapshot(appointment),
-        after: snapshot(updated),
-      },
-    ],
+    state: {
+      appointments: state.appointments.map((appointment) =>
+        appointment.id === after.id ? after : appointment),
+      history: [
+        ...state.history,
+        {
+          id: `lifecycle-history-${sequence.toString().padStart(3, '0')}`,
+          sequence,
+          appointmentId: before.id,
+          action,
+          actorId,
+          reason,
+          sourceStatus: before.appointmentStatus,
+          targetStatus: after.appointmentStatus,
+          before: snapshot(before),
+          after: snapshot(after),
+        },
+      ],
+    },
+    error: null,
   };
 }
 
-function requiredReason(reason: string): string | null {
-  return reason.trim().length > 0 ? null : 'A reason is required.';
+function failure(state: LifecycleState, error: string): LifecycleActionResult {
+  return { state, error };
 }
 
-function findAppointment(state: LifecycleState, appointmentId: string): LifecycleAppointment | null {
+function getAppointment(
+  state: LifecycleState,
+  appointmentId: string,
+): LifecycleAppointment | null {
   return state.appointments.find((appointment) => appointment.id === appointmentId) ?? null;
 }
 
-function exactConfiguration(
+function reasonError(reason: string): string | null {
+  return reason.trim().length > 0 ? null : 'A reason is required.';
+}
+
+function configurationError(
   configuration: DemoConfigurationState,
   appointment: LifecycleAppointment,
+  requireFlowCompatibility: boolean,
 ): string | null {
   const warehouses = configuration.warehouses.filter((warehouse) =>
     warehouse.id === appointment.warehouseId);
   if (warehouses.length === 0) return 'Warehouse configuration is missing.';
   if (warehouses.length > 1) return 'Warehouse configuration is ambiguous.';
-  if (warehouses[0].status !== 'published') return 'Warehouse configuration is not published.';
+  const warehouse = warehouses[0];
+  if (warehouse.status !== 'published') return 'Warehouse configuration is not published.';
 
   const suppliers = configuration.suppliers.filter((supplier) =>
     supplier.organizationId === appointment.supplierOrganizationId);
   if (suppliers.length === 0) return 'Supplier configuration is missing.';
   if (suppliers.length > 1) return 'Supplier configuration is ambiguous.';
-  if (!suppliers[0].warehouseIds.includes(appointment.warehouseId)) {
+  const supplier = suppliers[0];
+  if (!supplier.warehouseIds.includes(appointment.warehouseId)) {
     return 'Supplier is not assigned to the appointment warehouse.';
+  }
+  if (requireFlowCompatibility
+    && (!warehouse.availableFlows.includes(appointment.flow)
+      || !supplier.allowedFlows.includes(appointment.flow))) {
+    return 'Appointment flow is incompatible with the published configuration.';
   }
   return null;
 }
 
-function routingDecisionMatches(
+function routingMatches(
   decision: WorkflowRoutingDecision,
   appointment: LifecycleAppointment,
   step: WorkflowRoutingDecision['step'],
@@ -184,11 +202,11 @@ function routingAllows(
   step: WorkflowRoutingDecision['step'],
   capability: WorkflowRoutingDecision['capability'],
 ): boolean {
-  return routingDecisionMatches(decision, appointment, step, capability)
+  return routingMatches(decision, appointment, step, capability)
     && workflowDecisionAllowsActor(decision, actorId);
 }
 
-function actorCanChangeAppointment(actor: DemoActor, appointment: LifecycleAppointment): boolean {
+function actorCanChange(actor: DemoActor, appointment: LifecycleAppointment): boolean {
   if (actor.role === 'System Administrator') return true;
   if (actor.role === 'Warehouse Administrator') {
     return actor.warehouseIds.includes(appointment.warehouseId);
@@ -200,21 +218,18 @@ function actorCanChangeAppointment(actor: DemoActor, appointment: LifecycleAppoi
   return false;
 }
 
-function actorCanEvaluateApproval(actor: DemoActor, appointment: LifecycleAppointment): boolean {
+function actorCanEvaluate(actor: DemoActor, appointment: LifecycleAppointment): boolean {
   return actor.role === 'System Administrator'
     || (actor.role === 'Warehouse Administrator'
       && actor.warehouseIds.includes(appointment.warehouseId));
 }
 
-function capacityHolding(status: LifecyclePlanningStatus): boolean {
+function holdsCapacity(status: LifecyclePlanningStatus): boolean {
   return status === 'SUBMITTED' || status === 'PENDING_APPROVAL' || status === 'CONFIRMED';
 }
 
 function toPlanningAppointment(appointment: LifecycleAppointment): PlanningAppointment {
-  return {
-    ...appointment,
-    appointmentStatus: appointment.appointmentStatus,
-  };
+  return { ...appointment, appointmentStatus: appointment.appointmentStatus };
 }
 
 function activePlanningAppointments(
@@ -223,7 +238,7 @@ function activePlanningAppointments(
 ): readonly PlanningAppointment[] {
   return state.appointments
     .filter((appointment) =>
-      appointment.id !== excludedAppointmentId && capacityHolding(appointment.appointmentStatus))
+      appointment.id !== excludedAppointmentId && holdsCapacity(appointment.appointmentStatus))
     .map(toPlanningAppointment);
 }
 
@@ -234,12 +249,17 @@ function compatibleSlotError(
   plannedTime: string,
   configuration: DemoConfigurationState,
 ): string | null {
-  const candidate: LifecycleAppointment = { ...appointment, plannedDate, plannedTime };
-  const projected = buildPlanningCalendar(
+  const candidate = { ...appointment, plannedDate, plannedTime };
+  const card = buildPlanningCalendar(
     [...activePlanningAppointments(state, appointment.id), toPlanningAppointment(candidate)],
     configuration.warehouses,
-  ).find((card) => card.appointment.id === appointment.id);
-  return projected?.conflict?.message ?? (projected ? null : 'Capacity configuration could not be evaluated.');
+  ).find((item) => item.appointment.id === appointment.id);
+  return card?.conflict?.message ?? (card ? null : 'Capacity configuration could not be evaluated.');
+}
+
+function parseReferenceTime(value: string): number {
+  const civilMinute = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+  return Date.parse(civilMinute ? `${value}:00Z` : value);
 }
 
 function isAfterCutOff(
@@ -251,7 +271,7 @@ function isAfterCutOff(
     warehouse.id === appointment.warehouseId);
   if (warehouses.length !== 1 || warehouses[0].status !== 'published') return null;
   const appointmentTime = Date.parse(`${appointment.plannedDate}T${appointment.plannedTime}:00Z`);
-  const referenceTime = Date.parse(referenceDateTime);
+  const referenceTime = parseReferenceTime(referenceDateTime);
   if (!Number.isFinite(appointmentTime) || !Number.isFinite(referenceTime)) return null;
   return referenceTime >= appointmentTime - warehouses[0].cutOffHours * 60 * 60 * 1000;
 }
@@ -287,34 +307,34 @@ export function submitDraftAppointment(
   reason: string,
   configuration: DemoConfigurationState,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.appointmentStatus !== 'DRAFT') {
-    return { state, error: 'Only a DRAFT appointment can be submitted.' };
+    return failure(state, 'Only a DRAFT appointment can be submitted.');
   }
-  if (!actorCanChangeAppointment(actor, appointment)) {
-    return { state, error: 'The active actor cannot submit this appointment.' };
+  if (!actorCanChange(actor, appointment)) {
+    return failure(state, 'The active actor cannot submit this appointment.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
-  const configurationError = exactConfiguration(configuration, appointment);
-  if (configurationError) return { state, error: configurationError };
-  const slotError = compatibleSlotError(
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
+  const invalidConfiguration = configurationError(configuration, appointment, true);
+  if (invalidConfiguration) return failure(state, invalidConfiguration);
+  const invalidSlot = compatibleSlotError(
     state,
     appointment,
     appointment.plannedDate,
     appointment.plannedTime,
     configuration,
   );
-  if (slotError) return { state, error: slotError };
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    appointmentStatus: 'SUBMITTED',
-  };
-  return {
-    state: appendHistory(state, appointment, updated, 'SUBMIT', actor.userId, reason.trim()),
-    error: null,
-  };
+  if (invalidSlot) return failure(state, invalidSlot);
+  return success(
+    state,
+    appointment,
+    { ...appointment, appointmentStatus: 'SUBMITTED' },
+    'SUBMIT',
+    actor.userId,
+    reason.trim(),
+  );
 }
 
 export function evaluateSubmittedAppointment(
@@ -325,18 +345,18 @@ export function evaluateSubmittedAppointment(
   configuration: DemoConfigurationState,
   approvalDecision: WorkflowRoutingDecision,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.appointmentStatus !== 'SUBMITTED') {
-    return { state, error: 'Only a SUBMITTED appointment can be evaluated.' };
+    return failure(state, 'Only a SUBMITTED appointment can be evaluated.');
   }
-  if (!actorCanEvaluateApproval(actor, appointment)) {
-    return { state, error: 'The active actor cannot evaluate approval in this warehouse.' };
+  if (!actorCanEvaluate(actor, appointment)) {
+    return failure(state, 'The active actor cannot evaluate approval in this warehouse.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
-  const configurationError = exactConfiguration(configuration, appointment);
-  if (configurationError) return { state, error: configurationError };
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
+  const invalidConfiguration = configurationError(configuration, appointment, true);
+  if (invalidConfiguration) return failure(state, invalidConfiguration);
 
   const request: ApprovalRequest = {
     warehouseId: appointment.warehouseId,
@@ -348,35 +368,31 @@ export function evaluateSubmittedAppointment(
   };
   const mode = evaluateApproval(configuration, request);
   if (mode === 'manual') {
-    if (!routingDecisionMatches(
+    const routed = routingMatches(
       approvalDecision,
       appointment,
       'MANUAL_APPROVAL',
       'APPROVE_APPOINTMENT',
-    )) {
-      return { state, error: 'Approval routing evidence does not match this appointment.' };
-    }
-    if (approvalDecision.outcome === 'BLOCK' || approvalDecision.outcome === 'SKIP'
-      || approvalDecision.selectedActor === null) {
-      return { state, error: 'Manual approval is blocked because no authorized approver is available.' };
+    );
+    const availableApprover = (approvalDecision.outcome === 'RUN'
+      || approvalDecision.outcome === 'DELEGATE')
+      && approvalDecision.selectedActor !== null;
+    if (!routed || !availableApprover) {
+      return failure(state, 'Manual approval is blocked because no authorized approver is available.');
     }
   }
 
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    appointmentStatus: mode === 'auto' ? 'CONFIRMED' : 'PENDING_APPROVAL',
-  };
-  return {
-    state: appendHistory(
-      state,
-      appointment,
-      updated,
-      'EVALUATE_APPROVAL',
-      actor.userId,
-      reason.trim(),
-    ),
-    error: null,
-  };
+  return success(
+    state,
+    appointment,
+    {
+      ...appointment,
+      appointmentStatus: mode === 'auto' ? 'CONFIRMED' : 'PENDING_APPROVAL',
+    },
+    'EVALUATE_APPROVAL',
+    actor.userId,
+    reason.trim(),
+  );
 }
 
 export function approveAppointment(
@@ -386,13 +402,13 @@ export function approveAppointment(
   reason: string,
   decision: WorkflowRoutingDecision,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.appointmentStatus !== 'PENDING_APPROVAL') {
-    return { state, error: 'Only a PENDING_APPROVAL appointment can be approved.' };
+    return failure(state, 'Only a PENDING_APPROVAL appointment can be approved.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
   if (!routingAllows(
     decision,
     appointment,
@@ -400,13 +416,16 @@ export function approveAppointment(
     'MANUAL_APPROVAL',
     'APPROVE_APPOINTMENT',
   )) {
-    return { state, error: 'The active actor is not the routed approver.' };
+    return failure(state, 'The active actor is not the routed approver.');
   }
-  const updated = { ...appointment, appointmentStatus: 'CONFIRMED' as const };
-  return {
-    state: appendHistory(state, appointment, updated, 'APPROVE', actorId, reason.trim()),
-    error: null,
-  };
+  return success(
+    state,
+    appointment,
+    { ...appointment, appointmentStatus: 'CONFIRMED' },
+    'APPROVE',
+    actorId,
+    reason.trim(),
+  );
 }
 
 export function rejectAppointment(
@@ -416,13 +435,13 @@ export function rejectAppointment(
   reason: string,
   decision: WorkflowRoutingDecision,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.appointmentStatus !== 'PENDING_APPROVAL') {
-    return { state, error: 'Only a PENDING_APPROVAL appointment can be rejected.' };
+    return failure(state, 'Only a PENDING_APPROVAL appointment can be rejected.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
   if (!routingAllows(
     decision,
     appointment,
@@ -430,13 +449,16 @@ export function rejectAppointment(
     'MANUAL_REJECTION',
     'REJECT_APPOINTMENT',
   )) {
-    return { state, error: 'The active actor is not the routed rejector.' };
+    return failure(state, 'The active actor is not the routed rejector.');
   }
-  const updated = { ...appointment, appointmentStatus: 'REJECTED' as const };
-  return {
-    state: appendHistory(state, appointment, updated, 'REJECT', actorId, reason.trim()),
-    error: null,
-  };
+  return success(
+    state,
+    appointment,
+    { ...appointment, appointmentStatus: 'REJECTED' },
+    'REJECT',
+    actorId,
+    reason.trim(),
+  );
 }
 
 export function requestAppointmentData(
@@ -446,13 +468,16 @@ export function requestAppointmentData(
   reason: string,
   decision: WorkflowRoutingDecision,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.appointmentStatus !== 'PENDING_APPROVAL') {
-    return { state, error: 'Data can be requested only for a PENDING_APPROVAL appointment.' };
+    return failure(state, 'Data can be requested only for a PENDING_APPROVAL appointment.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
+  if (appointment.changeStatus === 'SUPPLIER_ACTION_REQUIRED') {
+    return failure(state, 'Supplier action is already required for this appointment.');
+  }
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
   if (!routingAllows(
     decision,
     appointment,
@@ -460,16 +485,16 @@ export function requestAppointmentData(
     'REQUEST_APPOINTMENT_DATA',
     'REQUEST_APPOINTMENT_DATA',
   )) {
-    return { state, error: 'The active actor is not routed to request appointment data.' };
+    return failure(state, 'The active actor is not routed to request appointment data.');
   }
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    changeStatus: 'SUPPLIER_ACTION_REQUIRED',
-  };
-  return {
-    state: appendHistory(state, appointment, updated, 'REQUEST_DATA', actorId, reason.trim()),
-    error: null,
-  };
+  return success(
+    state,
+    appointment,
+    { ...appointment, changeStatus: 'SUPPLIER_ACTION_REQUIRED' },
+    'REQUEST_DATA',
+    actorId,
+    reason.trim(),
+  );
 }
 
 export function rescheduleAppointment(
@@ -482,60 +507,55 @@ export function rescheduleAppointment(
   referenceDateTime: string,
   configuration: DemoConfigurationState,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
-  if (!actorCanChangeAppointment(actor, appointment)) {
-    return { state, error: 'The active actor cannot reschedule this appointment.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
+  if (!actorCanChange(actor, appointment)) {
+    return failure(state, 'The active actor cannot reschedule this appointment.');
   }
   if (!['SUBMITTED', 'PENDING_APPROVAL', 'CONFIRMED'].includes(appointment.appointmentStatus)) {
-    return { state, error: 'The appointment status does not allow rescheduling.' };
+    return failure(state, 'The appointment status does not allow rescheduling.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(plannedDate) || !/^\d{2}:\d{2}$/.test(plannedTime)) {
-    return { state, error: 'A valid explicit replacement date and time are required.' };
+    return failure(state, 'A valid explicit replacement date and time are required.');
   }
-  const configurationError = exactConfiguration(configuration, appointment);
-  if (configurationError) return { state, error: configurationError };
+  const invalidConfiguration = configurationError(configuration, appointment, true);
+  if (invalidConfiguration) return failure(state, invalidConfiguration);
   const afterCutOff = isAfterCutOff(appointment, configuration, referenceDateTime);
-  if (afterCutOff === null) return { state, error: 'Cut-off could not be evaluated.' };
+  if (afterCutOff === null) return failure(state, 'Cut-off could not be evaluated.');
 
-  if (afterCutOff && (actor.role === 'Supplier Administrator' || actor.role === 'Supplier User')) {
-    const updated: LifecycleAppointment = {
-      ...appointment,
-      changeStatus: 'RESCHEDULE_REQUESTED',
-    };
-    return {
-      state: appendHistory(
-        state,
-        appointment,
-        updated,
-        'REQUEST_RESCHEDULE',
-        actor.userId,
-        reason.trim(),
-      ),
-      error: null,
-    };
+  const isSupplier = actor.role === 'Supplier Administrator' || actor.role === 'Supplier User';
+  if (afterCutOff && isSupplier) {
+    if (appointment.changeStatus === 'RESCHEDULE_REQUESTED') {
+      return failure(state, 'A reschedule is already requested for this appointment.');
+    }
+    return success(
+      state,
+      appointment,
+      { ...appointment, changeStatus: 'RESCHEDULE_REQUESTED' },
+      'REQUEST_RESCHEDULE',
+      actor.userId,
+      reason.trim(),
+    );
   }
 
-  const slotError = compatibleSlotError(
+  const invalidSlot = compatibleSlotError(
     state,
     appointment,
     plannedDate,
     plannedTime,
     configuration,
   );
-  if (slotError) return { state, error: slotError };
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    plannedDate,
-    plannedTime,
-    changeStatus: 'NO_CHANGE_REQUEST',
-  };
-  return {
-    state: appendHistory(state, appointment, updated, 'RESCHEDULE', actor.userId, reason.trim()),
-    error: null,
-  };
+  if (invalidSlot) return failure(state, invalidSlot);
+  return success(
+    state,
+    appointment,
+    { ...appointment, plannedDate, plannedTime, changeStatus: 'NO_CHANGE_REQUEST' },
+    'RESCHEDULE',
+    actor.userId,
+    reason.trim(),
+  );
 }
 
 export function cancelAppointment(
@@ -546,30 +566,33 @@ export function cancelAppointment(
   referenceDateTime: string,
   configuration: DemoConfigurationState,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
-  if (!actorCanChangeAppointment(actor, appointment)) {
-    return { state, error: 'The active actor cannot cancel this appointment.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
+  if (!actorCanChange(actor, appointment)) {
+    return failure(state, 'The active actor cannot cancel this appointment.');
   }
   if (!['SUBMITTED', 'PENDING_APPROVAL', 'CONFIRMED'].includes(appointment.appointmentStatus)) {
-    return { state, error: 'The appointment status does not allow cancellation.' };
+    return failure(state, 'The appointment status does not allow cancellation.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
-  const configurationError = exactConfiguration(configuration, appointment);
-  if (configurationError) return { state, error: configurationError };
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
+  const invalidConfiguration = configurationError(configuration, appointment, false);
+  if (invalidConfiguration) return failure(state, invalidConfiguration);
   const afterCutOff = isAfterCutOff(appointment, configuration, referenceDateTime);
-  if (afterCutOff === null) return { state, error: 'Cut-off could not be evaluated.' };
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    appointmentStatus: 'CANCELLED',
-    changeStatus: 'NO_CHANGE_REQUEST',
-    lateCancellation: afterCutOff,
-  };
-  return {
-    state: appendHistory(state, appointment, updated, 'CANCEL', actor.userId, reason.trim()),
-    error: null,
-  };
+  if (afterCutOff === null) return failure(state, 'Cut-off could not be evaluated.');
+  return success(
+    state,
+    appointment,
+    {
+      ...appointment,
+      appointmentStatus: 'CANCELLED',
+      changeStatus: 'NO_CHANGE_REQUEST',
+      lateCancellation: afterCutOff,
+    },
+    'CANCEL',
+    actor.userId,
+    reason.trim(),
+  );
 }
 
 export function restoreCancelledAppointment(
@@ -579,47 +602,39 @@ export function restoreCancelledAppointment(
   reason: string,
   configuration: DemoConfigurationState,
 ): LifecycleActionResult {
-  const appointment = findAppointment(state, appointmentId);
-  if (!appointment) return { state, error: 'Appointment is missing.' };
+  const appointment = getAppointment(state, appointmentId);
+  if (!appointment) return failure(state, 'Appointment is missing.');
   if (actor.role !== 'System Administrator') {
-    return { state, error: 'Only System Administrator can restore a cancelled appointment.' };
+    return failure(state, 'Only System Administrator can restore a cancelled appointment.');
   }
   if (appointment.appointmentStatus !== 'CANCELLED') {
-    return { state, error: 'Only a CANCELLED appointment can be restored.' };
+    return failure(state, 'Only a CANCELLED appointment can be restored.');
   }
-  const reasonError = requiredReason(reason);
-  if (reasonError) return { state, error: reasonError };
-  const configurationError = exactConfiguration(configuration, appointment);
-  if (configurationError) return { state, error: configurationError };
-  const slotError = compatibleSlotError(
+  const missingReason = reasonError(reason);
+  if (missingReason) return failure(state, missingReason);
+  const invalidConfiguration = configurationError(configuration, appointment, true);
+  if (invalidConfiguration) return failure(state, invalidConfiguration);
+  const invalidSlot = compatibleSlotError(
     state,
     appointment,
     appointment.plannedDate,
     appointment.plannedTime,
     configuration,
   );
-  if (slotError) return { state, error: slotError };
-  const updated: LifecycleAppointment = {
-    ...appointment,
-    appointmentStatus: 'CONFIRMED',
-    lateCancellation: false,
-  };
-  return {
-    state: appendHistory(
-      state,
-      appointment,
-      updated,
-      'RESTORE_CANCELLED',
-      actor.userId,
-      reason.trim(),
-    ),
-    error: null,
-  };
+  if (invalidSlot) return failure(state, invalidSlot);
+  return success(
+    state,
+    appointment,
+    { ...appointment, appointmentStatus: 'CONFIRMED', lateCancellation: false },
+    'RESTORE_CANCELLED',
+    actor.userId,
+    reason.trim(),
+  );
 }
 
 export function lifecycleCapacityAppointmentIds(state: LifecycleState): readonly string[] {
   return state.appointments
-    .filter((appointment) => capacityHolding(appointment.appointmentStatus))
+    .filter((appointment) => holdsCapacity(appointment.appointmentStatus))
     .map((appointment) => appointment.id)
     .sort();
 }
