@@ -128,7 +128,7 @@ interface RoutedActionContract {
   capability: WorkflowCapability;
 }
 
-const routedActions: Readonly<Record<
+export const routedActions: Readonly<Record<
   'checkIn' | 'checkOut' | 'assignDock' | 'changeDock' | 'progress' | 'noShow',
   RoutedActionContract
 >> = {
@@ -140,7 +140,7 @@ const routedActions: Readonly<Record<
   noShow: { step: 'CONFIRM_NO_SHOW', capability: 'CONFIRM_NO_SHOW' },
 };
 
-const operationalTransitions: Readonly<Record<
+export const operationalTransitions: Readonly<Record<
   LifecycleOperationalStatus,
   readonly LifecycleOperationalStatus[]
 >> = {
@@ -282,19 +282,32 @@ function minutes(time: string): number {
   return match ? Number(match[1]) * 60 + Number(match[2]) : Number.NaN;
 }
 
+function scopeApplies(
+  block: WarehouseBlock,
+  dock: DockConfiguration,
+  warehouse: WarehouseConfiguration,
+): boolean {
+  const scope = block.scope;
+  switch (scope.type) {
+    case 'warehouse':
+      return true;
+    case 'dock':
+      return scope.dockId === dock.id;
+    case 'zone':
+      return scope.zone === dock.zone;
+    case 'capacity-pool':
+      return warehouse.capacityPools.some((pool) =>
+        pool.id === scope.capacityPoolId && pool.dockIds.includes(dock.id));
+  }
+}
+
 function blockApplies(
   block: WarehouseBlock,
   appointment: GateAppointment,
   dock: DockConfiguration,
   warehouse: WarehouseConfiguration,
 ): boolean {
-  const scopeMatches = block.scope.type === 'warehouse'
-    || (block.scope.type === 'dock' && block.scope.dockId === dock.id)
-    || (block.scope.type === 'zone' && block.scope.zone === dock.zone)
-    || (block.scope.type === 'capacity-pool'
-      && warehouse.capacityPools.some((pool) =>
-        pool.id === block.scope.capacityPoolId && pool.dockIds.includes(dock.id)));
-  if (!scopeMatches) return false;
+  if (!scopeApplies(block, dock, warehouse)) return false;
 
   if (block.schedule.kind === 'one-time') {
     if (block.schedule.date !== appointment.plannedDate) return false;
@@ -303,9 +316,10 @@ function blockApplies(
     return planned >= minutes(block.schedule.startsAt)
       && planned < minutes(block.schedule.endsAt);
   }
-  if (!block.schedule.weekdays.includes(weekday(appointment.plannedDate) as 0 | 1 | 2 | 3 | 4 | 5 | 6)) {
-    return false;
-  }
+
+  if (!block.schedule.weekdays.includes(
+    weekday(appointment.plannedDate) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  )) return false;
   const planned = minutes(appointment.plannedTime);
   return planned >= minutes(block.schedule.startsAt)
     && planned < minutes(block.schedule.endsAt);
@@ -323,7 +337,9 @@ function validDock(
   if (matches.length > 1) return 'The selected dock is ambiguous.';
   const dock = matches[0];
   if (!dock.active) return 'The selected dock is inactive.';
-  if (!dock.allowedFlows.includes(appointment.flow)) return 'The selected dock does not support this delivery flow.';
+  if (!dock.allowedFlows.includes(appointment.flow)) {
+    return 'The selected dock does not support this delivery flow.';
+  }
   if (appointment.isAdr && !dock.supportsAdr) return 'The selected dock does not support ADR.';
   if (warehouse.blocks.some((block) => blockApplies(block, appointment, dock, warehouse))) {
     return 'The selected dock is blocked for the appointment period.';
@@ -468,7 +484,10 @@ export function checkInAppointment(
   if (normalize(tractorRegistration) !== normalize(appointment.gateTractorRegistration)
     || normalize(trailerOrContainerRegistration)
       !== normalize(appointment.gateTrailerOrContainerRegistration)) {
-    return failure(state, 'Gate registrations conflict with recorded gate evidence. Record an explicit correction first.');
+    return failure(
+      state,
+      'Gate registrations conflict with recorded gate evidence. Record an explicit correction first.',
+    );
   }
   const classification = classifyArrival(appointment, arrivalAt);
   if (!classification) return failure(state, 'A valid explicit arrival timestamp is required.');
@@ -501,7 +520,12 @@ export function assignDock(
 ): GateActionResult {
   const appointment = getAppointment(state, appointmentId);
   if (!appointment) return failure(state, 'Appointment is missing.');
-  if (appointment.assignedDockId !== null) return failure(state, 'A dock is already assigned. Use Change dock.');
+  if (!['CHECKED_IN', 'WAITING_FOR_DOCK'].includes(appointment.operationalStatus)) {
+    return failure(state, 'Dock assignment requires CHECKED_IN or WAITING_FOR_DOCK status.');
+  }
+  if (appointment.assignedDockId !== null) {
+    return failure(state, 'A dock is already assigned. Use Change dock.');
+  }
   if (!routingAllows(decision, appointment, actorId, routedActions.assignDock)) {
     return failure(state, 'The active actor is not the routed dock-assignment actor.');
   }
@@ -532,9 +556,7 @@ export function changeDock(
   const appointment = getAppointment(state, appointmentId);
   if (!appointment) return failure(state, 'Appointment is missing.');
   if (appointment.assignedDockId === null) return failure(state, 'No dock is assigned. Use Assign dock.');
-  if (appointment.operationalStatus === 'COMPLETED'
-    || appointment.operationalStatus === 'CHECKED_OUT'
-    || appointment.operationalStatus === 'NO_SHOW') {
+  if (['COMPLETED', 'CHECKED_OUT', 'NO_SHOW'].includes(appointment.operationalStatus)) {
     return failure(state, 'The dock cannot be changed after the operation is completed.');
   }
   if (appointment.assignedDockId === dockId) return failure(state, 'The selected dock is already assigned.');
@@ -561,8 +583,10 @@ export function progressOperation(
   appointmentId: string,
   actorId: string,
   decision: WorkflowRoutingDecision,
-  targetStatus: Extract<LifecycleOperationalStatus,
-    'WAITING_FOR_DOCK' | 'AT_DOCK' | 'UNLOADING' | 'COMPLETED'>,
+  targetStatus: Extract<
+    LifecycleOperationalStatus,
+    'WAITING_FOR_DOCK' | 'AT_DOCK' | 'UNLOADING' | 'COMPLETED'
+  >,
   reason: string,
 ): GateActionResult {
   const appointment = getAppointment(state, appointmentId);
@@ -571,7 +595,10 @@ export function progressOperation(
     return failure(state, 'The active actor is not the routed operation actor.');
   }
   if (!transitionAllowed(appointment.operationalStatus, targetStatus)) {
-    return failure(state, `Operational transition ${appointment.operationalStatus} to ${targetStatus} is not allowed.`);
+    return failure(
+      state,
+      `Operational transition ${appointment.operationalStatus} to ${targetStatus} is not allowed.`,
+    );
   }
   if (targetStatus === 'AT_DOCK' && appointment.assignedDockId === null) {
     return failure(state, 'AT_DOCK requires an explicitly assigned dock.');
@@ -761,7 +788,8 @@ export function createUnannouncedVisit(
   if (typeof warehouse === 'string') return failure(state, warehouse);
   const suppliers = configuration.suppliers.filter((supplier) =>
     supplier.organizationId === input.supplierOrganizationId);
-  if (suppliers.length !== 1 || suppliers[0].status !== 'active'
+  if (suppliers.length !== 1
+    || suppliers[0].status !== 'active'
     || !suppliers[0].warehouseIds.includes(input.warehouseId)
     || !warehouse.supplierOrganizationIds.includes(input.supplierOrganizationId)) {
     return failure(state, 'An active Supplier assigned to the warehouse is required.');
@@ -811,5 +839,3 @@ export function gateCapacityAppointmentIds(state: GateOpsState): readonly string
 export function operatorAppointmentCreationBoundary(): string {
   return 'Blocked: operator-created appointment requires a reusable lifecycle approval handoff and cannot be invented inside gate operations.';
 }
-
-export { routedActions, operationalTransitions };
