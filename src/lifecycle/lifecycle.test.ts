@@ -13,6 +13,7 @@ import {
   requestAppointmentData,
   rescheduleAppointment,
   restoreCancelledAppointment,
+  submitDraftAppointment,
   type LifecycleState,
 } from './lifecycle';
 
@@ -56,14 +57,45 @@ describe('lifecycle domain', () => {
     expect(target.changeStatus).toBe('NO_CHANGE_REQUEST');
     expect(target.operationalStatus).toBe('EXPECTED');
     expect(target.planningState).toBe('AWAITING_DETAILS');
+    expect(target.lateCancellation).toBe(false);
   });
 
-  it('evaluates manual and auto approval without allowing a blocked route to auto-approve', () => {
+  it('permits only an authorized scoped actor to submit DRAFT to SUBMITTED', () => {
+    const draftAppointments = planningAppointments.map((candidate) =>
+      candidate.id === 'planning-northstar-1001'
+        ? { ...candidate, appointmentStatus: 'DRAFT' }
+        : candidate);
+    const initial = createLifecycleState(draftAppointments);
+
+    const wrongSupplier = submitDraftAppointment(
+      initial,
+      'planning-northstar-1001',
+      getDemoActor('supplier-user'),
+      'Wrong organization',
+      initialDemoConfiguration,
+    );
+    expect(wrongSupplier.error).toContain('cannot submit');
+    expect(wrongSupplier.state).toBe(initial);
+
+    const submitted = submitDraftAppointment(
+      initial,
+      'planning-northstar-1001',
+      getDemoActor('supplier-administrator'),
+      'Submit validated draft',
+      initialDemoConfiguration,
+    );
+    expect(submitted.error).toBeNull();
+    expect(appointment(submitted.state).appointmentStatus).toBe('SUBMITTED');
+    expect(submitted.state.history[0].action).toBe('SUBMIT');
+  });
+
+  it('evaluates manual and auto approval without allowing unauthorized or blocked auto-approval', () => {
     const initial = createLifecycleState(planningAppointments);
+    const systemAdministrator = getDemoActor('system-administrator');
     const manual = evaluateSubmittedAppointment(
       initial,
       'planning-northstar-1001',
-      'u-1',
+      systemAdministrator,
       'Evaluate ADR approval',
       initialDemoConfiguration,
       decision('approve'),
@@ -74,7 +106,7 @@ describe('lifecycle domain', () => {
     const auto = evaluateSubmittedAppointment(
       initial,
       'planning-vistula-3001',
-      'u-1',
+      systemAdministrator,
       'Evaluate standard delivery',
       initialDemoConfiguration,
       resolveWorkflowRouting({
@@ -87,10 +119,21 @@ describe('lifecycle domain', () => {
     expect(auto.error).toBeNull();
     expect(appointment(auto.state, 'planning-vistula-3001').appointmentStatus).toBe('CONFIRMED');
 
+    const unauthorized = evaluateSubmittedAppointment(
+      initial,
+      'planning-northstar-1001',
+      getDemoActor('supplier-administrator'),
+      'Supplier cannot evaluate',
+      initialDemoConfiguration,
+      decision('approve'),
+    );
+    expect(unauthorized.error).toContain('cannot evaluate');
+    expect(unauthorized.state).toBe(initial);
+
     const blocked = evaluateSubmittedAppointment(
       initial,
       'planning-northstar-1001',
-      'u-1',
+      systemAdministrator,
       'No approver available',
       initialDemoConfiguration,
       decision('approve', []),
@@ -105,7 +148,7 @@ describe('lifecycle domain', () => {
     const pending = evaluateSubmittedAppointment(
       initial,
       'planning-northstar-1001',
-      'u-1',
+      getDemoActor('system-administrator'),
       'Prepare manual decision',
       initialDemoConfiguration,
       decision('approve'),
@@ -179,7 +222,7 @@ describe('lifecycle domain', () => {
     const ambiguous = evaluateSubmittedAppointment(
       initial,
       'planning-northstar-1001',
-      'u-1',
+      getDemoActor('system-administrator'),
       'Evaluate configuration',
       ambiguousConfiguration,
       decision('approve'),
@@ -247,7 +290,7 @@ describe('lifecycle domain', () => {
     expect(requested.state.history[0].action).toBe('REQUEST_RESCHEDULE');
   });
 
-  it('enforces organization scope, cancellation capacity release, idempotency and System Administrator restore', () => {
+  it('enforces organization scope, cancellation release, late flag, idempotency and System Administrator restore', () => {
     const initial = createLifecycleState(planningAppointments);
     const wrongSupplier = getDemoActor('supplier-user');
     const blocked = cancelAppointment(
@@ -255,6 +298,8 @@ describe('lifecycle domain', () => {
       'planning-northstar-1001',
       wrongSupplier,
       'Wrong organization',
+      '2026-08-09T00:00:00Z',
+      initialDemoConfiguration,
     );
     expect(blocked.error).toContain('cannot cancel');
     expect(blocked.state).toBe(initial);
@@ -264,10 +309,13 @@ describe('lifecycle domain', () => {
       initial,
       'planning-northstar-1001',
       supplier,
-      'Delivery withdrawn',
+      'Delivery withdrawn after cut-off',
+      '2026-08-10T02:00:00Z',
+      initialDemoConfiguration,
     );
     expect(cancelled.error).toBeNull();
     expect(appointment(cancelled.state).appointmentStatus).toBe('CANCELLED');
+    expect(appointment(cancelled.state).lateCancellation).toBe(true);
     expect(lifecycleCapacityAppointmentIds(cancelled.state)).not.toContain('planning-northstar-1001');
 
     const repeated = cancelAppointment(
@@ -275,6 +323,8 @@ describe('lifecycle domain', () => {
       'planning-northstar-1001',
       supplier,
       'Repeat cancellation',
+      '2026-08-10T02:00:00Z',
+      initialDemoConfiguration,
     );
     expect(repeated.error).toContain('does not allow');
     expect(repeated.state).toBe(cancelled.state);
@@ -298,6 +348,7 @@ describe('lifecycle domain', () => {
     );
     expect(restored.error).toBeNull();
     expect(appointment(restored.state).appointmentStatus).toBe('CONFIRMED');
+    expect(appointment(restored.state).lateCancellation).toBe(false);
     expect(lifecycleCapacityAppointmentIds(restored.state)).toContain('planning-northstar-1001');
     expect(restored.state.history.at(-1)?.action).toBe('RESTORE_CANCELLED');
   });
