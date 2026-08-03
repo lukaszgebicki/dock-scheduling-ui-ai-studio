@@ -239,16 +239,16 @@ function normalized(value: string): string {
   return value.trim().toLocaleLowerCase('en-US');
 }
 
-function distinctSorted(values: readonly string[]): readonly string[] {
-  return Array.from(new Set(values.filter(Boolean))).sort(compareStrings);
-}
-
 function compareStrings(left: string, right: string): number {
   const a = normalized(left);
   const b = normalized(right);
   if (a < b) return -1;
   if (a > b) return 1;
   return 0;
+}
+
+function distinctSorted(values: readonly string[]): readonly string[] {
+  return Array.from(new Set(values.filter(Boolean))).sort(compareStrings);
 }
 
 function compareValues(
@@ -319,6 +319,8 @@ function poRow(record: AppointmentWorkspaceRecord): ReportRow {
       loadCarrierTypes: loadCarrierTypes.join(' | ') || null,
       goodsCategories: goodsCategories.join(' | ') || null,
       handlingSummary: handling.join(' | ') || null,
+      sku: record.skuLines.map((line) => line.sku).join(' | ') || null,
+      description: record.skuLines.map((line) => line.description).join(' | ') || null,
     },
   };
 }
