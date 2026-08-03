@@ -21,6 +21,7 @@ import { AppointmentsPage } from '../appointments/AppointmentsPage';
 import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
 import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
 import { PlanningCalendarPage } from '../calendar/PlanningCalendarPage';
+import { planningAppointments } from '../calendar/planningCalendar';
 import { FridayImportGuard, getAuthorizedFridayImportWarehouseIds } from '../import/FridayImportGuard';
 import { FridayImportPage } from '../import/FridayImportPage';
 import {
@@ -29,6 +30,8 @@ import {
   getWeeklyPlanningWarehouseUniverse,
 } from '../weeklyPlanning/WeeklyPlanningGuard';
 import { WeeklyPlanningPage } from '../weeklyPlanning/WeeklyPlanningPage';
+import { LifecycleGuard, canOpenLifecycleForActor } from '../lifecycle/LifecycleGuard';
+import { LifecyclePage } from '../lifecycle/LifecyclePage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -39,7 +42,13 @@ function DefaultDemoRoute() {
 }
 
 function AppointmentsRoutePage() {
-  const { activeActor, configuration, canNavigateWorkflow, canAccessWorkflowRoute } = useDemoDomain();
+  const {
+    activeActor,
+    configuration,
+    canNavigateWorkflow,
+    canAccessWorkflowRoute,
+    canViewAppointment,
+  } = useDemoDomain();
   const supplierOrganizationId = activeActor.supplierOrganizationId;
   const warehouseId = activeActor.warehouseIds[0];
   const canReserveNextWeek = Boolean(
@@ -66,6 +75,11 @@ function AppointmentsRoutePage() {
     weeklyPlanningUniverse,
     canAccessWorkflowRoute,
   ).length > 0;
+  const canOpenLifecycle = canOpenLifecycleForActor(
+    activeActor.role,
+    planningAppointments,
+    canViewAppointment,
+  );
 
   return (
     <>
@@ -76,6 +90,14 @@ function AppointmentsRoutePage() {
         >
           Open PO planning calendar
         </Link>
+        {canOpenLifecycle && (
+          <Link
+            to="/appointments/lifecycle"
+            className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+          >
+            Open appointment lifecycle
+          </Link>
+        )}
         {canOpenWeeklyPlanning && (
           <Link
             to="/weekly-planning"
@@ -123,6 +145,7 @@ export function AppRoutes() {
             <Route path="/" element={<DefaultDemoRoute />} />
             <Route path="/appointments" element={<DemoRouteGuard route="/appointments"><AppointmentsRoutePage /></DemoRouteGuard>} />
             <Route path="/appointments/reserve-next-week" element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>} />
+            <Route path="/appointments/lifecycle" element={<LifecycleGuard><LifecyclePage /></LifecycleGuard>} />
             <Route path="/calendar" element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>} />
             <Route path="/imports/friday-details" element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>} />
             <Route path="/weekly-planning" element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>} />
