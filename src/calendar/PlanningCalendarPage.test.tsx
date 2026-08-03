@@ -2,8 +2,9 @@
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Navigate, Route, Routes } from 'react-router';
 import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
 import type { DemoActorId } from '../demoDomain/demoDomain';
 import { PlanningCalendarPage } from './PlanningCalendarPage';
 
@@ -20,6 +21,30 @@ function renderPage(initialActorId: DemoActorId) {
 afterEach(cleanup);
 
 describe('PO planning calendar page', () => {
+  it('uses the existing appointment route decision for direct calendar access', () => {
+    render(
+      <MemoryRouter initialEntries={['/calendar']}>
+        <DemoDomainProvider initialActorId="supplier-administrator">
+          <Routes>
+            <Route
+              path="/calendar"
+              element={(
+                <DemoRouteGuard route="/appointments">
+                  <PlanningCalendarPage />
+                </DemoRouteGuard>
+              )}
+            />
+            <Route path="*" element={<Navigate to="/appointments" replace />} />
+          </Routes>
+        </DemoDomainProvider>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'PO planning calendar' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'PO-DEMO-2001' })).toBeNull();
+  });
+
   it('AC-CAL-002 renders one card for the three-line PO and exact derived totals', () => {
     renderPage('system-administrator');
 
