@@ -166,8 +166,8 @@ const demoUserRecords = [
     organizationId: 'pernod-ricard-poland',
     role: 'Security Officer',
     warehouseIds: ['nowy-kisielin-distribution-center'],
-    status: 'Inactive',
-    lastActive: '2 weeks ago',
+    status: 'Active',
+    lastActive: 'Just now',
     accountType: 'Internal',
   },
   {
