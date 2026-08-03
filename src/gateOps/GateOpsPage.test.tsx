@@ -1,0 +1,171 @@
+// @vitest-environment jsdom
+import React from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { initialDemoConfiguration } from '../demoDomain/configuration';
+import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+import type { DemoActorId } from '../demoDomain/demoDomain';
+import { GateOpsGuard } from './GateOpsGuard';
+import { GateOpsPage } from './GateOpsPage';
+
+function renderRoute(actorId: DemoActorId) {
+  return render(
+    <MemoryRouter initialEntries={['/gate-operations']}>
+      <DemoDomainProvider initialActorId={actorId}>
+        <Routes>
+          <Route path="/gate-operations" element={<GateOpsGuard><GateOpsPage /></GateOpsGuard>} />
+          <Route path="/appointments" element={<h1>Appointments fallback</h1>} />
+          <Route path="/users" element={<h1>Users fallback</h1>} />
+        </Routes>
+      </DemoDomainProvider>
+    </MemoryRouter>,
+  );
+}
+
+function articleFor(po: string): HTMLElement {
+  const heading = screen.getByRole('heading', { name: po });
+  const article = heading.closest('article');
+  if (!article) throw new Error(`Missing gate article for ${po}.`);
+  return article;
+}
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe('GateOpsPage', () => {
+  it.each<DemoActorId>([
+    'security-officer',
+    'warehouse-operator',
+    'warehouse-administrator',
+  ])('allows a routed direct route for %s', (actorId) => {
+    renderRoute(actorId);
+    expect(screen.getByRole('heading', { name: 'Gate operations' })).toBeDefined();
+  });
+
+  it.each<DemoActorId>([
+    'system-administrator',
+    'supplier-administrator',
+    'supplier-user',
+  ])('fails closed on the direct route for %s', (actorId) => {
+    renderRoute(actorId);
+    expect(screen.queryByRole('heading', { name: 'Gate operations' })).toBeNull();
+    expect(screen.getByRole('heading', { name: /fallback/i })).toBeDefined();
+  });
+
+  it('shows only the Security workweek and gate-safe appointment fields', () => {
+    renderRoute('security-officer');
+    expect(screen.getByText('Search result count: 2')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'PO-DEMO-3001' })).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'PO-DEMO-2001' })).toBeNull();
+    expect(screen.queryByText('Internal import review complete')).toBeNull();
+    expect(screen.queryByText('EXACT_MATCH')).toBeNull();
+    expect(screen.queryByText('batch-demo-1')).toBeNull();
+  });
+
+  it('uses exact search and never fuzzy-matches', () => {
+    renderRoute('security-officer');
+    fireEvent.change(screen.getByLabelText('Exact gate search'), {
+      target: { value: 'northstar pack' },
+    });
+    expect(screen.getByText('Search result count: 0')).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'PO-DEMO-1001' })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Exact gate search'), {
+      target: { value: ' PO-DEMO-1001 ' },
+    });
+    expect(screen.getByText('Search result count: 1')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
+  });
+
+  it('lets Security check in with RUN routing and keeps lifecycle and slot unchanged', () => {
+    renderRoute('security-officer');
+    const article = articleFor('PO-DEMO-1001');
+    expect(within(article).getByText((_content, element) =>
+      element?.tagName === 'P'
+      && element.textContent?.includes('Check-in route: RUN') === true)).toBeDefined();
+
+    fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
+    expect(within(article).getByText('Operational: CHECKED_IN')).toBeDefined();
+    expect(within(article).getByText('ON_TIME')).toBeDefined();
+    expect(within(article).getByText('CONFIRMED')).toBeDefined();
+    expect(within(article).getByText(/2026-08-10 08:00/)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Lifecycle, slot and Supplier-origin registrations were preserved');
+    expect(screen.getByText(/CHECK_IN · planning-northstar-1001 · EXPECTED → CHECKED_IN · RUN/)).toBeDefined();
+  });
+
+  it('lets the routed Warehouse Administrator assign an explicit dock and complete the exact sequence', () => {
+    renderRoute('warehouse-administrator');
+    const article = articleFor('PO-DEMO-1001');
+    fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
+
+    const dockId = initialDemoConfiguration.warehouses[0].docks[0].id;
+    fireEvent.change(screen.getByLabelText('Explicit dock'), { target: { value: dockId } });
+    fireEvent.click(within(article).getByRole('button', { name: 'Assign selected dock' }));
+    expect(within(article).getByText(dockId)).toBeDefined();
+    expect(within(article).getByText('Operational: CHECKED_IN')).toBeDefined();
+
+    fireEvent.click(within(article).getByRole('button', { name: 'Move to assigned dock' }));
+    fireEvent.click(within(article).getByRole('button', { name: 'Start unloading' }));
+    fireEvent.click(within(article).getByRole('button', { name: 'Complete operation' }));
+    fireEvent.click(within(article).getByRole('button', { name: 'Check out appointment' }));
+
+    expect(within(article).getByText('Operational: CHECKED_OUT')).toBeDefined();
+    expect(within(article).getByText('CONFIRMED')).toBeDefined();
+    expect(screen.getByText(/CHECK_OUT · planning-northstar-1001 · COMPLETED → CHECKED_OUT · DELEGATE/)).toBeDefined();
+  });
+
+  it('requires human confirmation before No Show and leaves the record visible', () => {
+    renderRoute('warehouse-administrator');
+    const article = articleFor('PO-DEMO-1001');
+    expect(within(article).getByText('Operational: EXPECTED')).toBeDefined();
+    fireEvent.click(within(article).getByRole('button', { name: 'Confirm No Show' }));
+    expect(within(article).getByText('Operational: NO_SHOW')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('record remains visible');
+    expect(within(article).queryByRole('button', { name: 'Confirm No Show' })).toBeNull();
+  });
+
+  it('preserves Supplier registrations when Security corrects gate-observed evidence', () => {
+    renderRoute('security-officer');
+    const article = articleFor('PO-DEMO-1001');
+    fireEvent.change(screen.getByLabelText('Gate tractor registration'), { target: { value: 'GATE-TR-9' } });
+    fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), { target: { value: 'GATE-TRL-9' } });
+    fireEvent.click(within(article).getByRole('button', { name: 'Correct gate registration' }));
+
+    expect(within(article).getByText('TR-100')).toBeDefined();
+    expect(within(article).getByText('GATE-TR-9')).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Supplier-origin values remain immutable');
+  });
+
+  it('creates an unannounced PENDING_DECISION record without slot, dock, capacity or lifecycle', () => {
+    renderRoute('security-officer');
+    fireEvent.click(screen.getByRole('button', { name: 'Create pending-decision visit' }));
+    expect(screen.getByText(/PO-UNANNOUNCED-1 · PENDING_DECISION · no slot\/dock\/capacity\/lifecycle/)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('no slot, dock, capacity or lifecycle status');
+  });
+
+  it('performs no network, storage, lifecycle approval or cancellation action', () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const storageSpy = vi.spyOn(Storage.prototype, 'setItem');
+    renderRoute('security-officer');
+    const article = articleFor('PO-DEMO-1001');
+    fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(storageSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /approve|reject|reschedule|cancel|restore/i })).toBeNull();
+    expect(screen.getByText(/Blocked: operator-created appointment requires a reusable lifecycle approval handoff/)).toBeDefined();
+  });
+});
