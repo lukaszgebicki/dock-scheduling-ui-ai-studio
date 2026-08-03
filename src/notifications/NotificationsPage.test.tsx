@@ -62,6 +62,7 @@ describe('NotificationsPage', () => {
     expect(severityLabels.length).toBeGreaterThan(0);
     expect(within(inbox()).queryByText('INFORMATION')).toBeNull();
 
+    fireEvent.change(screen.getByLabelText('Notification inbox filter'), { target: { value: 'ALL' } });
     fireEvent.change(screen.getByLabelText('Notification search'), { target: { value: 'baltic freight' } });
     expect(within(inbox()).getAllByText(/Baltic Freight/).length).toBeGreaterThan(0);
     expect(within(inbox()).queryByText(/Vistula Materials/)).toBeNull();
