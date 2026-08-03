@@ -120,17 +120,17 @@ describe('GateOpsPage', () => {
       && element.textContent?.includes('Check-in route: RUN') === true)).toBeDefined();
 
     fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
-    expect(within(article).getByText('Operational: CHECKED_IN')).toBeDefined();
-    expect(within(article).getByText('ON_TIME')).toBeDefined();
-    expect(within(article).getByText('CONFIRMED')).toBeDefined();
-    expect(within(article).getByText(/2026-08-10 08:00/)).toBeDefined();
+    const checkedInArticle = articleFor('PO-DEMO-1001');
+    expect(within(checkedInArticle).getByText('Operational: CHECKED_IN')).toBeDefined();
+    expect(within(checkedInArticle).getByText('ON_TIME')).toBeDefined();
+    expect(within(checkedInArticle).getByText('CONFIRMED')).toBeDefined();
+    expect(within(checkedInArticle).getByText(/2026-08-10 08:00/)).toBeDefined();
     expect(screen.getByRole('status').textContent).toContain('Lifecycle, slot and Supplier-origin registrations were preserved');
     expect(screen.getByText(/CHECK_IN · planning-northstar-1001 · EXPECTED → CHECKED_IN · RUN/)).toBeDefined();
   });
 
   it('lets the routed Warehouse Operator complete the exact delegated gate sequence', () => {
     renderRoute('warehouse-operator');
-    const article = articleFor('PO-DEMO-2001');
     fireEvent.change(screen.getByLabelText('Arrival timestamp'), {
       target: { value: '2026-08-11T10:00' },
     });
@@ -140,21 +140,26 @@ describe('GateOpsPage', () => {
     fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), {
       target: { value: 'TRL-400' },
     });
-    fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Check in appointment' }));
 
     const dockId = initialDemoConfiguration.warehouses[1].docks[0].id;
-    fireEvent.change(screen.getByLabelText('Explicit dock'), { target: { value: dockId } });
-    fireEvent.click(within(article).getByRole('button', { name: 'Assign selected dock' }));
-    expect(within(article).getByText(dockId)).toBeDefined();
-    expect(within(article).getByText('Operational: CHECKED_IN')).toBeDefined();
+    const dockSelect = screen.getByLabelText('Explicit dock') as HTMLSelectElement;
+    fireEvent.change(dockSelect, { target: { value: dockId } });
+    expect(dockSelect.value).toBe(dockId);
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Assign selected dock' }));
+    expect(screen.getByRole('status').textContent).toContain('Dock assigned locally');
+    const assignedArticle = articleFor('PO-DEMO-2001');
+    expect(within(assignedArticle).getByText(dockId)).toBeDefined();
+    expect(within(assignedArticle).getByText('Operational: CHECKED_IN')).toBeDefined();
 
-    fireEvent.click(within(article).getByRole('button', { name: 'Move to assigned dock' }));
-    fireEvent.click(within(article).getByRole('button', { name: 'Start unloading' }));
-    fireEvent.click(within(article).getByRole('button', { name: 'Complete operation' }));
-    fireEvent.click(within(article).getByRole('button', { name: 'Check out appointment' }));
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Move to assigned dock' }));
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Start unloading' }));
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Complete operation' }));
+    fireEvent.click(within(articleFor('PO-DEMO-2001')).getByRole('button', { name: 'Check out appointment' }));
 
-    expect(within(article).getByText('Operational: CHECKED_OUT')).toBeDefined();
-    expect(within(article).getByText('CONFIRMED')).toBeDefined();
+    const checkedOutArticle = articleFor('PO-DEMO-2001');
+    expect(within(checkedOutArticle).getByText('Operational: CHECKED_OUT')).toBeDefined();
+    expect(within(checkedOutArticle).getByText('CONFIRMED')).toBeDefined();
     expect(screen.getByText(/CHECK_OUT · planning-baltic-2001 · COMPLETED → CHECKED_OUT · DELEGATE/)).toBeDefined();
   });
 
@@ -163,21 +168,22 @@ describe('GateOpsPage', () => {
     const article = articleFor('PO-DEMO-1001');
     expect(within(article).getByText('Operational: EXPECTED')).toBeDefined();
     fireEvent.click(within(article).getByRole('button', { name: 'Confirm No Show' }));
-    expect(within(article).getByText('Operational: NO_SHOW')).toBeDefined();
+    const noShowArticle = articleFor('PO-DEMO-1001');
+    expect(within(noShowArticle).getByText('Operational: NO_SHOW')).toBeDefined();
     expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
     expect(screen.getByRole('status').textContent).toContain('record remains visible');
-    expect(within(article).queryByRole('button', { name: 'Confirm No Show' })).toBeNull();
+    expect(within(noShowArticle).queryByRole('button', { name: 'Confirm No Show' })).toBeNull();
   });
 
   it('preserves Supplier registrations when Security corrects gate-observed evidence', () => {
     renderActiveSecurityRoute();
-    const article = articleFor('PO-DEMO-1001');
     fireEvent.change(screen.getByLabelText('Gate tractor registration'), { target: { value: 'GATE-TR-9' } });
     fireEvent.change(screen.getByLabelText('Gate trailer or container registration'), { target: { value: 'GATE-TRL-9' } });
-    fireEvent.click(within(article).getByRole('button', { name: 'Correct gate registration' }));
+    fireEvent.click(within(articleFor('PO-DEMO-1001')).getByRole('button', { name: 'Correct gate registration' }));
 
-    expect(within(article).getByText('TR-100')).toBeDefined();
-    expect(within(article).getByText('GATE-TR-9')).toBeDefined();
+    const correctedArticle = articleFor('PO-DEMO-1001');
+    expect(within(correctedArticle).getByText('TR-100')).toBeDefined();
+    expect(within(correctedArticle).getByText('GATE-TR-9')).toBeDefined();
     expect(screen.getByRole('status').textContent).toContain('Supplier-origin values remain immutable');
   });
 
@@ -193,8 +199,7 @@ describe('GateOpsPage', () => {
     vi.stubGlobal('fetch', fetchSpy);
     const storageSpy = vi.spyOn(Storage.prototype, 'setItem');
     renderActiveSecurityRoute();
-    const article = articleFor('PO-DEMO-1001');
-    fireEvent.click(within(article).getByRole('button', { name: 'Check in appointment' }));
+    fireEvent.click(within(articleFor('PO-DEMO-1001')).getByRole('button', { name: 'Check in appointment' }));
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(storageSpy).not.toHaveBeenCalled();
