@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, Link } from 'react-router';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { PublicOnlyRoute } from '../auth/PublicOnlyRoute';
 import { AuthenticatedShell } from './AuthenticatedShell';
@@ -18,6 +18,8 @@ import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrga
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
 import { SupplierConfigurationPage } from '../supplierOrganizations/SupplierConfigurationPage';
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
+import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
+import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -25,6 +27,37 @@ import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
 function DefaultDemoRoute() {
   const { defaultRoute } = useDemoDomain();
   return <Navigate to={defaultRoute} replace />;
+}
+
+function AppointmentsRoutePage() {
+  const { activeActor, canNavigateWorkflow } = useDemoDomain();
+  const supplierOrganizationId = activeActor.supplierOrganizationId;
+  const warehouseId = activeActor.warehouseIds[0];
+  const canReserveNextWeek = Boolean(
+    supplierOrganizationId
+    && warehouseId
+    && canNavigateWorkflow({
+      step: 'SUPPLIER_RESERVE_NEXT_WEEK',
+      capability: 'BOOK_APPOINTMENT',
+      scope: { supplierOrganizationId, warehouseId },
+    }),
+  );
+
+  return (
+    <>
+      {canReserveNextWeek && (
+        <div className="mx-auto mb-6 flex max-w-7xl justify-end">
+          <Link
+            to="/appointments/reserve-next-week"
+            className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+          >
+            Reserve next-week slot
+          </Link>
+        </div>
+      )}
+      <AppointmentsPage />
+    </>
+  );
 }
 
 function NotFoundFallback() {
@@ -51,7 +84,11 @@ export function AppRoutes() {
             <Route path="/" element={<DefaultDemoRoute />} />
             <Route
               path="/appointments"
-              element={<DemoRouteGuard route="/appointments"><AppointmentsPage /></DemoRouteGuard>}
+              element={<DemoRouteGuard route="/appointments"><AppointmentsRoutePage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/appointments/reserve-next-week"
+              element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>}
             />
             <Route
               path="/users"
