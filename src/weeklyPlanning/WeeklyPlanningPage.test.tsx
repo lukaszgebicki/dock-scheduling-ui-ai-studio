@@ -40,11 +40,11 @@ describe('Weekly planning page', () => {
     expect(screen.getByRole('heading', { name: /fallback/i })).toBeDefined();
   });
 
-  it('requires an explicit action, records local history and performs no network or storage write', () => {
+  it('requires an explicit primary-actor action, records local history and performs no network or storage write', () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
     const storageSpy = vi.spyOn(Storage.prototype, 'setItem');
-    renderRoute('system-administrator');
+    renderRoute('warehouse-administrator');
 
     expect(screen.getByText('No planning action has been applied.')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Attach exact SKU details' }));
