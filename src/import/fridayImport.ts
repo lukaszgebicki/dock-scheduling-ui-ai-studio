@@ -47,14 +47,21 @@ export interface FridayImportLine {
   handling: string;
 }
 
+interface FridayImportIdentity {
+  warehouseCode: string;
+  supplierCode: string;
+  purchaseOrderNumber: string;
+  deliveryWeek: string;
+  deliveryPartKey: string;
+}
+
+interface FridayImportTransport {
+  tractorRegistration: string;
+  trailerOrContainerRegistration: string;
+}
+
 export interface FridayImportGroup {
-  identity: {
-    warehouseCode: string;
-    supplierCode: string;
-    purchaseOrderNumber: string;
-    deliveryWeek: string;
-    deliveryPartKey: string;
-  };
+  identity: FridayImportIdentity;
   rowNumbers: readonly number[];
   lines: readonly FridayImportLine[];
   outcome: FridayImportOutcome;
@@ -98,6 +105,7 @@ function parseCsv(text: string): { rows: string[][]; error?: string } {
   let row: string[] = [];
   let field = '';
   let quoted = false;
+  let justClosedQuote = false;
 
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
@@ -108,6 +116,7 @@ function parseCsv(text: string): { rows: string[][]; error?: string } {
           index += 1;
         } else {
           quoted = false;
+          justClosedQuote = true;
         }
       } else {
         field += character;
@@ -115,17 +124,22 @@ function parseCsv(text: string): { rows: string[][]; error?: string } {
       continue;
     }
 
+    if (justClosedQuote && character !== ',' && character !== '\n' && character !== '\r') {
+      return { rows: [], error: 'Malformed CSV quoting.' };
+    }
     if (character === '"') {
-      if (field.length > 0) return { rows: [], error: 'Malformed CSV quoting.' };
+      if (field.length > 0 || justClosedQuote) return { rows: [], error: 'Malformed CSV quoting.' };
       quoted = true;
     } else if (character === ',') {
       row.push(field);
       field = '';
+      justClosedQuote = false;
     } else if (character === '\n') {
       row.push(field);
       rows.push(row);
       row = [];
       field = '';
+      justClosedQuote = false;
     } else if (character !== '\r') {
       field += character;
     }
@@ -141,7 +155,7 @@ function normalizeIdentity(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toUpperCase();
 }
 
-function groupKey(identity: FridayImportGroup['identity']): string {
+function groupKey(identity: FridayImportIdentity): string {
   return JSON.stringify([
     identity.warehouseCode,
     identity.supplierCode,
@@ -151,13 +165,19 @@ function groupKey(identity: FridayImportGroup['identity']): string {
   ]);
 }
 
-function fingerprint(identity: FridayImportGroup['identity'], lines: readonly FridayImportLine[]): string {
+function fingerprint(
+  identity: FridayImportIdentity,
+  transport: FridayImportTransport,
+  lines: readonly FridayImportLine[],
+): string {
   return JSON.stringify({
     identity,
-    lines: [...lines].sort((left, right) =>
-      left.sku.localeCompare(right.sku)
-      || left.description.localeCompare(right.description)
-      || left.rowNumber - right.rowNumber).map(({ rowNumber: _rowNumber, ...line }) => line),
+    transport,
+    lines: [...lines]
+      .sort((left, right) => left.sku.localeCompare(right.sku)
+        || left.description.localeCompare(right.description)
+        || left.rowNumber - right.rowNumber)
+      .map(({ rowNumber: _rowNumber, ...line }) => line),
   });
 }
 
@@ -198,31 +218,39 @@ export function buildFridayImportPreview(input: PreviewInput): FridayImportPrevi
 
   const parsed = parseCsv(input.text);
   if (parsed.error) return { fileName: input.fileName, groups: [], errors: [parsed.error], counts };
-  const [headerRow, ...dataRows] = parsed.rows;
+  const [headerRow, ...rawDataRows] = parsed.rows;
   if (!headerRow) return { fileName: input.fileName, groups: [], errors: ['Missing CSV header.'], counts };
+
+  const dataRows = rawDataRows.filter((values) => !(values.length === 1 && values[0].trim() === ''));
+  if (dataRows.length === 0) return { fileName: input.fileName, groups: [], errors: ['CSV contains no data rows.'], counts };
   if (dataRows.length > maxRows) return { fileName: input.fileName, groups: [], errors: [`CSV exceeds the ${maxRows} row limit.`], counts };
 
   const normalizedHeaders = headerRow.map((header) => header.trim());
-  const duplicateHeaders = normalizedHeaders.filter((header, index) =>
-    normalizedHeaders.indexOf(header) !== index);
+  const duplicateHeaders = normalizedHeaders.filter((header, index) => normalizedHeaders.indexOf(header) !== index);
   const missingHeaders = fridayImportHeaders.filter((header) => !normalizedHeaders.includes(header));
-  const unknownHeaders = normalizedHeaders.filter((header) =>
-    !fridayImportHeaders.includes(header as FridayImportHeader));
+  const unknownHeaders = normalizedHeaders.filter((header) => !fridayImportHeaders.includes(header as FridayImportHeader));
   if (duplicateHeaders.length > 0) errors.push(`Duplicate headers: ${[...new Set(duplicateHeaders)].join(', ')}.`);
   if (missingHeaders.length > 0) errors.push(`Missing headers: ${missingHeaders.join(', ')}.`);
   if (unknownHeaders.length > 0) errors.push(`Unsupported headers: ${unknownHeaders.join(', ')}.`);
+
+  dataRows.forEach((values, index) => {
+    if (values.length !== normalizedHeaders.length) {
+      errors.push(`Row ${index + 2} has ${values.length} columns; expected ${normalizedHeaders.length}.`);
+    }
+  });
   if (errors.length > 0) return { fileName: input.fileName, groups: [], errors, counts };
 
-  const indexes = Object.fromEntries(fridayImportHeaders.map((header) => [header, normalizedHeaders.indexOf(header)])) as Record<FridayImportHeader, number>;
+  const indexes = Object.fromEntries(
+    fridayImportHeaders.map((header) => [header, normalizedHeaders.indexOf(header)]),
+  ) as Record<FridayImportHeader, number>;
   const grouped = new Map<string, {
-    identity: FridayImportGroup['identity'];
+    identity: FridayImportIdentity;
     rows: { values: Record<FridayImportHeader, string>; rowNumber: number }[];
   }>();
 
   dataRows.forEach((values, dataIndex) => {
-    if (values.length === 1 && values[0].trim() === '') return;
     const record = Object.fromEntries(fridayImportHeaders.map((header) =>
-      [header, (values[indexes[header]] ?? '').trim()])) as Record<FridayImportHeader, string>;
+      [header, values[indexes[header]].trim()])) as Record<FridayImportHeader, string>;
     const identity = {
       warehouseCode: normalizeIdentity(record.warehouseCode),
       supplierCode: normalizeIdentity(record.supplierCode),
@@ -245,6 +273,15 @@ export function buildFridayImportPreview(input: PreviewInput): FridayImportPrevi
 
     if (Object.values(identity).some((value) => value.length === 0)) diagnostics.push('Every reconciliation identity field is required.');
     if (identity.deliveryPartKey !== '1') diagnostics.push('deliveryPartKey must remain "1".');
+
+    const tractorValues = [...new Set(rows.map(({ values }) => normalizeIdentity(values.tractorRegistration)).filter(Boolean))];
+    const trailerValues = [...new Set(rows.map(({ values }) => normalizeIdentity(values.trailerOrContainerRegistration)).filter(Boolean))];
+    if (tractorValues.length > 1) diagnostics.push('Rows in one PO group contain inconsistent tractorRegistration values.');
+    if (trailerValues.length > 1) diagnostics.push('Rows in one PO group contain inconsistent trailerOrContainerRegistration values.');
+    const transport: FridayImportTransport = {
+      tractorRegistration: tractorValues[0] ?? '',
+      trailerOrContainerRegistration: trailerValues[0] ?? '',
+    };
 
     rows.forEach(({ values, rowNumber }) => {
       const skuFields = [values.sku, values.description, values.units, values.pallets, values.loadCarrierType, values.goodsCategory, values.handling];
@@ -277,7 +314,7 @@ export function buildFridayImportPreview(input: PreviewInput): FridayImportPrevi
       lines.push(line);
     });
 
-    const groupFingerprint = fingerprint(identity, lines);
+    const groupFingerprint = fingerprint(identity, transport, lines);
     const matchingTargets = input.targets.filter((target) =>
       target.warehouseCode === identity.warehouseCode
       && target.supplierCode === identity.supplierCode
@@ -298,10 +335,9 @@ export function buildFridayImportPreview(input: PreviewInput): FridayImportPrevi
     if (outcome === 'AMBIGUOUS_MATCH') diagnostics.push('More than one booking matches all five identity fields.');
 
     const target = matchingTargets.length === 1 ? matchingTargets[0] : undefined;
-    const firstRow = rows[0]?.values;
-    const transportConflicts = target && firstRow ? ([
-      ['tractorRegistration', target.tractorRegistration, firstRow.tractorRegistration],
-      ['trailerOrContainerRegistration', target.trailerOrContainerRegistration, firstRow.trailerOrContainerRegistration],
+    const transportConflicts = target ? ([
+      ['tractorRegistration', target.tractorRegistration, transport.tractorRegistration],
+      ['trailerOrContainerRegistration', target.trailerOrContainerRegistration, transport.trailerOrContainerRegistration],
     ] as const).filter(([, existingValue, importedValue]) =>
       importedValue.length > 0 && normalizeIdentity(importedValue) !== normalizeIdentity(existingValue))
       .map(([field, existingValue, importedValue]) => ({ field, existingValue, importedValue })) : [];
