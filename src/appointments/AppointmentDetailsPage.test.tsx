@@ -91,13 +91,18 @@ describe('AppointmentDetailsPage', () => {
     expect(screen.getByText('No status history is visible.')).toBeDefined();
   });
 
-  it('shows Supplier-safe SKU contents but excludes diagnostics, lineage and internal notes', () => {
+  it('shows Supplier-safe SKU contents but excludes diagnostics and internal state evidence', () => {
     renderDetails('planning-vistula-3001', 'supplier-user');
     expect(screen.getByRole('heading', { name: 'APT-WPL-003' })).toBeDefined();
     expect(screen.getByText('SKU-101')).toBeDefined();
     expect(screen.getByText('Glass packaging')).toBeDefined();
+    expect(screen.getByText('Administrator added')).toBeDefined();
     expect(screen.queryByText('EXACT_MATCH')).toBeNull();
     expect(screen.queryByText('batch-demo-1')).toBeNull();
+    expect(screen.queryByText('WEEKLY_PLANNING')).toBeNull();
+    expect(screen.queryByText('NO_CHANGE_REQUEST')).toBeNull();
+    expect(screen.queryByText(/Planning: READY/)).toBeNull();
+    expect(screen.queryByText(/Operational: EXPECTED/)).toBeNull();
     expect(screen.getByText('Technical audit metadata is not available in this role.')).toBeDefined();
     expect(screen.getByText(/Supplier-safe view/)).toBeDefined();
     expect(screen.queryByRole('option', { name: 'Internal Note' })).toBeNull();
@@ -142,6 +147,25 @@ describe('AppointmentDetailsPage', () => {
     expect(screen.queryByText(/ADD_COMMENT · INTERNAL_NOTE/)).toBeNull();
   });
 
+  it('shows an internal Shared Comment to Supplier without the internal reason', () => {
+    const base = createInitialAppointmentWorkspaceState();
+    const state = addWorkspaceComment(
+      base,
+      'planning-vistula-3001',
+      getDemoActor('system-administrator'),
+      true,
+      'SHARED_COMMENT',
+      'Shared delivery clarification',
+      'INTERNAL-REASON-SECRET',
+    ).state;
+    renderDetails('planning-vistula-3001', 'supplier-user', state);
+    expect(screen.getByText((_content, element) =>
+      element?.tagName === 'LI'
+      && element.textContent?.includes('Shared delivery clarification') === true)).toBeDefined();
+    expect(screen.getByText(/ADD_COMMENT · SHARED_COMMENT/)).toBeDefined();
+    expect(screen.queryByText('INTERNAL-REASON-SECRET')).toBeNull();
+  });
+
   it('allows Supplier-safe vehicle correction on its own non-weekly record', () => {
     renderDetails('appointment-nonweekly-vistula-001', 'supplier-user');
     fireEvent.change(screen.getByLabelText('Safe field'), { target: { value: 'tractorRegistration' } });
@@ -177,8 +201,12 @@ describe('AppointmentDetailsPage', () => {
     expect(within(safeField).getByRole('option', { name: 'Contact name' })).toBeDefined();
   });
 
-  it('keeps Security on a restricted projection without internal diagnostics or edits', () => {
+  it('keeps Security on a restricted operational projection', () => {
     renderDetails('planning-northstar-1001', 'security-officer');
+    expect(screen.getByText(/Operational: EXPECTED/)).toBeDefined();
+    expect(screen.queryByText(/Planning: AWAITING_DETAILS/)).toBeNull();
+    expect(screen.queryByText('WEEKLY_PLANNING')).toBeNull();
+    expect(screen.queryByText('NO_CHANGE_REQUEST')).toBeNull();
     expect(screen.getByText('Administrator reconciliation diagnostics are not available in this role.')).toBeDefined();
     expect(screen.getByText('Technical audit metadata is not available in this role.')).toBeDefined();
     expect(screen.getByText('No safe inline field is editable for this actor and operational state.')).toBeDefined();
