@@ -6,7 +6,6 @@ import {
   loadOrchestratorPolicy,
 } from "./autonomy-core.mjs";
 import {
-  SafeCommandRunner,
   executeTask,
   loadTaskSource,
   plannedLifecycle,
@@ -14,6 +13,7 @@ import {
   sanitizeLog,
   verifyRoadmapGate,
 } from "./autonomy-runtime.mjs";
+import { createDefaultCommandRunner } from "./windows-runtime.mjs";
 
 const HELP = `Dock Scheduling bounded autonomy runner
 
@@ -73,7 +73,8 @@ export async function main(
     canonicalRoot = process.cwd(),
     output = (value) => process.stdout.write(`${value}\n`),
     errorOutput = (value) => process.stderr.write(`${value}\n`),
-    commandRunner = new SafeCommandRunner(),
+    commandRunner,
+    commandRunnerFactory = createDefaultCommandRunner,
   } = {},
 ) {
   try {
@@ -82,12 +83,13 @@ export async function main(
       output(HELP);
       return 0;
     }
+    const activeCommandRunner = commandRunner ?? commandRunnerFactory();
 
     if (parsed.command === "doctor") {
       const policy = loadOrchestratorPolicy(canonicalRoot);
       const result = await runDoctor({
         canonicalRoot,
-        commandRunner,
+        commandRunner: activeCommandRunner,
         policy,
       });
       output(JSON.stringify(result, null, 2));
@@ -96,12 +98,16 @@ export async function main(
 
     if (parsed.command === "plan") {
       const policy = loadOrchestratorPolicy(canonicalRoot);
-      await runDoctor({ canonicalRoot, commandRunner, policy });
+      await runDoctor({
+        canonicalRoot,
+        commandRunner: activeCommandRunner,
+        policy,
+      });
       const source = await loadTaskSource({
         contractPath: parsed.contractPath,
         issueNumber: parsed.issueNumber,
         canonicalRoot,
-        commandRunner,
+        commandRunner: activeCommandRunner,
         policy,
       });
       verifyRoadmapGate(canonicalRoot, source.contract);
@@ -113,7 +119,7 @@ export async function main(
       canonicalRoot,
       contractPath: parsed.contractPath,
       issueNumber: parsed.issueNumber,
-      commandRunner,
+      commandRunner: activeCommandRunner,
     });
     output(JSON.stringify(result, null, 2));
     return 0;
