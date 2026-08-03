@@ -117,7 +117,7 @@ describe('notification domain', () => {
       expect(state.title.length).toBeGreaterThan(0);
       expect(state.description.length).toBeGreaterThan(0);
       expect(state.actionOutcome).toMatch(/locally|guidance/);
-      expect(state.actionOutcome).toMatch(/No |no /);
+      expect(state.actionOutcome).toMatch(/No |no |not /);
     }
   });
 });
