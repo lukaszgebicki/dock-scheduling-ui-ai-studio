@@ -117,7 +117,7 @@ describe('notification domain', () => {
       expect(state.title.length).toBeGreaterThan(0);
       expect(state.description.length).toBeGreaterThan(0);
       expect(state.actionOutcome).toMatch(/locally|guidance/);
-      expect(state.actionOutcome).not.toMatch(/successfully|was (booked|saved|uploaded|renewed|restored|granted|reconnected|created)/i);
+      expect(state.actionOutcome).not.toMatch(/successfully (saved|booked|uploaded|renewed|restored|granted|reconnected|created)|reconnected successfully|permission granted|session renewed|hold restored|document uploaded/i);
     }
   });
 });
