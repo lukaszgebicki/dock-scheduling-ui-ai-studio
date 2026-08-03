@@ -13,6 +13,7 @@ import {
   normalizeCodexExecArguments,
   resolveWindowsCodexRuntime,
 } from "./windows-runtime.mjs";
+import { main } from "./run-task.mjs";
 
 const SHA = "a".repeat(40);
 
@@ -42,6 +43,18 @@ function optionValue(args, option) {
   const index = args.indexOf(option);
   return index === -1 ? undefined : args[index + 1];
 }
+
+test("help remains non-mutating and does not resolve the runtime", async () => {
+  const output = [];
+  const exitCode = await main([], {
+    output: (value) => output.push(value),
+    commandRunnerFactory() {
+      throw new Error("help must not resolve tools");
+    },
+  });
+  assert.equal(exitCode, 0);
+  assert.match(output.join("\n"), /non-mutating/);
+});
 
 test("Codex global exec options are normalized before exec", () => {
   const normalized = normalizeCodexExecArguments(codexArgs("C:\\out.txt"));
