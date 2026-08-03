@@ -6,7 +6,6 @@ import {
   loadOrchestratorPolicy,
 } from "./autonomy-core.mjs";
 import {
-  SafeCommandRunner,
   executeTask,
   loadTaskSource,
   plannedLifecycle,
@@ -14,6 +13,7 @@ import {
   sanitizeLog,
   verifyRoadmapGate,
 } from "./autonomy-runtime.mjs";
+import { createDefaultCommandRunner } from "./windows-runtime.mjs";
 
 const HELP = `Dock Scheduling bounded autonomy runner
 
@@ -73,7 +73,7 @@ export async function main(
     canonicalRoot = process.cwd(),
     output = (value) => process.stdout.write(`${value}\n`),
     errorOutput = (value) => process.stderr.write(`${value}\n`),
-    commandRunner = new SafeCommandRunner(),
+    commandRunner = createDefaultCommandRunner(),
   } = {},
 ) {
   try {
