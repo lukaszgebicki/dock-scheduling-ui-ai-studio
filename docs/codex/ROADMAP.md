@@ -40,50 +40,52 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-BOOKING-1 — restricted Supplier reservation | DONE; PR #66 squash-merged at `e6eab51f51d03c9133ec604e9df1b70b36d78a1e` |
 | UI-MVP-CALENDAR-CAPACITY-1-ACTIVATE — activate PO planning calendar | DONE; PR #68 squash-merged at `ba4164da5ae2dfdd4bf450a2d58aa9e3892a7ba9` |
 | UI-MVP-CALENDAR-CAPACITY-1 — PO planning calendar and capacity | DONE; PR #70 squash-merged at `327506b08462d498b387d50b6402650a600b7def` |
+| UI-MVP-ADMIN-IMPORT-1-ACTIVATE — activate local Friday PO import | DONE; PR #73 squash-merged at `6b18bdeecb0f6d725a26b457cce5e4e87e04df09` |
+| UI-MVP-ADMIN-IMPORT-1 — local Friday PO import preview | DONE; PR #75 squash-merged at `c492ba9f28c764f0432dffc46b89fdf207f02c37` |
+| UI-MVP-WEEKLY-PLANNING-1-ACTIVATE — activate exact enrichment and planning queue | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-ADMIN-IMPORT-1 — local Friday PO import preview
+### UI-MVP-WEEKLY-PLANNING-1 — exact enrichment and planning queue
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: implement an Administrator-only local upload and deterministic
-  preview of the approved Friday PO/SKU file without applying any changes to
-  appointments, planning state or warehouse capacity.
-- Product authority: the approved UI MVP and weekly-planning specification
-  import contract, together with existing PO identity, `deliveryPartKey`,
-  booking, calendar, scope and configuration rules.
-- Access boundary: only an authorized Administrator in the applicable warehouse
-  scope may open the import route or select a file. Supplier, Operator and
-  Security actors fail closed and receive no file contents or diagnostics.
-- Input boundary: accept only the explicitly supported local demonstration file
-  shape and size. Missing headers, unknown required columns, invalid values,
-  duplicate headers, malformed rows and ambiguous identities fail closed with
-  stable, line-specific evidence.
-- Preview boundary: classify every parsed row deterministically as valid,
-  invalid, duplicate or unmatched. Multi-line PO evidence remains grouped by PO
-  identity and `deliveryPartKey`; the preview must not create one appointment
-  per SKU line.
-- Reconciliation boundary: existing bookings and slots remain unchanged. The
-  preview may identify an exact match or a reconciliation conflict but must not
-  silently merge, split, move, cancel, approve, enrich or overwrite any record.
-- Visibility boundary: file names and approved business fields may be shown to
-  authorized Administrators. Raw technical stack traces, browser paths,
-  secrets and hidden lineage remain absent from the UI.
-- Implementation boundary: implement only local file selection, deterministic
-  parse/validation, preview grouping, reconciliation evidence and focused tests.
-  Do not implement apply/import commit, SKU enrichment, unmatched scheduling,
-  lifecycle or gate actions, notifications, reporting, persistence, backend or
-  integrations.
+- Objective: connect the approved Supplier reservation, Friday import preview,
+  PO/SKU calendar and capacity contracts through deterministic local planning
+  state without introducing appointment lifecycle execution or persistence.
+- Product authority: `BDP-WPL-001`, `BDP-DATA-001`, `BDP-MATCH-001`, applicable
+  `BDP-CAP-001` and `BDP-VAL-001`, scenarios `AC-ADM-002`, `AC-ADM-004` through
+  `AC-ADM-007`, and integrated Supplier/calendar scenarios.
+- Exact-enrichment boundary: only an exact five-field match may attach imported
+  zero-to-many SKU lines to the matching PO header. Slot, booking origin,
+  Supplier transport values and appointment lifecycle status remain unchanged.
+- Queue boundary: `NO_MATCH` creates local unscheduled planning evidence only,
+  with no fabricated slot or capacity. An `ADMIN_ADDED` appointment requires a
+  separately authorized `SCHEDULE_UNRESERVED_DELIVERY` action and a compatible
+  free slot.
+- Conflict boundary: ambiguous matches and enrichment/capacity conflicts remain
+  blocked until an authorized `RESOLVE_PLANNING_CONFLICT` action records an
+  explicit resolution. No silent attachment, replacement, transport overwrite,
+  move, cancellation, approval or override is permitted.
+- Status boundary: planning state is explicit and independent of appointment
+  lifecycle status. Readiness cannot authorize lifecycle or gate execution.
+- Scope boundary: System Administrator acts globally; assigned Warehouse
+  Administrator acts only in assigned warehouse scope. Supplier, Operator and
+  Security actors receive no import diagnostics or planning-resolution actions.
+- Implementation boundary: implement only typed provider/component memory,
+  exact local enrichment, unmatched queue, compatible-slot scheduling for an
+  authorized Admin path, explicit conflict resolution and focused consumers.
+  Do not implement notifications, lifecycle/gate transitions, reporting,
+  durable persistence, backend or integrations.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus an external worktree, complete validation, independent review and
   controlled publication.
 - Technical boundary: frontend-only local or in-memory scope; no localStorage,
-  sessionStorage, IndexedDB, network APIs, deployment or production-repository
-  access.
+  sessionStorage, IndexedDB, cookies, network APIs, deployment or production-
+  repository access.
 
-`UI-MVP-WEEKLY-PLANNING-1`, lifecycle and gate consumers,
-`UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining source tasks
-remain inactive and unauthorized. No other product, governance, security or
-infrastructure task is `READY` or active.
+Lifecycle and gate consumers, `UI-MVP-LIST-DETAILS-1`,
+`UI-MVP-REPORTING-1` and all remaining source tasks remain inactive and
+unauthorized. No other product, governance, security or infrastructure task is
+`READY` or active.
