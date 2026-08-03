@@ -2,7 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { planningAppointments } from '../calendar/planningCalendar';
 import { buildFridayImportPreview, createFridayImportTargets, fridayImportHeaders } from '../import/fridayImport';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
-import { getAuthorizedWeeklyPlanningWarehouseIds } from './WeeklyPlanningGuard';
+import {
+  getAuthorizedWeeklyPlanningWarehouseIds,
+  getWeeklyPlanningWarehouseUniverse,
+} from './WeeklyPlanningGuard';
 import {
   attachExactDetails,
   createWeeklyPlanningState,
@@ -40,10 +43,16 @@ export function WeeklyPlanningPage() {
     canAccessWorkflowRoute,
     canPerformWorkflowAction,
   } = useDemoDomain();
-  const authorizedWarehouseIds = useMemo(() => getAuthorizedWeeklyPlanningWarehouseIds(
-    activeActor.warehouseIds,
-    canAccessWorkflowRoute,
-  ), [activeActor.warehouseIds, canAccessWorkflowRoute]);
+  const authorizedWarehouseIds = useMemo(() => {
+    const universe = getWeeklyPlanningWarehouseUniverse(
+      activeActor.role,
+      activeActor.warehouseIds,
+      configuration.warehouses
+        .filter((warehouse) => warehouse.status === 'published')
+        .map((warehouse) => warehouse.id),
+    );
+    return getAuthorizedWeeklyPlanningWarehouseIds(universe, canAccessWorkflowRoute);
+  }, [activeActor.role, activeActor.warehouseIds, configuration.warehouses, canAccessWorkflowRoute]);
   const [state, setState] = useState(initialState);
   const [reason, setReason] = useState('Reviewed local planning evidence');
   const [plannedDate, setPlannedDate] = useState('2026-08-13');
