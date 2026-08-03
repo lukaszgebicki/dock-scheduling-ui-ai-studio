@@ -45,6 +45,7 @@ export const lifecycleOperationalStatuses = [
 export type LifecycleOperationalStatus = (typeof lifecycleOperationalStatuses)[number];
 
 export type LifecycleHistoryAction =
+  | 'SUBMIT'
   | 'EVALUATE_APPROVAL'
   | 'APPROVE'
   | 'REJECT'
@@ -61,6 +62,7 @@ export interface LifecycleAppointment extends Omit<PlanningAppointment, 'appoint
   flow: DeliveryFlow;
   isAdr: boolean;
   hasRequiredDocument: boolean;
+  lateCancellation: boolean;
 }
 
 export interface LifecycleHistoryEntry {
@@ -90,19 +92,13 @@ function isLifecyclePlanningStatus(value: string): value is LifecyclePlanningSta
   return lifecyclePlanningStatuses.some((status) => status === value);
 }
 
-function cloneAppointment(appointment: LifecycleAppointment): LifecycleAppointment {
-  return {
-    ...appointment,
-    skuLines: appointment.skuLines.map((line) => ({ ...line })),
-  };
-}
-
 function snapshot(appointment: LifecycleAppointment): string {
   return JSON.stringify({
     id: appointment.id,
     appointmentStatus: appointment.appointmentStatus,
     changeStatus: appointment.changeStatus,
     operationalStatus: appointment.operationalStatus,
+    lateCancellation: appointment.lateCancellation,
     plannedDate: appointment.plannedDate,
     plannedTime: appointment.plannedTime,
     bookingOrigin: appointment.bookingOrigin,
@@ -204,6 +200,12 @@ function actorCanChangeAppointment(actor: DemoActor, appointment: LifecycleAppoi
   return false;
 }
 
+function actorCanEvaluateApproval(actor: DemoActor, appointment: LifecycleAppointment): boolean {
+  return actor.role === 'System Administrator'
+    || (actor.role === 'Warehouse Administrator'
+      && actor.warehouseIds.includes(appointment.warehouseId));
+}
+
 function capacityHolding(status: LifecyclePlanningStatus): boolean {
   return status === 'SUBMITTED' || status === 'PENDING_APPROVAL' || status === 'CONFIRMED';
 }
@@ -271,16 +273,54 @@ export function createLifecycleState(
         flow: 'Material Delivery',
         isAdr: appointment.id === 'planning-northstar-1001',
         hasRequiredDocument: true,
+        lateCancellation: false,
       };
     }),
     history: [],
   };
 }
 
+export function submitDraftAppointment(
+  state: LifecycleState,
+  appointmentId: string,
+  actor: DemoActor,
+  reason: string,
+  configuration: DemoConfigurationState,
+): LifecycleActionResult {
+  const appointment = findAppointment(state, appointmentId);
+  if (!appointment) return { state, error: 'Appointment is missing.' };
+  if (appointment.appointmentStatus !== 'DRAFT') {
+    return { state, error: 'Only a DRAFT appointment can be submitted.' };
+  }
+  if (!actorCanChangeAppointment(actor, appointment)) {
+    return { state, error: 'The active actor cannot submit this appointment.' };
+  }
+  const reasonError = requiredReason(reason);
+  if (reasonError) return { state, error: reasonError };
+  const configurationError = exactConfiguration(configuration, appointment);
+  if (configurationError) return { state, error: configurationError };
+  const slotError = compatibleSlotError(
+    state,
+    appointment,
+    appointment.plannedDate,
+    appointment.plannedTime,
+    configuration,
+  );
+  if (slotError) return { state, error: slotError };
+  const updated: LifecycleAppointment = {
+    ...appointment,
+    appointmentStatus: 'SUBMITTED',
+  };
+  return {
+    state: appendHistory(state, appointment, updated, 'SUBMIT', actor.userId, reason.trim()),
+    error: null,
+  };
+}
+
 export function evaluateSubmittedAppointment(
   state: LifecycleState,
   appointmentId: string,
-  actorId: string,
+  actor: DemoActor,
   reason: string,
   configuration: DemoConfigurationState,
   approvalDecision: WorkflowRoutingDecision,
@@ -289,6 +329,9 @@ export function evaluateSubmittedAppointment(
   if (!appointment) return { state, error: 'Appointment is missing.' };
   if (appointment.appointmentStatus !== 'SUBMITTED') {
     return { state, error: 'Only a SUBMITTED appointment can be evaluated.' };
+  }
+  if (!actorCanEvaluateApproval(actor, appointment)) {
+    return { state, error: 'The active actor cannot evaluate approval in this warehouse.' };
   }
   const reasonError = requiredReason(reason);
   if (reasonError) return { state, error: reasonError };
@@ -329,7 +372,7 @@ export function evaluateSubmittedAppointment(
       appointment,
       updated,
       'EVALUATE_APPROVAL',
-      actorId,
+      actor.userId,
       reason.trim(),
     ),
     error: null,
@@ -500,6 +543,8 @@ export function cancelAppointment(
   appointmentId: string,
   actor: DemoActor,
   reason: string,
+  referenceDateTime: string,
+  configuration: DemoConfigurationState,
 ): LifecycleActionResult {
   const appointment = findAppointment(state, appointmentId);
   if (!appointment) return { state, error: 'Appointment is missing.' };
@@ -511,10 +556,15 @@ export function cancelAppointment(
   }
   const reasonError = requiredReason(reason);
   if (reasonError) return { state, error: reasonError };
+  const configurationError = exactConfiguration(configuration, appointment);
+  if (configurationError) return { state, error: configurationError };
+  const afterCutOff = isAfterCutOff(appointment, configuration, referenceDateTime);
+  if (afterCutOff === null) return { state, error: 'Cut-off could not be evaluated.' };
   const updated: LifecycleAppointment = {
     ...appointment,
     appointmentStatus: 'CANCELLED',
     changeStatus: 'NO_CHANGE_REQUEST',
+    lateCancellation: afterCutOff,
   };
   return {
     state: appendHistory(state, appointment, updated, 'CANCEL', actor.userId, reason.trim()),
@@ -552,6 +602,7 @@ export function restoreCancelledAppointment(
   const updated: LifecycleAppointment = {
     ...appointment,
     appointmentStatus: 'CONFIRMED',
+    lateCancellation: false,
   };
   return {
     state: appendHistory(
