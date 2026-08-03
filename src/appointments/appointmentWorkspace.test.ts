@@ -29,6 +29,25 @@ function warehouse(id: string) {
   return initialDemoConfiguration.warehouses.find((candidate) => candidate.id === id)!;
 }
 
+function withImportedConflict(
+  state: AppointmentWorkspaceState,
+  recordId: string,
+): AppointmentWorkspaceState {
+  return {
+    ...state,
+    records: state.records.map((candidate) => candidate.id === recordId
+      ? {
+          ...candidate,
+          importedTransportDetails: {
+            tractorRegistration: 'TR-IMPORT-999',
+            trailerOrContainerRegistration:
+              candidate.supplierTransportDetails.trailerOrContainerRegistration,
+          },
+        }
+      : candidate),
+  };
+}
+
 describe('appointment workspace domain', () => {
   it('projects one PO header per record and aggregates SKU lines exactly once', () => {
     const state = createInitialAppointmentWorkspaceState();
@@ -41,6 +60,15 @@ describe('appointment workspace domain', () => {
       pallets: 4.25,
     });
     expect(state.records.filter((candidate) => candidate.id === baltic.id)).toHaveLength(1);
+  });
+
+  it('does not fabricate status history or transport conflicts', () => {
+    const state = createInitialAppointmentWorkspaceState();
+    for (const candidate of state.records) {
+      expect(candidate.statusHistory).toHaveLength(0);
+      expect(candidate.importedTransportDetails).toEqual({});
+      expect(transportReconciliation(candidate).requiresDecision).toBe(false);
+    }
   });
 
   it('keeps missing SKU detail explicit instead of fabricating zero totals', () => {
@@ -183,6 +211,19 @@ describe('appointment workspace domain', () => {
     expect(changed.savedView?.name).toBe('Baltic');
   });
 
+  it('sanitizes saved-view columns against the active actor', () => {
+    const supplier = getDemoActor('supplier-user');
+    const result = saveWorkspaceView(
+      [],
+      supplier,
+      'Supplier safe',
+      emptyWorkspaceFilters,
+      ['appointment', 'supplier', 'planningState', 'purchaseOrder'],
+    );
+    expect(result.error).toBeNull();
+    expect(result.savedView?.columns).toEqual(['appointment', 'purchaseOrder']);
+  });
+
   it('requires explicit comment visibility and hides Internal Notes from Supplier actors', () => {
     const internal = getDemoActor('system-administrator');
     const supplier = getDemoActor('supplier-user');
@@ -238,13 +279,18 @@ describe('appointment workspace domain', () => {
       actorId: supplier.id,
       before: 'TR-NW-100',
       after: 'TR-NW-101',
+      externalVisible: true,
     });
+    expect(visibleChangeHistory(updated, supplier)).toHaveLength(1);
     expect(initial.records).not.toBe(result.state.records);
   });
 
-  it('uses Administrator transport authority and preserves imported reconciliation evidence', () => {
+  it('uses Administrator transport authority only for explicit imported reconciliation evidence', () => {
     const system = getDemoActor('system-administrator');
-    const initial = createInitialAppointmentWorkspaceState();
+    const initial = withImportedConflict(
+      createInitialAppointmentWorkspaceState(),
+      'planning-baltic-2001',
+    );
     const target = record(initial, 'planning-baltic-2001');
     expect(transportReconciliation(target).requiresDecision).toBe(true);
     const result = updateWorkspaceField(
@@ -262,6 +308,27 @@ describe('appointment workspace domain', () => {
     expect(updated.importedTransportDetails.tractorRegistration).toBe('TR-IMPORT-999');
     expect(updated.supplierTransportDetails.tractorRegistration).toBe('TR-IMPORT-999');
     expect(transportReconciliation(updated).requiresDecision).toBe(false);
+  });
+
+  it('keeps internal safe-edit history hidden from Supplier actors', () => {
+    const internal = getDemoActor('system-administrator');
+    const supplier = getDemoActor('supplier-user');
+    const initial = createInitialAppointmentWorkspaceState();
+    const target = record(initial, 'planning-vistula-3001');
+    const result = updateWorkspaceField(
+      initial,
+      target.id,
+      internal,
+      true,
+      warehouse(target.warehouseId),
+      'contactName',
+      'Internal Contact',
+      'Internal correction',
+    );
+    expect(result.error).toBeNull();
+    const updated = record(result.state, target.id);
+    expect(updated.changeHistory[0].externalVisible).toBe(false);
+    expect(visibleChangeHistory(updated, supplier)).toHaveLength(0);
   });
 
   it('blocks Warehouse Operator transport authority and editing at or after CHECKED_IN', () => {
