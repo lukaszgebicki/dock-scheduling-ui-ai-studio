@@ -204,7 +204,13 @@ async function runWorkspaceWriteProbe({ args, options, runCodex }) {
   const probeOutput = `${outputFile}.workspace-write-probe`;
   const probePath = path.join(options.cwd, WRITE_PROBE_FILE);
   rmSync(probeOutput, { force: true });
-  rmSync(probePath, { force: true });
+  if (existsSync(probePath)) {
+    throw new AutonomyError(
+      "workspace-write probe path already exists",
+      "CODEX_WRITE_PROBE_PATH_CONFLICT",
+      { probePath },
+    );
+  }
   const probeArgs = replaceOptionValue(
     args,
     "--output-last-message",
