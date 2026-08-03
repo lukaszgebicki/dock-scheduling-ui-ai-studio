@@ -48,65 +48,60 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-LIFECYCLE-1 — capability-routed lifecycle transitions | DONE; PR #83 squash-merged at `3b0552a6a095da1cd2248f7d6b6e60850a6261d0` |
 | UI-MVP-GATE-OPS-1-ACTIVATE — activate operator and Security workflows | DONE; PR #85 squash-merged at `e98796157ecbf4d9e858a4e10b252ad7819f5b01` |
 | UI-MVP-GATE-OPS-1 — operator and Security workflows | DONE; PR #87 squash-merged at `bc4b11325a4f894c4227ea75eefaa487cce22221` |
-| UI-MVP-LIST-DETAILS-1-ACTIVATE — activate planning-aware appointment list and details | DONE after merge of this activation PR |
+| UI-MVP-LIST-DETAILS-1-ACTIVATE — activate planning-aware appointment list and details | DONE; PR #89 squash-merged at `38d5365ef63eb9e1ebc307af4e261c79a04ee381` |
+| UI-MVP-LIST-DETAILS-1 — planning-aware appointment list and details | DONE; PR #91 squash-merged at `ab47046a4b25e5f91e9b5aa9c36e0115c9833beb` |
+| UI-MVP-REPORTING-1-ACTIVATE — activate PO/SKU reports and local exports | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-LIST-DETAILS-1 — planning-aware appointment list and details
+### UI-MVP-REPORTING-1 — PO/SKU reports and local exports
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: extend the existing appointment overview into role-scoped list and
-  detail consumers that expose approved PO/SKU, planning, lifecycle,
-  operational, transport and history evidence without creating new business
-  transitions or durable effects.
-- Product authority: `BDP-LIST-001`, `BDP-DET-001`, `BDP-DATA-001`, applicable
-  `BDP-CAL-002`, the safe-edit portion of `BDP-EDIT-001`, `AC-SUP-002` and
-  `AC-SUP-008`.
-- List boundary: internal and Supplier actors receive only their approved column
-  sets. Filters, global search and demonstrational saved views remain scoped to
-  the active actor, organization and warehouse visibility.
-- Detail boundary: expose the approved Overview, Delivery Data, Transport,
-  Orders and References, Quantities, Comments, Status History, Change History
-  and Audit Metadata projections only where the actor may see them. Documents
-  remain display-only fixtures; no storage behavior is authorized.
-- Planning boundary: show PO header, zero-to-many SKU lines, booking origin,
-  planning state and approved reconciliation outcomes without exposing import
-  diagnostics, source-row identifiers or batch lineage to Supplier actors.
-- Supplier-safety boundary: Supplier actors never see internal notes, technical
-  audit metadata, Security-only evidence, another organization’s data or
-  Administrator-only reconciliation diagnostics.
-- Search boundary: global search covers only approved identifiers and fields
-  visible to the active actor. It must not fuzzy-match hidden data or leak
-  records outside role, Supplier-organization or warehouse scope.
-- Saved-view boundary: saving, naming and choosing a default view is a local
-  demonstrational state only. No browser storage, backend persistence or claim
-  of durable personalization is permitted.
-- Comment boundary: Shared Comment and Internal Note are distinct typed choices.
-  Visibility must be selected explicitly before submission; Supplier actors may
-  never receive Internal Notes.
-- Edit boundary: inline changes are limited to safe fields explicitly permitted
-  by `BDP-EDIT-001` and require actor, reason and immutable local before/after
-  history. Slot-affecting, lifecycle, dock, capacity, approval, cancellation,
-  reschedule and transport-authority changes remain controlled by existing
-  consumers and may not be invented inside list/details.
-- Status boundary: planning, lifecycle/change and operational statuses remain
-  independent. Display readiness or a required-action label never authorizes a
-  transition and cannot fabricate success history.
-- Implementation boundary: use typed local provider/component memory and
-  established appointment, calendar, weekly-planning, lifecycle, gate and
-  transport evidence. Do not implement reporting/export, notifications,
-  dashboards, standing appointments, document upload, backend, APIs,
-  persistence or integrations.
+- Objective: deliver role-scoped, local demonstrational weekly and monthly
+  reporting consumers at PO and SKU levels, with filtered previews and local
+  CSV/XLSX exports that preserve the active result definition.
+- Product authority: `BDP-REP-001`, `BDP-DATA-001` and `AC-REP-001` through
+  `AC-REP-004`.
+- Scope boundary: System Administrator may report across all accessible data;
+  Warehouse Administrator and Warehouse Operator remain limited to assigned
+  warehouses. Supplier actors remain limited to their own organization and
+  assigned warehouse scope if a Supplier report/export consumer is exposed.
+  Security Officer has no reporting route or action.
+- Date boundary: every report uses an inclusive planned-date range. Weekly
+  all-delivery and monthly Slipsheet presets must resolve deterministic start
+  and end dates without silently broadening the active range.
+- Level boundary: `PO` produces exactly one row per distinct appointment/PO
+  header. `SKU` produces one row per product line and does not fabricate rows
+  for an appointment awaiting SKU details.
+- Aggregation boundary: appointment count uses distinct appointment IDs.
+  Units and pallets sum each SKU line exactly once. Derived totals must not be
+  maintained as a second manual source of truth.
+- Preview boundary: filters and role-permitted columns may cover warehouse,
+  planned date/time, PO, SKU, descriptions, Supplier, units, pallets, load
+  carrier, goods category, handling instruction, transport, booking origin,
+  planning status, appointment status and import source where permitted.
+- Export boundary: local CSV and XLSX-compatible workbook output must preserve
+  the active date range, filters, level, selected columns, sorting, row order
+  and actor scope. Export may use only the already scoped active result and may
+  not silently include hidden columns or excluded rows.
+- Supplier-safety boundary: Supplier actors never receive another
+  organization’s records, Internal Notes, technical audit metadata, import
+  diagnostics, source-row/batch lineage or Administrator-only reconciliation
+  reasoning.
+- Mutation boundary: reports and exports are read-only consumers. They may not
+  mutate planning, lifecycle/change, operational, transport, capacity, slot,
+  dock, gate, approval, cancellation or reschedule state.
+- Technical boundary: generation and download remain local and demonstrational.
+  No advanced reporting warehouse, scheduled export, e-mail, notification,
+  localStorage, sessionStorage, IndexedDB, cookies, backend, API, persistence,
+  integration, deployment or production-repository access is authorized.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus an external worktree, complete validation, Simplification Pass,
   independent review and controlled publication.
-- Technical boundary: frontend-only local or in-memory scope; no localStorage,
-  sessionStorage, IndexedDB, cookies, network APIs, deployment or production-
-  repository access.
 
-`UI-MVP-REPORTING-1`, `UI-MVP-NOTIFICATIONS-STATES-1`,
-`UI-MVP-DASH-MOBILE-1`, `UI-MVP-STANDING-1` and every other remaining source
-task remain inactive and unauthorized. No other product, governance, security
-or infrastructure task is `READY` or active.
+`UI-MVP-NOTIFICATIONS-STATES-1`, `UI-MVP-DASH-MOBILE-1`,
+`UI-MVP-STANDING-1` and every other remaining source task remain inactive and
+unauthorized. No other product, governance, security or infrastructure task is
+`READY` or active.
