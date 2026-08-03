@@ -187,10 +187,10 @@ describe('AppointmentDetailsPage', () => {
 
   it('clears draft comments, edit values and messages when the actor changes', () => {
     render(
-      <MemoryRouter initialEntries={['/appointments/planning-baltic-2001']}>
+      <MemoryRouter initialEntries={['/appointments/planning-northstar-1001']}>
         <DemoDomainProvider>
           <AppointmentWorkspaceProvider>
-            <SwitchActor actorId="warehouse-operator" />
+            <SwitchActor actorId="security-officer" />
             <Routes>
               <Route path="/appointments/:appointmentId" element={<AppointmentDetailsPage />} />
             </Routes>
@@ -205,8 +205,8 @@ describe('AppointmentDetailsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Switch actor' }));
     expect(screen.getByLabelText('Comment visibility')).toHaveProperty('value', '');
     expect(screen.getByLabelText('Comment text')).toHaveProperty('value', '');
-    expect(screen.getByLabelText('Safe field')).toHaveProperty('value', '');
-    expect(screen.getByLabelText('Replacement value')).toHaveProperty('value', '');
+    expect(screen.queryByLabelText('Safe field')).toBeNull();
+    expect(screen.queryByLabelText('Replacement value')).toBeNull();
     expect(screen.queryByRole('option', { name: 'Internal Note' })).toBeNull();
     expect(screen.queryByText('Draft secret')).toBeNull();
   });
