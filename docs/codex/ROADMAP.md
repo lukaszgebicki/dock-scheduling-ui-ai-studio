@@ -38,49 +38,52 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-TRANSPORT-RULES-1 — transport contract and readiness | DONE; PR #62 squash-merged at `279d33f6fbbefd7b4a8527822eff5e6ade289ea6` |
 | UI-MVP-BOOKING-1-ACTIVATE — activate restricted Supplier reservation | DONE; PR #64 squash-merged at `14c81304e1ad362a9165848a4c75ce21fe5e1ea6` |
 | UI-MVP-BOOKING-1 — restricted Supplier reservation | DONE; PR #66 squash-merged at `e6eab51f51d03c9133ec604e9df1b70b36d78a1e` |
-| UI-MVP-CALENDAR-CAPACITY-1-ACTIVATE — activate PO planning calendar | DONE after merge of this activation PR |
+| UI-MVP-CALENDAR-CAPACITY-1-ACTIVATE — activate PO planning calendar | DONE; PR #68 squash-merged at `ba4164da5ae2dfdd4bf450a2d58aa9e3892a7ba9` |
+| UI-MVP-CALENDAR-CAPACITY-1 — PO planning calendar and capacity | DONE; PR #70 squash-merged at `327506b08462d498b387d50b6402650a600b7def` |
 
 ## Active and queued
 
-### UI-MVP-CALENDAR-CAPACITY-1 — PO planning calendar and capacity
+### UI-MVP-ADMIN-IMPORT-1 — local Friday PO import preview
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: extend the local demonstrational calendar and capacity behavior with
-  role-safe PO appointment cards, planning state and accessible delivery-content
-  disclosure while preserving existing booking, configuration and scope rules.
-- Product authority: `BDP-CAL-001`, `BDP-CAL-002`, applicable `BDP-CAP-001` and
-  `BDP-BLOCK-001`, scenarios `AC-CAL-002` through `AC-CAL-004`, and applicable
-  existing capacity scenarios.
-- Card boundary: show exactly one calendar card per appointment or PO header,
-  never one card per SKU line. Derived SKU count, units and pallets may be shown
-  only from explicit line fixtures and must be aggregated exactly once.
-- Empty-detail boundary: a Supplier reservation with no SKU details displays
-  `Awaiting SKU details`; it must not imply zero pallets, zero units or an empty
-  physical delivery.
-- Interaction boundary: provide the exact accessible action
-  `Pokaż zawartość dostawy`, operable by mouse, keyboard and touch. Hover must
-  not be the only access path.
-- Visibility boundary: Supplier actors may see approved delivery contents but
-  never internal planning notes, import diagnostics or technical lineage.
-  Internal actors remain warehouse-scoped.
-- Capacity and conflict boundary: consume published local working hours, docks,
-  blocks and capacity configuration deterministically. Do not silently move,
-  cancel or approve a booked slot; conflicts remain explicit and any override
-  requires a separately authorized action with reason and history.
-- Implementation boundary: implement only the local calendar/capacity domain,
-  route/UI and focused tests required for the accepted scenarios. Do not
-  implement file import, apply/enrichment, unmatched scheduling, lifecycle or
-  gate execution, reporting, notifications, durable persistence or integrations.
+- Objective: implement an Administrator-only local upload and deterministic
+  preview of the approved Friday PO/SKU file without applying any changes to
+  appointments, planning state or warehouse capacity.
+- Product authority: the approved UI MVP and weekly-planning specification
+  import contract, together with existing PO identity, `deliveryPartKey`,
+  booking, calendar, scope and configuration rules.
+- Access boundary: only an authorized Administrator in the applicable warehouse
+  scope may open the import route or select a file. Supplier, Operator and
+  Security actors fail closed and receive no file contents or diagnostics.
+- Input boundary: accept only the explicitly supported local demonstration file
+  shape and size. Missing headers, unknown required columns, invalid values,
+  duplicate headers, malformed rows and ambiguous identities fail closed with
+  stable, line-specific evidence.
+- Preview boundary: classify every parsed row deterministically as valid,
+  invalid, duplicate or unmatched. Multi-line PO evidence remains grouped by PO
+  identity and `deliveryPartKey`; the preview must not create one appointment
+  per SKU line.
+- Reconciliation boundary: existing bookings and slots remain unchanged. The
+  preview may identify an exact match or a reconciliation conflict but must not
+  silently merge, split, move, cancel, approve, enrich or overwrite any record.
+- Visibility boundary: file names and approved business fields may be shown to
+  authorized Administrators. Raw technical stack traces, browser paths,
+  secrets and hidden lineage remain absent from the UI.
+- Implementation boundary: implement only local file selection, deterministic
+  parse/validation, preview grouping, reconciliation evidence and focused tests.
+  Do not implement apply/import commit, SKU enrichment, unmatched scheduling,
+  lifecycle or gate actions, notifications, reporting, persistence, backend or
+  integrations.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
   PR, plus an external worktree, complete validation, independent review and
   controlled publication.
-- Technical boundary: frontend-only local or in-memory scope; no backend,
-  persistence, ERP/WMS/SAP integration, deployment or production-repository
+- Technical boundary: frontend-only local or in-memory scope; no localStorage,
+  sessionStorage, IndexedDB, network APIs, deployment or production-repository
   access.
 
-`UI-MVP-ADMIN-IMPORT-1`, `UI-MVP-WEEKLY-PLANNING-1`, lifecycle and gate
-consumers, `UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining
-source tasks remain inactive and unauthorized. No other product, governance,
-security or infrastructure task is `READY` or active.
+`UI-MVP-WEEKLY-PLANNING-1`, lifecycle and gate consumers,
+`UI-MVP-LIST-DETAILS-1`, `UI-MVP-REPORTING-1` and all remaining source tasks
+remain inactive and unauthorized. No other product, governance, security or
+infrastructure task is `READY` or active.
