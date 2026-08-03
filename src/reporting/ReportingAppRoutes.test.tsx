@@ -62,7 +62,7 @@ describe('reporting AppRoutes integration', () => {
     expect(screen.queryByText('Baltic Freight')).toBeNull();
   });
 
-  it('redirects Security Officer from /reports to gate operations', async () => {
+  it('redirects Security Officer from /reports to its canonical default route', async () => {
     renderApp('/reports');
     await waitFor(() => expect(screen.getByRole('heading', { name: 'PO and SKU reports' })).toBeDefined());
 
@@ -72,7 +72,8 @@ describe('reporting AppRoutes integration', () => {
       });
     });
 
-    await waitFor(() => expect(screen.getByTestId('report-location').textContent).toBe('/gate-operations'));
+    await waitFor(() => expect(screen.getByTestId('report-location').textContent).toBe('/appointments'));
+    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'PO and SKU reports' })).toBeNull();
   });
 
