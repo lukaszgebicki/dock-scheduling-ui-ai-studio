@@ -96,10 +96,10 @@ describe('Supplier weekly booking rendered contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create local demonstration' }));
 
     expect(screen.getByRole('heading', { name: 'Demonstrational reservation created' })).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('local fixture');
-    expect(screen.getByText('PO-DEMO-1001')).toBeDefined();
-    expect(screen.getByText('TR-100')).toBeDefined();
-    expect(screen.getByText('TRAILER-200')).toBeDefined();
+    expect(screen.getByText(/already exists in the same local Supplier, warehouse and delivery-week scope/).getAttribute('role')).toBe('status');
+    expect(screen.getByText('po-demo-1001')).toBeDefined();
+    expect(screen.getByText('tr-100')).toBeDefined();
+    expect(screen.getByText('trailer-200')).toBeDefined();
     expect(screen.getByText('SUPPLIER_RESERVED')).toBeDefined();
     expect(screen.getByText('AWAITING_DETAILS')).toBeDefined();
     expect(screen.getByText(/No durable save, capacity reservation, email, approval or integration occurred/)).toBeDefined();
