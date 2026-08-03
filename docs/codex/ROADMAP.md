@@ -50,58 +50,57 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-GATE-OPS-1 — operator and Security workflows | DONE; PR #87 squash-merged at `bc4b11325a4f894c4227ea75eefaa487cce22221` |
 | UI-MVP-LIST-DETAILS-1-ACTIVATE — activate planning-aware appointment list and details | DONE; PR #89 squash-merged at `38d5365ef63eb9e1ebc307af4e261c79a04ee381` |
 | UI-MVP-LIST-DETAILS-1 — planning-aware appointment list and details | DONE; PR #91 squash-merged at `ab47046a4b25e5f91e9b5aa9c36e0115c9833beb` |
-| UI-MVP-REPORTING-1-ACTIVATE — activate PO/SKU reports and local exports | DONE after merge of this activation PR |
+| UI-MVP-REPORTING-1-ACTIVATE — activate PO/SKU reports and local exports | DONE; PR #93 squash-merged at `0af25155ade24489578015e6029b9175cd9c7555` |
+| UI-MVP-REPORTING-1 — PO/SKU reports and local exports | DONE; PR #95 squash-merged at `607881b521f0846104bdf56432547b6f5a010585` |
+| UI-MVP-NOTIFICATIONS-STATES-1-ACTIVATE — activate notifications and exceptional states | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-REPORTING-1 — PO/SKU reports and local exports
+### UI-MVP-NOTIFICATIONS-STATES-1 — notifications and exceptional states
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: deliver role-scoped, local demonstrational weekly and monthly
-  reporting consumers at PO and SKU levels, with filtered previews and local
-  CSV/XLSX exports that preserve the active result definition.
-- Product authority: `BDP-REP-001`, `BDP-DATA-001` and `AC-REP-001` through
-  `AC-REP-004`.
-- Scope boundary: System Administrator may report across all accessible data;
-  Warehouse Administrator and Warehouse Operator remain limited to assigned
-  warehouses. Supplier actors remain limited to their own organization and
-  assigned warehouse scope if a Supplier report/export consumer is exposed.
-  Security Officer has no reporting route or action.
-- Date boundary: every report uses an inclusive planned-date range. Weekly
-  all-delivery and monthly Slipsheet presets must resolve deterministic start
-  and end dates without silently broadening the active range.
-- Level boundary: `PO` produces exactly one row per distinct appointment/PO
-  header. `SKU` produces one row per product line and does not fabricate rows
-  for an appointment awaiting SKU details.
-- Aggregation boundary: appointment count uses distinct appointment IDs.
-  Units and pallets sum each SKU line exactly once. Derived totals must not be
-  maintained as a second manual source of truth.
-- Preview boundary: filters and role-permitted columns may cover warehouse,
-  planned date/time, PO, SKU, descriptions, Supplier, units, pallets, load
-  carrier, goods category, handling instruction, transport, booking origin,
-  planning status, appointment status and import source where permitted.
-- Export boundary: local CSV and XLSX-compatible workbook output must preserve
-  the active date range, filters, level, selected columns, sorting, row order
-  and actor scope. Export may use only the already scoped active result and may
-  not silently include hidden columns or excluded rows.
-- Supplier-safety boundary: Supplier actors never receive another
-  organization’s records, Internal Notes, technical audit metadata, import
-  diagnostics, source-row/batch lineage or Administrator-only reconciliation
-  reasoning.
-- Mutation boundary: reports and exports are read-only consumers. They may not
-  mutate planning, lifecycle/change, operational, transport, capacity, slot,
-  dock, gate, approval, cancellation or reschedule state.
-- Technical boundary: generation and download remain local and demonstrational.
-  No advanced reporting warehouse, scheduled export, e-mail, notification,
-  localStorage, sessionStorage, IndexedDB, cookies, backend, API, persistence,
-  integration, deployment or production-repository access is authorized.
+- Objective: add actor-scoped, local demonstrational in-app notifications,
+  e-mail-status simulation and reusable exceptional-state presentations with
+  safe next actions.
+- Product authority: `BDP-NOT-001`, BDP section 22 and the existing role,
+  organization, warehouse, appointment, lifecycle, planning, gate and reporting
+  boundaries.
+- Event boundary: supported notification demonstrations may cover creation,
+  submitted, pending approval, confirmed, rejected, changes requested, slot
+  proposed, rescheduled, cancelled, reminder, missing data, late arrival,
+  no-show and shared comment.
+- Recipient boundary: local recipient previews may include author, Supplier
+  primary contact, Supplier Administrator, Warehouse Operator, Warehouse
+  Administrator, Security Officer and explicit additional addresses only when
+  the active actor and event scope permit them.
+- Preference boundary: critical cancellation, reschedule, rejection, required
+  action and safety notifications cannot be disabled. Noncritical events may
+  simulate immediate, hourly digest or daily digest frequency.
+- Data boundary: every notification is derived from actor-visible records and
+  approved event fields. Supplier actors never receive another organization’s
+  records, Internal Notes, technical audit metadata, import diagnostics,
+  source-row/batch lineage or Administrator-only reconciliation reasoning.
+- Exceptional-state boundary: provide separate presentations for no
+  appointments, no filter results, no slots, no assigned warehouses, no
+  permission, unavailable appointment, reservation conflict, expired session,
+  save error, connection loss, stale data, forbidden action, expired hold,
+  upload error, unavailable configuration and blocked Supplier. Every state
+  must identify a safe next action and must not fabricate success or durable
+  recovery.
+- Technical boundary: all notification and state behavior remains local and
+  demonstrational. No real e-mail, SMS, backend, API, persistence, browser
+  storage, scheduled job, external delivery, ERP/WMS/SAP integration,
+  deployment or production-repository access is authorized.
+- Mutation boundary: notification preferences and previews are local UI state
+  only. They may not mutate appointment, planning, lifecycle/change,
+  operational, transport, capacity, slot, dock, gate, approval, cancellation,
+  reschedule or reporting data.
 - Contract gate: execution requires a separate machine-readable Class B issue
   contract bound to the exact `main` SHA produced by merge of this activation
-  PR, plus an external worktree, complete validation, Simplification Pass,
-  independent review and controlled publication.
+  PR, plus complete validation, Simplification Pass, independent review and
+  controlled publication.
 
-`UI-MVP-NOTIFICATIONS-STATES-1`, `UI-MVP-DASH-MOBILE-1`,
-`UI-MVP-STANDING-1` and every other remaining source task remain inactive and
-unauthorized. No other product, governance, security or infrastructure task is
-`READY` or active.
+`UI-MVP-DASH-MOBILE-1`, `UI-MVP-STANDING-1` and every other remaining source
+or product-review task remain inactive and unauthorized. No other product,
+governance, security or infrastructure task is `READY` or active.
