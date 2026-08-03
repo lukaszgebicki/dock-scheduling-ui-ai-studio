@@ -53,7 +53,7 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
   reservation. The later booking task may consume this contract but this task
   must not create booking UI or appointment records.
 - Administrator and reconciliation boundary: an authorized Administrator may
-  explicitly and audibly create, correct or update either transport value.
+  explicitly and auditably create, correct or update either transport value.
   Friday import never silently overwrites a Supplier-entered value; differences
   require an explicit reconciliation decision.
 - Readiness boundary: the `warehouse + loadCarrierType + goodsCategory` matrix
