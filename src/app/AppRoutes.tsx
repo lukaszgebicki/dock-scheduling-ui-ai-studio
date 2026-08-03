@@ -20,6 +20,7 @@ import { SupplierConfigurationPage } from '../supplierOrganizations/SupplierConf
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
 import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
 import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
+import { PlanningCalendarPage } from '../calendar/PlanningCalendarPage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -45,16 +46,22 @@ function AppointmentsRoutePage() {
 
   return (
     <>
-      {canReserveNextWeek && (
-        <div className="mx-auto mb-6 flex max-w-7xl justify-end">
+      <div className="mx-auto mb-6 flex max-w-7xl flex-wrap justify-end gap-3">
+        <Link
+          to="/calendar"
+          className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+        >
+          Open PO planning calendar
+        </Link>
+        {canReserveNextWeek && (
           <Link
             to="/appointments/reserve-next-week"
             className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
           >
             Reserve next-week slot
           </Link>
-        </div>
-      )}
+        )}
+      </div>
       <AppointmentsPage />
     </>
   );
@@ -89,6 +96,10 @@ export function AppRoutes() {
             <Route
               path="/appointments/reserve-next-week"
               element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>}
+            />
+            <Route
+              path="/calendar"
+              element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>}
             />
             <Route
               path="/users"
