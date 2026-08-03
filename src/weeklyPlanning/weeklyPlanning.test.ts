@@ -112,7 +112,16 @@ describe('weekly planning domain', () => {
     expect(created.bookingOrigin).toBe('ADMIN_ADDED');
     expect(created.deliveryPartKey).toBe('1');
     expect(created.skuLines).toHaveLength(1);
-    expect(created.appointmentStatus).toBe('UNSCHEDULED');
+    expect(created.appointmentStatus).toBe('SUBMITTED');
+    expect(created.tractorRegistration).toBe('TR-100');
+    expect(created.trailerOrContainerRegistration).toBe('TRL-200');
+
+    const duplicate = scheduleUnreservedDelivery(
+      scheduled.state, evidence[0].fingerprint, 'warehouse-admin', 'Repeat', true,
+      '2026-08-13', '09:30', initialDemoConfiguration.warehouses,
+    );
+    expect(duplicate.error).toContain('already scheduled');
+    expect(duplicate.state.appointments).toHaveLength(planningAppointments.length + 1);
   });
 
   it('fails closed when configuration or capacity evidence is missing', () => {
@@ -126,7 +135,7 @@ describe('weekly planning domain', () => {
     expect(result.state).toBe(initial);
   });
 
-  it('requires explicit exact-candidate selection for ambiguous evidence', () => {
+  it('requires explicit exact-candidate selection and recalculates transport conflict evidence', () => {
     const target = createFridayImportTargets(planningAppointments)[0];
     const evidence = groups([values()], [target, { ...target, appointmentId: 'second-exact-target' }]);
     const duplicateAppointment = { ...planningAppointments[0], id: 'second-exact-target' };
@@ -141,5 +150,10 @@ describe('weekly planning domain', () => {
     expect(resolved.state.queue[0].state).toBe('EXACT_READY');
     expect(resolved.state.queue[0].selectedTargetId).toBe(planningAppointments[0].id);
     expect(resolved.state.history[0].action).toBe('RESOLVE_AMBIGUOUS');
+
+    const conflictingAppointment = { ...duplicateAppointment, tractorRegistration: 'DIFFERENT' };
+    const conflictInitial = createWeeklyPlanningState([...planningAppointments, conflictingAppointment], evidence);
+    const conflictResolved = resolveAmbiguousTarget(conflictInitial, evidence[0].fingerprint, conflictingAppointment.id, 'admin', 'Selected conflict', true);
+    expect(conflictResolved.state.queue[0].state).toBe('TRANSPORT_CONFLICT');
   });
 });
