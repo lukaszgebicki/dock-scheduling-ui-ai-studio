@@ -69,9 +69,10 @@ export function PlanningCalendarPage() {
   } = useDemoDomain();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const supplierView = Boolean(activeActor.supplierOrganizationId);
-  const visibleAppointments = planningAppointments.filter((appointment) =>
-    canViewAppointment(appointment));
-  const cards = buildPlanningCalendar(visibleAppointments, configuration.warehouses);
+  const cards = buildPlanningCalendar(
+    planningAppointments,
+    configuration.warehouses,
+  ).filter(({ appointment }) => canViewAppointment(appointment));
 
   return (
     <section aria-labelledby="planning-calendar-title" className="mx-auto max-w-7xl">
