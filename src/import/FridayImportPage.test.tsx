@@ -53,6 +53,7 @@ const exactRow = [
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('Friday import page', () => {
@@ -60,15 +61,16 @@ describe('Friday import page', () => {
     renderRoute('warehouse-administrator');
 
     expect(screen.getByRole('heading', { name: 'Friday PO/SKU import preview' })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Warehouse scope' })).toHaveValue('nowy-kisielin-distribution-center');
+    expect((screen.getByRole('combobox', { name: 'Warehouse scope' }) as HTMLSelectElement).value)
+      .toBe('nowy-kisielin-distribution-center');
   });
 
   it('allows System Administrator only through delegated warehouse scope', () => {
     renderRoute('system-administrator');
 
     expect(screen.getByRole('heading', { name: 'Friday PO/SKU import preview' })).toBeDefined();
-    const warehouse = screen.getByRole('combobox', { name: 'Warehouse scope' });
-    expect(warehouse).toHaveValue('zielona-gora-plant');
+    const warehouse = screen.getByRole('combobox', { name: 'Warehouse scope' }) as HTMLSelectElement;
+    expect(warehouse.value).toBe('zielona-gora-plant');
     expect(screen.queryByRole('option', { name: 'Nowy Kisielin Distribution Center' })).toBeNull();
   });
 
@@ -104,7 +106,6 @@ describe('Friday import page', () => {
     expect(screen.queryByRole('button', { name: /apply|import|confirm/i })).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(storageSpy).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
   });
 
   it('shows file validation errors with no group or hidden apply affordance', async () => {
