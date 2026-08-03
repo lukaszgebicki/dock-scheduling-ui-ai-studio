@@ -295,6 +295,8 @@ export function GateOpsPage({
           const canProgress = canPerformWorkflowAction(progressRequest);
           const canConfirmNoShow = canPerformWorkflowAction(noShowRequest)
             && isPotentialNoShow(appointment, referenceAt, configuration);
+          const canAssignDockNow = appointment.operationalStatus === 'CHECKED_IN'
+            || appointment.operationalStatus === 'WAITING_FOR_DOCK';
 
           return (
             <article key={appointment.id} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200">
@@ -323,7 +325,7 @@ export function GateOpsPage({
               <div className="mt-4 flex flex-wrap gap-3">
                 {appointment.operationalStatus === 'EXPECTED' && canCheckIn && <button type="button" onClick={() => performCheckIn(appointment)} className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white">Check in appointment</button>}
                 {appointment.operationalStatus === 'CHECKED_IN' && canProgress && <button type="button" onClick={() => progress(appointment, 'WAITING_FOR_DOCK')} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Move to waiting for dock</button>}
-                {appointment.assignedDockId === null && canAssignDock && <button type="button" onClick={() => performDockAction(appointment, false)} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Assign selected dock</button>}
+                {canAssignDockNow && appointment.assignedDockId === null && canAssignDock && <button type="button" onClick={() => performDockAction(appointment, false)} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Assign selected dock</button>}
                 {appointment.assignedDockId !== null && canChangeDock && <button type="button" onClick={() => performDockAction(appointment, true)} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Change to selected dock</button>}
                 {(appointment.operationalStatus === 'CHECKED_IN' || appointment.operationalStatus === 'WAITING_FOR_DOCK') && canProgress && <button type="button" onClick={() => progress(appointment, 'AT_DOCK')} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Move to assigned dock</button>}
                 {appointment.operationalStatus === 'AT_DOCK' && canProgress && <button type="button" onClick={() => progress(appointment, 'UNLOADING')} className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466]">Start unloading</button>}
