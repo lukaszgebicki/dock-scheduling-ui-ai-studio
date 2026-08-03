@@ -320,8 +320,37 @@ function lifecycleRunner(
 }
 
 function lifecycleContract() {
-  const externalWorktree = path.join(tmpdir(), `autonomy-worktree-${Date.now()}-${Math.random()}`);
-  const contractPath = path.join(tmpdir(), `autonomy-contract-${Date.now()}-${Math.random()}.json`);
+  const canonicalRoot = temporaryRepository();
+
+  mkdirSync(path.join(canonicalRoot, ".ai"), { recursive: true });
+  writeFileSync(
+    path.join(canonicalRoot, ".ai", "orchestrator-policy.json"),
+    `${JSON.stringify(trustedPolicy, null, 2)}\n`,
+  );
+
+  mkdirSync(path.join(canonicalRoot, "docs", "codex"), {
+    recursive: true,
+  });
+  writeFileSync(
+    path.join(canonicalRoot, "docs", "codex", "ROADMAP.md"),
+    [
+      "### AUTONOMY-PILOT-1 — lifecycle fixture",
+      "",
+      "- State: `READY`.",
+      "- Risk class: Class A.",
+      "",
+    ].join("\n"),
+  );
+
+  const externalWorktree = path.join(
+    path.dirname(canonicalRoot),
+    `${path.basename(canonicalRoot)}-worktree`,
+  );
+  const contractPath = path.join(
+    tmpdir(),
+    `autonomy-contract-${Date.now()}-${Math.random()}.json`,
+  );
+
   writeFileSync(
     contractPath,
     JSON.stringify(
@@ -334,7 +363,12 @@ function lifecycleContract() {
       }),
     ),
   );
-  return { contractPath, stateRoot: mkdtempSync(path.join(tmpdir(), "autonomy-state-")) };
+
+  return {
+    canonicalRoot,
+    contractPath,
+    stateRoot: mkdtempSync(path.join(tmpdir(), "autonomy-state-")),
+  };
 }
 
 test("default help is non-mutating", async () => {
@@ -1342,17 +1376,21 @@ test("Builder and Reviewer invocations use distinct enforced sandboxes", () => {
 });
 
 test("initial Builder empty diff stops before validation, simplification, review, and publication", async () => {
-  const { runner, calls } = lifecycleRunner(process.cwd(), { initialEmpty: true });
-  const { contractPath, stateRoot } = lifecycleContract();
+  const { canonicalRoot, contractPath, stateRoot } = lifecycleContract();
+  const { runner, calls } = lifecycleRunner(canonicalRoot, {
+    initialEmpty: true,
+  });
+
   await assert.rejects(
     executeTask({
-      canonicalRoot: process.cwd(),
+      canonicalRoot,
       contractPath,
       stateRoot,
       commandRunner: runner,
     }),
     { code: "EMPTY_INITIAL_BUILDER_DIFF" },
   );
+
   assert.deepEqual(calls, {
     npm: 0,
     simplifier: 0,
@@ -1362,17 +1400,21 @@ test("initial Builder empty diff stops before validation, simplification, review
 });
 
 test("empty simplified diff stops before post-simplification validation, review, and publication", async () => {
-  const { runner, calls } = lifecycleRunner(process.cwd(), { simplifyToEmpty: true });
-  const { contractPath, stateRoot } = lifecycleContract();
+  const { canonicalRoot, contractPath, stateRoot } = lifecycleContract();
+  const { runner, calls } = lifecycleRunner(canonicalRoot, {
+    simplifyToEmpty: true,
+  });
+
   await assert.rejects(
     executeTask({
-      canonicalRoot: process.cwd(),
+      canonicalRoot,
       contractPath,
       stateRoot,
       commandRunner: runner,
     }),
     { code: "EMPTY_SIMPLIFIED_DIFF" },
   );
+
   assert.deepEqual(calls, {
     npm: 6,
     simplifier: 1,
