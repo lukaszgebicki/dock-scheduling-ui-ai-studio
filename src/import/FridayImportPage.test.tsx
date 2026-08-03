@@ -100,7 +100,7 @@ describe('Friday import page', () => {
     fireEvent.change(input, { target: { files: [csvFile(`${header}\n${exactRow}`)] } });
 
     await waitFor(() => expect(screen.getByText('PO-DEMO-2001')).toBeDefined());
-    expect(screen.getByText('EXACT_MATCH')).toBeDefined();
+    expect(screen.getAllByText('EXACT_MATCH')).toHaveLength(2);
     expect(screen.getByText(/Transport reconciliation required/)).toBeDefined();
     expect(screen.getByText(/No overwrite occurred/)).toBeDefined();
     expect(screen.queryByRole('button', { name: /apply|import|confirm/i })).toBeNull();
