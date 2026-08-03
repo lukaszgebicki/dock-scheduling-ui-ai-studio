@@ -57,7 +57,9 @@ export interface PlanningCardTotals {
 export interface CalendarConflict {
   kind:
     | 'WAREHOUSE_CONFIGURATION_MISSING'
+    | 'WAREHOUSE_CONFIGURATION_AMBIGUOUS'
     | 'WAREHOUSE_NOT_PUBLISHED'
+    | 'NO_ACTIVE_DOCK'
     | 'OUTSIDE_WORKING_HOURS'
     | 'WAREHOUSE_BLOCKED'
     | 'CAPACITY_EXCEEDED';
@@ -99,19 +101,32 @@ function blockApplies(block: WarehouseBlock, appointment: PlanningAppointment): 
 
 function configurationConflict(
   appointment: PlanningAppointment,
-  warehouse: WarehouseConfiguration | undefined,
+  matchingWarehouses: readonly WarehouseConfiguration[],
   appointments: readonly PlanningAppointment[],
 ): CalendarConflict | null {
-  if (!warehouse) {
+  if (matchingWarehouses.length === 0) {
     return {
       kind: 'WAREHOUSE_CONFIGURATION_MISSING',
       message: 'Calendar configuration is missing. Keep the booked slot and contact an Administrator.',
     };
   }
+  if (matchingWarehouses.length > 1) {
+    return {
+      kind: 'WAREHOUSE_CONFIGURATION_AMBIGUOUS',
+      message: 'More than one warehouse configuration matches this booking. The slot remains unchanged until configuration is corrected.',
+    };
+  }
+  const warehouse = matchingWarehouses[0];
   if (warehouse.status !== 'published') {
     return {
       kind: 'WAREHOUSE_NOT_PUBLISHED',
       message: 'Warehouse configuration is not published. The booked slot was not changed.',
+    };
+  }
+  if (!warehouse.docks.some((dock) => dock.active)) {
+    return {
+      kind: 'NO_ACTIVE_DOCK',
+      message: 'No active dock is configured. The booked slot is preserved and cannot be treated as operationally ready.',
     };
   }
   const day = warehouse.workingDays.find((candidate) => candidate.weekday === weekday(appointment.plannedDate));
@@ -169,7 +184,7 @@ export function buildPlanningCalendar(
       totals: aggregatePlanningLines(appointment.skuLines),
       conflict: configurationConflict(
         appointment,
-        warehouses.find((warehouse) => warehouse.id === appointment.warehouseId),
+        warehouses.filter((warehouse) => warehouse.id === appointment.warehouseId),
         appointments,
       ),
     }));
