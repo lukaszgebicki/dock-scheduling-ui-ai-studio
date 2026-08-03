@@ -7,6 +7,8 @@ import {
   canSeeInternalNotes,
   editableFieldsForRecord,
   fieldLabel,
+  isFullInternalActor,
+  isSecurityActor,
   isSupplierActor,
   skuTotals,
   transportReconciliation,
@@ -32,6 +34,12 @@ function displayFieldValue(
     return record.supplierTransportDetails.trailerOrContainerRegistration;
   }
   return record[field];
+}
+
+function bookingOriginLabel(origin: 'SUPPLIER_RESERVED' | 'ADMIN_ADDED'): string {
+  return origin === 'SUPPLIER_RESERVED'
+    ? 'Supplier reservation'
+    : 'Administrator added';
 }
 
 function DetailSection({
@@ -97,6 +105,8 @@ export function AppointmentDetailsPage() {
   const changeHistory = visibleChangeHistory(record, activeActor);
   const showInternalDiagnostics = canSeeInternalDiagnostics(activeActor);
   const showInternalNotes = canSeeInternalNotes(activeActor);
+  const fullInternalActor = isFullInternalActor(activeActor);
+  const securityActor = isSecurityActor(activeActor);
   const supplierActor = isSupplierActor(activeActor);
 
   const submitEdit = () => {
@@ -140,8 +150,12 @@ export function AppointmentDetailsPage() {
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
           <span className="rounded-full border border-gray-300 px-3 py-1">Lifecycle: {record.lifecycleStatus}</span>
-          <span className="rounded-full border border-gray-300 px-3 py-1">Planning: {record.planningState}</span>
-          <span className="rounded-full border border-gray-300 px-3 py-1">Operational: {record.operationalStatus}</span>
+          {fullInternalActor && (
+            <span className="rounded-full border border-gray-300 px-3 py-1">Planning: {record.planningState}</span>
+          )}
+          {(fullInternalActor || securityActor) && (
+            <span className="rounded-full border border-gray-300 px-3 py-1">Operational: {record.operationalStatus}</span>
+          )}
         </div>
       </div>
 
@@ -170,10 +184,14 @@ export function AppointmentDetailsPage() {
 
         <DetailSection title="Delivery Data">
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="font-semibold text-gray-700">Booking origin</dt><dd>{record.bookingOrigin}</dd></div>
-            <div><dt className="font-semibold text-gray-700">Source kind</dt><dd>{record.sourceKind}</dd></div>
-            <div><dt className="font-semibold text-gray-700">Planning readiness</dt><dd>{record.planningState}</dd></div>
-            <div><dt className="font-semibold text-gray-700">Change status</dt><dd>{record.changeStatus}</dd></div>
+            <div><dt className="font-semibold text-gray-700">Booking origin</dt><dd>{bookingOriginLabel(record.bookingOrigin)}</dd></div>
+            {fullInternalActor && (
+              <>
+                <div><dt className="font-semibold text-gray-700">Source kind</dt><dd>{record.sourceKind}</dd></div>
+                <div><dt className="font-semibold text-gray-700">Planning readiness</dt><dd>{record.planningState}</dd></div>
+                <div><dt className="font-semibold text-gray-700">Change status</dt><dd>{record.changeStatus}</dd></div>
+              </>
+            )}
             <div><dt className="font-semibold text-gray-700">Contact</dt><dd>{record.contactName || 'Not provided'}</dd></div>
             <div><dt className="font-semibold text-gray-700">Phone</dt><dd>{record.phone || 'Not provided'}</dd></div>
           </dl>
@@ -278,7 +296,12 @@ export function AppointmentDetailsPage() {
         <DetailSection title="Status History">
           {statusHistory.length === 0 ? <p className="text-sm text-gray-600">No status history is visible.</p> : (
             <ol className="space-y-2 text-sm text-gray-700">
-              {statusHistory.map((entry) => <li key={entry.id}>{entry.category} · {entry.from} → {entry.to} · {entry.reason}</li>)}
+              {statusHistory.map((entry) => (
+                <li key={entry.id}>
+                  {entry.category} · {entry.from} → {entry.to}
+                  {showInternalDiagnostics ? ` · ${entry.reason}` : ''}
+                </li>
+              ))}
             </ol>
           )}
         </DetailSection>
@@ -287,7 +310,10 @@ export function AppointmentDetailsPage() {
           {changeHistory.length === 0 ? <p className="text-sm text-gray-600">No local changes have been applied.</p> : (
             <ol className="space-y-2 text-sm text-gray-700">
               {changeHistory.map((entry) => (
-                <li key={entry.id}>{entry.sequence}. {entry.action} · {entry.field ?? entry.visibility} · {entry.before || 'Empty'} → {entry.after} · {entry.reason}</li>
+                <li key={entry.id}>
+                  {entry.sequence}. {entry.action} · {entry.field ?? entry.visibility} · {entry.before || 'Empty'} → {entry.after}
+                  {showInternalDiagnostics ? ` · ${entry.reason}` : ''}
+                </li>
               ))}
             </ol>
           )}
