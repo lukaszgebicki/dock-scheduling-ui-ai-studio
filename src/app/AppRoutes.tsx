@@ -18,6 +18,8 @@ import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrga
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
 import { SupplierConfigurationPage } from '../supplierOrganizations/SupplierConfigurationPage';
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
+import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
+import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -52,6 +54,10 @@ export function AppRoutes() {
             <Route
               path="/appointments"
               element={<DemoRouteGuard route="/appointments"><AppointmentsPage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/appointments/reserve-next-week"
+              element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>}
             />
             <Route
               path="/users"
