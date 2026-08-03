@@ -3,7 +3,10 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
+import {
+  DemoDomainProvider,
+  useDemoDomain,
+} from '../demoDomain/DemoDomainProvider';
 import { getDemoActor, type DemoActorId } from '../demoDomain/demoDomain';
 import {
   addWorkspaceComment,
@@ -30,6 +33,30 @@ function renderDetails(
       </DemoDomainProvider>
     </MemoryRouter>,
   );
+}
+
+function withImportedConflict(
+  state: AppointmentWorkspaceState,
+  recordId: string,
+): AppointmentWorkspaceState {
+  return {
+    ...state,
+    records: state.records.map((candidate) => candidate.id === recordId
+      ? {
+          ...candidate,
+          importedTransportDetails: {
+            tractorRegistration: 'TR-IMPORT-999',
+            trailerOrContainerRegistration:
+              candidate.supplierTransportDetails.trailerOrContainerRegistration,
+          },
+        }
+      : candidate),
+  };
+}
+
+function SwitchActor({ actorId }: { actorId: DemoActorId }) {
+  const { setActiveActorId } = useDemoDomain();
+  return <button type="button" onClick={() => setActiveActorId(actorId)}>Switch actor</button>;
 }
 
 afterEach(() => {
@@ -60,7 +87,8 @@ describe('AppointmentDetailsPage', () => {
     expect(screen.getByText('3 SKU lines · 2100 units · 4.25 pallets')).toBeDefined();
     expect(screen.getByText('EXACT_MATCH')).toBeDefined();
     expect(screen.getByText('batch-demo-1')).toBeDefined();
-    expect(screen.getByText(/Requires decision: Yes/)).toBeDefined();
+    expect(screen.getByText(/Requires decision: No/)).toBeDefined();
+    expect(screen.getByText('No status history is visible.')).toBeDefined();
   });
 
   it('shows Supplier-safe SKU contents but excludes diagnostics, lineage and internal notes', () => {
@@ -127,7 +155,11 @@ describe('AppointmentDetailsPage', () => {
   });
 
   it('allows explicit Administrator transport correction and updates local reconciliation only', () => {
-    renderDetails('planning-baltic-2001');
+    const initial = withImportedConflict(
+      createInitialAppointmentWorkspaceState(),
+      'planning-baltic-2001',
+    );
+    renderDetails('planning-baltic-2001', 'system-administrator', initial);
     expect(screen.getByText(/Requires decision: Yes/)).toBeDefined();
     fireEvent.change(screen.getByLabelText('Safe field'), { target: { value: 'tractorRegistration' } });
     fireEvent.change(screen.getByLabelText('Replacement value'), { target: { value: 'TR-IMPORT-999' } });
@@ -151,6 +183,32 @@ describe('AppointmentDetailsPage', () => {
     expect(screen.getByText('Technical audit metadata is not available in this role.')).toBeDefined();
     expect(screen.getByText('No safe inline field is editable for this actor and operational state.')).toBeDefined();
     expect(screen.queryByRole('option', { name: 'Internal Note' })).toBeNull();
+  });
+
+  it('clears draft comments, edit values and messages when the actor changes', () => {
+    render(
+      <MemoryRouter initialEntries={['/appointments/planning-baltic-2001']}>
+        <DemoDomainProvider>
+          <AppointmentWorkspaceProvider>
+            <SwitchActor actorId="warehouse-operator" />
+            <Routes>
+              <Route path="/appointments/:appointmentId" element={<AppointmentDetailsPage />} />
+            </Routes>
+          </AppointmentWorkspaceProvider>
+        </DemoDomainProvider>
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText('Comment visibility'), { target: { value: 'INTERNAL_NOTE' } });
+    fireEvent.change(screen.getByLabelText('Comment text'), { target: { value: 'Draft secret' } });
+    fireEvent.change(screen.getByLabelText('Safe field'), { target: { value: 'tractorRegistration' } });
+    fireEvent.change(screen.getByLabelText('Replacement value'), { target: { value: 'DRAFT-REG' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Switch actor' }));
+    expect(screen.getByLabelText('Comment visibility')).toHaveProperty('value', '');
+    expect(screen.getByLabelText('Comment text')).toHaveProperty('value', '');
+    expect(screen.getByLabelText('Safe field')).toHaveProperty('value', '');
+    expect(screen.getByLabelText('Replacement value')).toHaveProperty('value', '');
+    expect(screen.queryByRole('option', { name: 'Internal Note' })).toBeNull();
+    expect(screen.queryByText('Draft secret')).toBeNull();
   });
 
   it('has no network, browser storage, document or hidden business actions', () => {
