@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
-import type { DemoActorId } from '../demoDomain/demoDomain';
+import { getDemoActor, type DemoActorId } from '../demoDomain/demoDomain';
 import {
   addWorkspaceComment,
   createInitialAppointmentWorkspaceState,
@@ -97,18 +97,10 @@ describe('AppointmentDetailsPage', () => {
 
   it('never exposes an Internal Note or its history to a Supplier actor', () => {
     const base = createInitialAppointmentWorkspaceState();
-    const internal = {
-      id: 'system-administrator',
-      userId: 'u-1',
-      displayName: 'Demo Administrator',
-      role: 'System Administrator' as const,
-      organizationId: 'pernod-ricard-poland' as const,
-      warehouseIds: ['nowy-kisielin-distribution-center', 'zielona-gora-plant'] as const,
-    };
     const state = addWorkspaceComment(
       base,
       'planning-vistula-3001',
-      internal,
+      getDemoActor('system-administrator'),
       true,
       'INTERNAL_NOTE',
       'SECRET INTERNAL NOTE',
