@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -202,6 +203,29 @@ test("initial Builder runs a clean write probe and receives the phase preamble",
   assert.deepEqual(calls[1].args, ["rev-parse", "HEAD"]);
   assert.match(calls[2].input, new RegExp(SHA));
   assert.ok(calls[2].args.indexOf("--sandbox") < calls[2].args.indexOf("exec"));
+});
+
+test("write probe refuses to delete a pre-existing path", async () => {
+  const worktree = mkdtempSync(path.join(tmpdir(), "autonomy-worktree-"));
+  const outputFile = path.join(tmpdir(), `builder-conflict-${Date.now()}.txt`);
+  const probePath = path.join(worktree, ".autonomy-write-probe.tmp");
+  writeFileSync(probePath, "KEEP");
+  const calls = [];
+  const tools = { codex: "C:\\codex.exe", git: "C:\\git.exe" };
+  const processRunner = async (executable, args) => {
+    calls.push({ executable, args: [...args] });
+    return { code: 0, stdout: "", stderr: "" };
+  };
+  const runner = createRuntimeProcessRunner(tools, { processRunner });
+  await assert.rejects(
+    runner(tools.codex, codexArgs(outputFile), {
+      cwd: worktree,
+      input: "Implement task AUTONOMY-WINDOWS-RUNTIME-1",
+    }),
+    { code: "CODEX_WRITE_PROBE_PATH_CONFLICT" },
+  );
+  assert.equal(calls.length, 0);
+  assert.equal(readFileSync(probePath, "utf8"), "KEEP");
 });
 
 test("failed write probe stops before HEAD inspection and Builder", async () => {
