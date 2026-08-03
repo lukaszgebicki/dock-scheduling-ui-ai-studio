@@ -47,7 +47,7 @@ describe('standing appointment domain', () => {
   it('derives unique scope choices only from supplied visible records', () => {
     expect(systemChoices.map((choice) => choice.key)).toEqual([
       'baltic-freight:zielona-gora-plant',
-      'northstar-logistics:nowy-kisielin-dc',
+      'northstar-packaging:nowy-kisielin-dc',
       'vistula-materials:nowy-kisielin-dc',
     ]);
     const supplierActor = getDemoActor('supplier-administrator');
@@ -106,7 +106,7 @@ describe('standing appointment domain', () => {
 
   it('uses inclusive end dates and biweekly increments', () => {
     const northstar = systemChoices.find((choice) =>
-      choice.supplierOrganizationId === 'northstar-logistics')!;
+      choice.supplierOrganizationId === 'northstar-packaging')!;
     const eligible = new Set([northstar.key]);
     const result = generateStandingPreview(definition({
       scopeKey: northstar.key,
@@ -136,7 +136,7 @@ describe('standing appointment domain', () => {
 
   it('changes one occurrence preview independently and can derive a new conflict', () => {
     const northstar = systemChoices.find((choice) =>
-      choice.supplierOrganizationId === 'northstar-logistics')!;
+      choice.supplierOrganizationId === 'northstar-packaging')!;
     const eligible = new Set([northstar.key]);
     const preview = generateStandingPreview(definition({
       scopeKey: northstar.key,
