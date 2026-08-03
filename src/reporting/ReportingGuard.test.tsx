@@ -48,10 +48,10 @@ describe('ReportingGuard', () => {
     expect(screen.getByTestId('location').textContent).toBe('/appointments');
   });
 
-  it('redirects Security Officer to the existing gate default route', () => {
+  it('redirects Security Officer to its canonical default without rendering report data', () => {
     renderGuard('security-officer');
     expect(screen.queryByRole('heading', { name: 'Scoped reports' })).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Gate fallback' })).toBeDefined();
-    expect(screen.getByTestId('location').textContent).toBe('/gate-operations');
+    expect(screen.getByRole('heading', { name: 'Appointments fallback' })).toBeDefined();
+    expect(screen.getByTestId('location').textContent).toBe('/appointments');
   });
 });
