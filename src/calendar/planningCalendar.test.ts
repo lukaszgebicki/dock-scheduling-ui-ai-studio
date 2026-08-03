@@ -47,6 +47,38 @@ describe('PO planning calendar domain', () => {
     expect(card.appointment.appointmentStatus).toBe(appointment.appointmentStatus);
   });
 
+  it('fails closed when more than one warehouse configuration matches', () => {
+    const appointment = planningAppointments[0];
+    const warehouse = initialDemoConfiguration.warehouses.find(
+      (candidate) => candidate.id === appointment.warehouseId,
+    );
+    if (!warehouse) throw new Error('Expected warehouse fixture.');
+
+    const [card] = buildPlanningCalendar(
+      [appointment],
+      [warehouse, { ...warehouse }],
+    );
+
+    expect(card.conflict?.kind).toBe('WAREHOUSE_CONFIGURATION_AMBIGUOUS');
+    expect(card.appointment.plannedTime).toBe(appointment.plannedTime);
+  });
+
+  it('fails closed when the warehouse has no active dock', () => {
+    const appointment = planningAppointments[0];
+    const warehouse = initialDemoConfiguration.warehouses.find(
+      (candidate) => candidate.id === appointment.warehouseId,
+    );
+    if (!warehouse) throw new Error('Expected warehouse fixture.');
+
+    const [card] = buildPlanningCalendar([appointment], [{
+      ...warehouse,
+      docks: warehouse.docks.map((dock) => ({ ...dock, active: false })),
+    }]);
+
+    expect(card.conflict?.kind).toBe('NO_ACTIVE_DOCK');
+    expect(card.conflict?.message).toContain('slot is preserved');
+  });
+
   it('preserves a slot when a published warehouse block conflicts', () => {
     const appointment = planningAppointments[0];
     const warehouse = initialDemoConfiguration.warehouses.find(
