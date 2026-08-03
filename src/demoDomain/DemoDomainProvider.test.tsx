@@ -4,7 +4,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { DemoActionGuard } from './DemoActionGuard';
-import { DemoDomainProvider, useDemoDomain } from './DemoDomainProvider';
+import {
+  DemoDomainProvider,
+  useDemoDomain,
+  type ContextWorkflowRoutingRequest,
+} from './DemoDomainProvider';
 import { DemoRouteGuard } from './DemoRouteGuard';
 import { asWarehouseId, demoUsers, type DemoActorId } from './demoDomain';
 
@@ -101,6 +105,40 @@ function UserScopeControl() {
   );
 }
 
+const warehouseOperationRequest = {
+  step: 'ASSIGN_DOCK',
+  capability: 'ASSIGN_DOCK',
+  scope: {
+    organizationId: 'pernod-ricard-poland',
+    warehouseId: 'zielona-gora-plant',
+  },
+  rules: [],
+} satisfies ContextWorkflowRoutingRequest;
+
+function WorkflowRoutingControl() {
+  const {
+    canAccessWorkflowRoute,
+    canNavigateWorkflow,
+    canPerformWorkflowAction,
+    resolveWorkflow,
+  } = useDemoDomain();
+  const decision = resolveWorkflow(warehouseOperationRequest);
+  return (
+    <>
+      <output aria-label="workflow outcome">{decision.outcome}</output>
+      <output aria-label="navigation allowed">
+        {canNavigateWorkflow(warehouseOperationRequest) ? 'yes' : 'no'}
+      </output>
+      <output aria-label="action allowed">
+        {canPerformWorkflowAction(warehouseOperationRequest) ? 'yes' : 'no'}
+      </output>
+      <output aria-label="direct route allowed">
+        {canAccessWorkflowRoute(warehouseOperationRequest) ? 'yes' : 'no'}
+      </output>
+    </>
+  );
+}
+
 describe('DemoDomainProvider', () => {
   it('uses local UI state, defaults to System Administrator and exposes all six actors', () => {
     localStorage.clear();
@@ -191,5 +229,18 @@ describe('DemoDomainProvider', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Warehouse actor' }));
     expect(screen.getByLabelText('supplier user visible').textContent).toBe('hidden');
+  });
+
+  it('uses the canonical workflow decision for navigation, actions and direct routes', () => {
+    render(
+      <DemoDomainProvider initialActorId="warehouse-operator">
+        <WorkflowRoutingControl />
+      </DemoDomainProvider>,
+    );
+
+    expect(screen.getByLabelText('workflow outcome').textContent).toBe('RUN');
+    expect(screen.getByLabelText('navigation allowed').textContent).toBe('yes');
+    expect(screen.getByLabelText('action allowed').textContent).toBe('yes');
+    expect(screen.getByLabelText('direct route allowed').textContent).toBe('yes');
   });
 });

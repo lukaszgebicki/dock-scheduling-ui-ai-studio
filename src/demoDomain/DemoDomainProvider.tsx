@@ -6,6 +6,7 @@ import {
   canViewUser,
   canViewWarehouse,
   demoActors,
+  demoUsers,
   getDefaultRoute,
   getDemoActor,
   type DemoAction,
@@ -27,6 +28,14 @@ import {
   type SupplierConfiguration,
   type WarehouseConfiguration,
 } from './configuration';
+import {
+  resolveWorkflowRouting,
+  workflowDecisionAllowsActor,
+  type WorkflowRoutingDecision,
+  type WorkflowRoutingRequest,
+} from './workflowRouting';
+
+export type ContextWorkflowRoutingRequest = Omit<WorkflowRoutingRequest, 'actors'>;
 
 interface DemoDomainContextValue {
   activeActor: DemoActor;
@@ -40,6 +49,10 @@ interface DemoDomainContextValue {
   canViewSupplierOrganization: (id: SupplierOrganizationId) => boolean;
   canViewUser: (user: DemoUser) => boolean;
   canViewAppointment: (appointment: { warehouseId: WarehouseId; supplierOrganizationId: SupplierOrganizationId }) => boolean;
+  resolveWorkflow: (request: ContextWorkflowRoutingRequest) => WorkflowRoutingDecision;
+  canNavigateWorkflow: (request: ContextWorkflowRoutingRequest) => boolean;
+  canPerformWorkflowAction: (request: ContextWorkflowRoutingRequest) => boolean;
+  canAccessWorkflowRoute: (request: ContextWorkflowRoutingRequest) => boolean;
   getWarehouseDisplayNames: (ids: readonly WarehouseId[]) => string[];
   createWarehouseDraft: (id: WarehouseId, displayName: string) => void;
   publishWarehouse: (
@@ -105,6 +118,11 @@ function createContextValue(
   publishSupplier: (supplier: SupplierConfiguration) => void,
 ): DemoDomainContextValue {
   const activeActor = getConfiguredActor(baseActor, configuration);
+  const configuredUsers = demoUsers.map((user) => getConfiguredUser(user, configuration));
+  const resolveWorkflow = (request: ContextWorkflowRoutingRequest) =>
+    resolveWorkflowRouting({ ...request, actors: configuredUsers });
+  const activeActorCanUseWorkflow = (request: ContextWorkflowRoutingRequest) =>
+    workflowDecisionAllowsActor(resolveWorkflow(request), activeActor.userId);
   return {
     activeActor,
     actors: demoActors,
@@ -126,6 +144,10 @@ function createContextValue(
     },
     canViewUser: (user) => canViewUser(activeActor, getConfiguredUser(user, configuration)),
     canViewAppointment: (appointment) => canViewAppointment(activeActor, appointment),
+    resolveWorkflow,
+    canNavigateWorkflow: activeActorCanUseWorkflow,
+    canPerformWorkflowAction: activeActorCanUseWorkflow,
+    canAccessWorkflowRoute: activeActorCanUseWorkflow,
     getWarehouseDisplayNames: (ids) => ids.map((id) =>
       configuration.warehouses.find((warehouse) => warehouse.id === id)?.displayName ?? id),
     createWarehouseDraft,
