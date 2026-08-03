@@ -96,7 +96,7 @@ describe('AppointmentDetailsPage', () => {
     expect(screen.getByRole('heading', { name: 'APT-WPL-003' })).toBeDefined();
     expect(screen.getByText('SKU-101')).toBeDefined();
     expect(screen.getByText('Glass packaging')).toBeDefined();
-    expect(screen.getByText('Administrator added')).toBeDefined();
+    expect(screen.getByText('Supplier reservation')).toBeDefined();
     expect(screen.queryByText('EXACT_MATCH')).toBeNull();
     expect(screen.queryByText('batch-demo-1')).toBeNull();
     expect(screen.queryByText('WEEKLY_PLANNING')).toBeNull();
@@ -159,7 +159,8 @@ describe('AppointmentDetailsPage', () => {
       'INTERNAL-REASON-SECRET',
     ).state;
     renderDetails('planning-vistula-3001', 'supplier-user', state);
-    expect(screen.getByText((_content, element) =>
+    const commentsSection = screen.getByRole('heading', { name: 'Comments' }).closest('section')!;
+    expect(within(commentsSection).getByText((_content, element) =>
       element?.tagName === 'LI'
       && element.textContent?.includes('Shared delivery clarification') === true)).toBeDefined();
     expect(screen.getByText(/ADD_COMMENT · SHARED_COMMENT/)).toBeDefined();
