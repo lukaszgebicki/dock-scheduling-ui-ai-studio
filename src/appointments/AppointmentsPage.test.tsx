@@ -32,7 +32,8 @@ afterEach(() => {
 });
 
 function expectResultCount(text: string) {
-  expect(screen.getByText(text)).toBeDefined();
+  expect(screen.getByText((_content, element) =>
+    element?.tagName === 'P' && element.textContent === text)).toBeDefined();
 }
 
 describe('AppointmentsPage', () => {
@@ -48,12 +49,12 @@ describe('AppointmentsPage', () => {
 
   it('applies visible filters with AND semantics', () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText('Lifecycle status'), { target: { value: 'CONFIRMED' } });
-    fireEvent.change(screen.getByLabelText('Warehouse'), { target: { value: 'zielona-gora-plant' } });
-    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'baltic-freight' } });
-    fireEvent.change(screen.getByLabelText('Planning state'), { target: { value: 'READY' } });
-    fireEvent.change(screen.getByLabelText('Booking origin'), { target: { value: 'ADMIN_ADDED' } });
-    fireEvent.change(screen.getByLabelText('Required action'), { target: { value: 'none' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Lifecycle status' }), { target: { value: 'CONFIRMED' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), { target: { value: 'zielona-gora-plant' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Supplier' }), { target: { value: 'baltic-freight' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Planning state' }), { target: { value: 'READY' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Booking origin' }), { target: { value: 'ADMIN_ADDED' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Required action' }), { target: { value: 'none' } });
     expectResultCount('Showing 1 of 4 appointments');
     expect(screen.getAllByText('APT-WPL-002').length).toBeGreaterThan(0);
     expect(screen.queryByText('APT-WPL-001')).toBeNull();
@@ -63,14 +64,14 @@ describe('AppointmentsPage', () => {
     renderPage();
     fireEvent.change(screen.getByLabelText('Planned date from'), { target: { value: '2026-08-12' } });
     fireEvent.change(screen.getByLabelText('Planned date to'), { target: { value: '2026-08-14' } });
-    fireEvent.click(screen.getByLabelText('Missing details only'));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Missing details only' }));
     expectResultCount('Showing 1 of 4 appointments');
     expect(screen.getAllByText('APT-NW-2026-001').length).toBeGreaterThan(0);
   });
 
   it('searches approved visible fields and never matches hidden diagnostics', () => {
     renderPage();
-    const search = screen.getByLabelText('Global search');
+    const search = screen.getByRole('searchbox', { name: 'Global search' });
     fireEvent.change(search, { target: { value: 'ASN-DEMO-2001' } });
     expectResultCount('Showing 1 of 4 appointments');
     expect(screen.getAllByText('APT-WPL-002').length).toBeGreaterThan(0);
@@ -90,8 +91,8 @@ describe('AppointmentsPage', () => {
     expect(screen.getAllByText('APT-WPL-003').length).toBeGreaterThan(0);
     expect(screen.getAllByText('APT-NW-2026-001').length).toBeGreaterThan(0);
     expect(screen.queryByText('Baltic Freight')).toBeNull();
-    expect(screen.queryByLabelText('Supplier')).toBeNull();
-    expect(screen.queryByLabelText('Planning state')).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Supplier' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Planning state' })).toBeNull();
   });
 
   it('provides accessible desktop and mobile detail actions', () => {
@@ -105,7 +106,7 @@ describe('AppointmentsPage', () => {
     renderPage();
     const selector = screen.getByText('Column selector');
     fireEvent.click(selector);
-    const supplierColumn = screen.getByLabelText('Column Supplier');
+    const supplierColumn = screen.getByRole('checkbox', { name: 'Column Supplier' });
     expect(supplierColumn).toHaveProperty('checked', true);
     fireEvent.click(supplierColumn);
     expect(within(screen.getByRole('table')).queryByRole('columnheader', { name: 'Supplier' })).toBeNull();
@@ -117,7 +118,7 @@ describe('AppointmentsPage', () => {
 
   it('saves, applies and selects a local default view while blocking duplicate names', () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText('Required action'), { target: { value: 'required' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Required action' }), { target: { value: 'required' } });
     fireEvent.change(screen.getByLabelText('Saved view name'), { target: { value: 'Needs action' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save local view' }));
     expect(screen.getByRole('status').textContent).toContain('local memory only');
@@ -137,7 +138,7 @@ describe('AppointmentsPage', () => {
 
   it('shows an empty state and clears all filters', () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText('Global search'), { target: { value: 'not-found' } });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Global search' }), { target: { value: 'not-found' } });
     expect(screen.getByRole('heading', { name: 'No appointments found' })).toBeDefined();
     const clearButtons = screen.getAllByRole('button', { name: 'Clear filters' });
     fireEvent.click(clearButtons[clearButtons.length - 1]);
@@ -155,15 +156,15 @@ describe('AppointmentsPage', () => {
         </DemoDomainProvider>
       </MemoryRouter>,
     );
-    fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'baltic-freight' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Supplier' }), { target: { value: 'baltic-freight' } });
     fireEvent.change(screen.getByLabelText('Saved view name'), { target: { value: 'Internal Baltic' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save local view' }));
     expectResultCount('Showing 1 of 4 appointments');
 
     fireEvent.click(screen.getByRole('button', { name: 'Switch actor' }));
     expectResultCount('Showing 2 of 2 appointments');
-    expect(screen.queryByLabelText('Supplier')).toBeNull();
-    expect(screen.getByLabelText('Available saved views').querySelectorAll('option')).toHaveLength(1);
+    expect(screen.queryByRole('combobox', { name: 'Supplier' })).toBeNull();
+    expect(screen.getByRole('combobox', { name: 'Available saved views' }).querySelectorAll('option')).toHaveLength(1);
     expect(screen.queryByText('Baltic Freight')).toBeNull();
   });
 
