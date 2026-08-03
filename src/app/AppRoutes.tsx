@@ -21,6 +21,8 @@ import { AppointmentsPage } from '../appointments/AppointmentsPage';
 import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
 import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
 import { PlanningCalendarPage } from '../calendar/PlanningCalendarPage';
+import { FridayImportGuard, getAuthorizedFridayImportWarehouseIds } from '../import/FridayImportGuard';
+import { FridayImportPage } from '../import/FridayImportPage';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -31,7 +33,7 @@ function DefaultDemoRoute() {
 }
 
 function AppointmentsRoutePage() {
-  const { activeActor, canNavigateWorkflow } = useDemoDomain();
+  const { activeActor, canNavigateWorkflow, canAccessWorkflowRoute } = useDemoDomain();
   const supplierOrganizationId = activeActor.supplierOrganizationId;
   const warehouseId = activeActor.warehouseIds[0];
   const canReserveNextWeek = Boolean(
@@ -43,6 +45,10 @@ function AppointmentsRoutePage() {
       scope: { supplierOrganizationId, warehouseId },
     }),
   );
+  const canPreviewFridayImport = getAuthorizedFridayImportWarehouseIds(
+    activeActor.warehouseIds,
+    canAccessWorkflowRoute,
+  ).length > 0;
 
   return (
     <>
@@ -53,6 +59,14 @@ function AppointmentsRoutePage() {
         >
           Open PO planning calendar
         </Link>
+        {canPreviewFridayImport && (
+          <Link
+            to="/imports/friday-details"
+            className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+          >
+            Preview Friday CSV
+          </Link>
+        )}
         {canReserveNextWeek && (
           <Link
             to="/appointments/reserve-next-week"
@@ -100,6 +114,10 @@ export function AppRoutes() {
             <Route
               path="/calendar"
               element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>}
+            />
+            <Route
+              path="/imports/friday-details"
+              element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>}
             />
             <Route
               path="/users"
