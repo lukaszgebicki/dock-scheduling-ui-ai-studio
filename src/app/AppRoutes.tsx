@@ -18,6 +18,9 @@ import { SupplierOrganizationsPage } from '../supplierOrganizations/SupplierOrga
 import { AddSupplierOrganizationPage } from '../supplierOrganizations/AddSupplierOrganizationPage';
 import { SupplierConfigurationPage } from '../supplierOrganizations/SupplierConfigurationPage';
 import { AppointmentsPage } from '../appointments/AppointmentsPage';
+import { AppointmentDetailsPage } from '../appointments/AppointmentDetailsPage';
+import { AppointmentDetailsGuard } from '../appointments/AppointmentDetailsGuard';
+import { AppointmentWorkspaceProvider } from '../appointments/AppointmentWorkspaceProvider';
 import { SupplierWeeklyBookingPage } from '../appointments/SupplierWeeklyBookingPage';
 import { SupplierWeeklyBookingGuard } from '../appointments/SupplierWeeklyBookingGuard';
 import { PlanningCalendarPage } from '../calendar/PlanningCalendarPage';
@@ -137,32 +140,35 @@ function NotFoundFallback() {
 export function AppRoutes() {
   return (
     <DemoDomainProvider>
-      <Routes>
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AuthenticatedShell />}>
-            <Route path="/" element={<DefaultDemoRoute />} />
-            <Route path="/appointments" element={<DemoRouteGuard route="/appointments"><AppointmentsRoutePage /></DemoRouteGuard>} />
-            <Route path="/appointments/reserve-next-week" element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>} />
-            <Route path="/appointments/lifecycle" element={<LifecycleGuard><LifecyclePage /></LifecycleGuard>} />
-            <Route path="/gate-operations" element={<GateOpsGuard><GateOpsPage /></GateOpsGuard>} />
-            <Route path="/calendar" element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>} />
-            <Route path="/imports/friday-details" element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>} />
-            <Route path="/weekly-planning" element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>} />
-            <Route path="/users" element={<DemoRouteGuard route="/users"><UsersAccessPage /></DemoRouteGuard>} />
-            <Route path="/users/invite" element={<DemoActionGuard action="invite-user"><InviteUserPage /></DemoActionGuard>} />
-            <Route path="/warehouses" element={<DemoRouteGuard route="/warehouses"><WarehousesPage /></DemoRouteGuard>} />
-            <Route path="/warehouses/new" element={<DemoActionGuard action="add-warehouse"><AddWarehousePage /></DemoActionGuard>} />
-            <Route path="/warehouses/:warehouseId/configuration" element={<DemoActionGuard action="configure-warehouse"><WarehouseConfigurationPage /></DemoActionGuard>} />
-            <Route path="/supplier-organizations" element={<DemoRouteGuard route="/supplier-organizations"><SupplierOrganizationsPage /></DemoRouteGuard>} />
-            <Route path="/supplier-organizations/new" element={<DemoActionGuard action="add-supplier-organization"><AddSupplierOrganizationPage /></DemoActionGuard>} />
-            <Route path="/supplier-organizations/:supplierOrganizationId/configuration" element={<DemoActionGuard action="configure-supplier-organization"><SupplierConfigurationPage /></DemoActionGuard>} />
+      <AppointmentWorkspaceProvider>
+        <Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AuthenticatedShell />}>
+              <Route path="/" element={<DefaultDemoRoute />} />
+              <Route path="/appointments" element={<DemoRouteGuard route="/appointments"><AppointmentsRoutePage /></DemoRouteGuard>} />
+              <Route path="/appointments/:appointmentId" element={<DemoRouteGuard route="/appointments"><AppointmentDetailsGuard><AppointmentDetailsPage /></AppointmentDetailsGuard></DemoRouteGuard>} />
+              <Route path="/appointments/reserve-next-week" element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>} />
+              <Route path="/appointments/lifecycle" element={<LifecycleGuard><LifecyclePage /></LifecycleGuard>} />
+              <Route path="/gate-operations" element={<GateOpsGuard><GateOpsPage /></GateOpsGuard>} />
+              <Route path="/calendar" element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>} />
+              <Route path="/imports/friday-details" element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>} />
+              <Route path="/weekly-planning" element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>} />
+              <Route path="/users" element={<DemoRouteGuard route="/users"><UsersAccessPage /></DemoRouteGuard>} />
+              <Route path="/users/invite" element={<DemoActionGuard action="invite-user"><InviteUserPage /></DemoActionGuard>} />
+              <Route path="/warehouses" element={<DemoRouteGuard route="/warehouses"><WarehousesPage /></DemoRouteGuard>} />
+              <Route path="/warehouses/new" element={<DemoActionGuard action="add-warehouse"><AddWarehousePage /></DemoActionGuard>} />
+              <Route path="/warehouses/:warehouseId/configuration" element={<DemoActionGuard action="configure-warehouse"><WarehouseConfigurationPage /></DemoActionGuard>} />
+              <Route path="/supplier-organizations" element={<DemoRouteGuard route="/supplier-organizations"><SupplierOrganizationsPage /></DemoRouteGuard>} />
+              <Route path="/supplier-organizations/new" element={<DemoActionGuard action="add-supplier-organization"><AddSupplierOrganizationPage /></DemoActionGuard>} />
+              <Route path="/supplier-organizations/:supplierOrganizationId/configuration" element={<DemoActionGuard action="configure-supplier-organization"><SupplierConfigurationPage /></DemoActionGuard>} />
+            </Route>
           </Route>
-        </Route>
-        <Route element={<PublicOnlyRoute />}><Route path="/login" element={<LoginPage />} /></Route>
-        <Route path="/forgot-password" element={<ForgotPasswordPage api={demoAuthApi} />} />
-        <Route path="/reset-password" element={<ResetPasswordPage api={demoAuthApi} />} />
-        <Route path="*" element={<NotFoundFallback />} />
-      </Routes>
+          <Route element={<PublicOnlyRoute />}><Route path="/login" element={<LoginPage />} /></Route>
+          <Route path="/forgot-password" element={<ForgotPasswordPage api={demoAuthApi} />} />
+          <Route path="/reset-password" element={<ResetPasswordPage api={demoAuthApi} />} />
+          <Route path="*" element={<NotFoundFallback />} />
+        </Routes>
+      </AppointmentWorkspaceProvider>
     </DemoDomainProvider>
   );
 }

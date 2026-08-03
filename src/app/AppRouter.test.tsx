@@ -17,7 +17,6 @@ const createControlledPromise = <T,>() => {
   return { promise, resolve, reject };
 };
 
-// Helper to capture location
 const LocationDisplay = () => {
   const location = useLocation();
   return <div data-testid="location-display">{location.pathname}{location.search}</div>;
@@ -79,7 +78,6 @@ describe('AppRouter', () => {
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Sign in' })).toBeDefined());
     expect(screen.getByTestId('location-display').textContent).toBe('/login');
-    // Check that state.from contains only pathname
     expect(screen.getByTestId('location-state').textContent).toContain('{"from":"/"}');
   });
 
@@ -126,7 +124,6 @@ describe('AppRouter', () => {
   });
 
   it('6. /forgot-password: available for authenticated and unauthenticated', async () => {
-    // Unauthenticated
     const { promise: p1, reject } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p1);
 
@@ -138,7 +135,6 @@ describe('AppRouter', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Forgot password?' })).toBeDefined());
     unmount();
 
-    // Authenticated
     const { promise: p2, resolve } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p2);
 
@@ -151,7 +147,6 @@ describe('AppRouter', () => {
   });
 
   it('7. /reset-password: available for authenticated and unauthenticated', async () => {
-    // Unauthenticated
     const { promise: p1, reject } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p1);
 
@@ -164,7 +159,6 @@ describe('AppRouter', () => {
     expect(screen.getByTestId('location-display').textContent).toBe('/reset-password');
     unmount();
 
-    // Authenticated
     const { promise: p2, resolve } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p2);
 
@@ -178,7 +172,6 @@ describe('AppRouter', () => {
   });
 
   it('8. unknown route: redirects authenticated to / and unauthenticated to /login', async () => {
-    // Unauthenticated
     const { promise: p1, reject } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p1);
 
@@ -190,7 +183,6 @@ describe('AppRouter', () => {
     await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/login'));
     unmount();
 
-    // Authenticated
     const { promise: p2, resolve } = createControlledPromise<any>();
     (mockAuthApi.refresh as any).mockReturnValueOnce(p2);
 
@@ -356,5 +348,54 @@ describe('AppRouter', () => {
 
     await waitFor(() => expect(screen.getByTestId('location-display').textContent).toBe('/users'));
     expect(screen.queryByRole('heading', { name: 'Configure Northstar Packaging' })).toBeNull();
+  });
+
+  it('17. authenticated internal actor reaches a scoped appointment detail route', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/appointments/planning-baltic-2001');
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'APT-WPL-002' })).toBeDefined());
+    expect(screen.getByTestId('location-display').textContent)
+      .toBe('/appointments/planning-baltic-2001');
+  });
+
+  it('18. actor switch to Supplier fails closed on an out-of-scope detail route', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/appointments/planning-baltic-2001');
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'APT-WPL-002' })).toBeDefined());
+
+    fireEvent.change(screen.getByLabelText('Demo access context'), {
+      target: { value: 'supplier-user' },
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent)
+      .toBe('/appointments'));
+    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
+    expect(screen.queryByText('PO-DEMO-2001')).toBeNull();
+  });
+
+  it('19. missing appointment detail redirects safely to the appointment list', async () => {
+    const { promise, resolve } = createControlledPromise<any>();
+    (mockAuthApi.refresh as any).mockReturnValue(promise);
+
+    renderRouter('/appointments/missing-record');
+    await act(async () => {
+      resolve({ access_token: 'token', token_type: 'Bearer', expires_in: 3600 });
+    });
+
+    await waitFor(() => expect(screen.getByTestId('location-display').textContent)
+      .toBe('/appointments'));
+    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
+    expect(screen.queryByText('missing-record')).toBeNull();
   });
 });
