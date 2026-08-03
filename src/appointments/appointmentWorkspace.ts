@@ -276,9 +276,10 @@ function normalized(value: string): string {
 }
 
 function lifecycleStatus(value: string): LifecyclePlanningStatus {
-  return lifecycleStatuses.has(value as LifecyclePlanningStatus)
-    ? value as LifecyclePlanningStatus
-    : 'SUBMITTED';
+  if (!lifecycleStatuses.has(value as LifecyclePlanningStatus)) {
+    throw new Error(`Unsupported lifecycle status: ${value}`);
+  }
+  return value as LifecyclePlanningStatus;
 }
 
 function deterministicTimestamp(sequence: number): string {
@@ -305,44 +306,6 @@ function requiredActionFor(
   }
   if (lifecycle === 'CANCELLED') return 'Cancelled';
   return 'No action required';
-}
-
-function baseStatusHistory(
-  appointment: PlanningAppointment,
-  resolvedLifecycleStatus: LifecyclePlanningStatus,
-): readonly WorkspaceStatusHistoryEntry[] {
-  return [
-    {
-      id: `${appointment.id}-status-001`,
-      sequence: 1,
-      category: 'PLANNING',
-      from: 'NOT_CREATED',
-      to: appointment.planningState,
-      reason: 'Local planning projection created.',
-      externalVisible: true,
-      recordedAt: '2026-08-01T08:00:00.000Z',
-    },
-    {
-      id: `${appointment.id}-status-002`,
-      sequence: 2,
-      category: 'LIFECYCLE',
-      from: 'NOT_CREATED',
-      to: resolvedLifecycleStatus,
-      reason: 'Source lifecycle evidence projected without mutation.',
-      externalVisible: true,
-      recordedAt: '2026-08-01T08:01:00.000Z',
-    },
-  ];
-}
-
-function importedTransportFor(
-  appointment: PlanningAppointment,
-): Partial<TransportDetails> {
-  if (appointment.id !== 'planning-baltic-2001') return {};
-  return {
-    tractorRegistration: 'TR-IMPORT-999',
-    trailerOrContainerRegistration: appointment.trailerOrContainerRegistration,
-  };
 }
 
 function mapPlanningAppointment(
@@ -385,7 +348,7 @@ function mapPlanningAppointment(
       trailerOrContainerRegistration:
         appointment.trailerOrContainerRegistration,
     },
-    importedTransportDetails: importedTransportFor(appointment),
+    importedTransportDetails: {},
     assignedDockId: null,
     skuLines: appointment.skuLines.map((line) => ({ ...line })),
     documents: appointment.skuLines.length > 0
@@ -400,7 +363,7 @@ function mapPlanningAppointment(
           status: 'NOT_PROVIDED',
         }],
     comments: [],
-    statusHistory: baseStatusHistory(appointment, resolvedLifecycleStatus),
+    statusHistory: [],
     changeHistory: [],
     importDiagnostic: appointment.importDiagnostic,
     batchLineage: appointment.batchLineage,
@@ -452,18 +415,7 @@ function nonWeeklySupplierRecord(): AppointmentWorkspaceRecord {
       status: 'NOT_PROVIDED',
     }],
     comments: [],
-    statusHistory: [
-      {
-        id: 'appointment-nonweekly-vistula-001-status-001',
-        sequence: 1,
-        category: 'LIFECYCLE',
-        from: 'SUBMITTED',
-        to: 'CONFIRMED',
-        reason: 'Explicit non-weekly AC-SUP-002 demonstration fixture.',
-        externalVisible: true,
-        recordedAt: '2026-08-01T09:00:00.000Z',
-      },
-    ],
+    statusHistory: [],
     changeHistory: [],
     createdBy: 'SUPPLIER_RESERVED',
     createdAt: '2026-08-01T09:00:00.000Z',
@@ -672,13 +624,15 @@ export function saveWorkspaceView(
     return { views: existing, error: 'A saved view with this name already exists.', savedView: null };
   }
   const actorViews = existing.filter((view) => view.ownerUserId === actor.userId);
+  const actorColumns = columnsForActor(actor);
+  const permittedColumns = columns.filter((column) => actorColumns.includes(column));
   const savedView: WorkspaceSavedView = {
     id: `saved-view-${actor.userId}-${(actorViews.length + 1).toString().padStart(3, '0')}`,
     ownerUserId: actor.userId,
     name: trimmedName,
     normalizedName,
     filters: cloneFilters(filters),
-    columns: columns.slice(),
+    columns: permittedColumns.length > 0 ? permittedColumns : actorColumns,
     isDefault: actorViews.length === 0,
   };
   return { views: [...existing, savedView], error: null, savedView };
@@ -740,14 +694,6 @@ function fieldValue(
     return record.supplierTransportDetails.trailerOrContainerRegistration;
   }
   return record[field];
-}
-
-function externalVisibilityForEdit(
-  actor: DemoActor,
-  field: WorkspaceSafeField,
-): boolean {
-  return isSupplierActor(actor)
-    || workspaceSafeFields.includes(field);
 }
 
 export function editableFieldsForRecord(
@@ -849,7 +795,7 @@ export function updateWorkspaceField(
     after: next,
     sourceEvidence: `${field}=${before}`,
     targetEvidence: `${field}=${next}`,
-    externalVisible: externalVisibilityForEdit(actor, field),
+    externalVisible: isSupplierActor(actor),
     recordedAt,
   };
   updatedRecord = {
