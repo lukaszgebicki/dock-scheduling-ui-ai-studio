@@ -78,7 +78,7 @@ describe('standing appointments AppRoutes integration', () => {
     expect(screen.queryByRole('heading', { name: 'Standing appointment series' })).toBeNull();
   });
 
-  it('redirects Security Officer to the existing gate default route', async () => {
+  it('redirects Security Officer to the current default appointments route', async () => {
     renderApp('/standing-appointments');
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined());
     await act(async () => {
@@ -86,7 +86,8 @@ describe('standing appointments AppRoutes integration', () => {
         target: { value: 'security-officer' },
       });
     });
-    await waitFor(() => expect(screen.getByTestId('standing-app-location').textContent).toBe('/gate-operations'));
+    await waitFor(() => expect(screen.getByTestId('standing-app-location').textContent).toBe('/appointments'));
+    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Standing appointment series' })).toBeNull();
   });
 
