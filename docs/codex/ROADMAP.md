@@ -56,55 +56,45 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-NOTIFICATIONS-STATES-1 — local notifications and exceptional states | DONE; PR #99 squash-merged at `02e7ac4eefcf87daccaeb393dfa0f9b6bb930a5c` |
 | UI-MVP-DASH-MOBILE-1-ACTIVATE — activate dashboards and responsive role views | DONE; PR #101 squash-merged at `3e39d6d5057f60415c64cbeed3177e5e1a36fb6d` |
 | UI-MVP-DASH-MOBILE-1 — role dashboards and responsive web views | DONE; PR #103 squash-merged at `06ea72d8e8f56d5d2004fd0fa06ab3de40c15ffc` |
-| UI-MVP-STANDING-1-ACTIVATE — activate standing appointment series | DONE after merge of this activation PR |
+| UI-MVP-STANDING-1-ACTIVATE — activate standing appointment series | DONE; PR #105 squash-merged at `efa64744c4a97e166ad6120617ec2aa8c0a31b06` |
+| UI-MVP-STANDING-1 — local standing appointment series | DONE; PR #107 squash-merged at `5f507367a0c7a1cbcd1039f531c46b6891735458` |
 
 ## Active and queued
 
-### UI-MVP-STANDING-1 — standing appointment series
+### UI-MVP-PRODUCT-REVIEW-1 — product-level completion review
 
 - State: `READY`.
-- Risk class: Class B.
-- Objective: add local demonstrational eligibility, recurrence preview and
-  independent occurrence controls for standing appointments without reserving
-  capacity or persisting appointments.
-- Product authority: approved BDP section 4.5 plus existing role,
-  organization, warehouse, booking, capacity, lifecycle and Supplier-safety
-  contracts.
-- Eligibility boundary: Warehouse Administrator may locally manage eligibility
-  for Suppliers in assigned warehouses. Supplier Administrator may locally
-  manage eligibility only for its own organization. System Administrator may
-  inspect the full scoped demonstration but cannot silently substitute for an
-  eligibility decision assigned to those roles. Supplier User and Security
-  Officer cannot manage eligibility or series.
-- Definition boundary: a series requires weekday and time, weekly or biweekly
-  frequency, start date and exactly one termination rule: inclusive end date or
-  occurrence count.
-- Occurrence boundary: every generated occurrence is an independent local
-  preview item and independently reports compatibility, capacity/approval
-  readiness and conflict evidence available from existing configuration. No
-  occurrence reserves a slot or creates an appointment.
-- Exception boundary: one preview occurrence may be locally edited,
-  rescheduled or cancelled without changing other occurrences. A permitted
-  Administrator may locally pause or end the series. These controls affect only
-  the demonstration state.
-- Hold boundary: an unconfirmed occurrence may display an illustrative hold
-  expiry state, but no timer, background job, capacity release or notification
-  delivery is authorized.
-- Data boundary: Supplier actors never receive another organization’s records,
-  Internal Notes, technical audit metadata, import diagnostics,
-  source-row/batch lineage, hidden capacity details or Administrator-only
-  reasoning.
-- Technical boundary: no recurrence scheduler, backend, API, persistence,
-  browser storage, background task, real hold, integration, deployment or
-  production-repository access is authorized.
-- Mutation boundary: standing-series previews may not mutate existing
-  appointments, planning, lifecycle/change, operational, transport, capacity,
-  gate, reporting, notification, dashboard or configuration state.
-- Contract gate: execution requires a separate machine-readable Class B issue
-  contract bound to the exact `main` SHA produced by merge of this activation
-  PR, plus complete validation, Simplification Pass, independent review and
-  controlled publication.
+- Risk class: Class A read-only review.
+- Objective: evaluate the merged UI MVP against the complete approved product
+  authority and produce one traceable completion report without implementing or
+  repairing any feature.
+- Product authority: all 29 BDP identifiers, all 43 acceptance scenarios,
+  section 22 exceptional states, section 23 mobile coverage, section 24
+  exclusions, section 25 screen inventory, section 27 Definition of Done,
+  section 28 downstream configuration consequences, sections 29–30 weekly
+  planning decisions and `BDR-TRN-001`.
+- Evidence boundary: every conclusion must cite concrete repository evidence,
+  including merged task/PR lineage, implementation paths, focused tests and CI
+  results. Missing evidence is not equivalent to completion.
+- Assessment boundary: each requirement and acceptance scenario must receive an
+  explicit evidence-backed outcome such as `PASS`, `PARTIAL`, `GAP` or
+  `EXCLUDED`, with no silent aggregation that hides a missing behavior.
+- Scope boundary: the review may identify gaps and recommend separately named
+  repair tasks, but it may not modify `src/**`, configuration, dependencies,
+  CI, security controls, product authority or production repositories.
+- Repair boundary: no implementation fix, test repair, scope expansion or
+  product reinterpretation is authorized inside this task. Every repair needs a
+  separate exact-SHA contract and activation.
+- Output boundary: produce a dedicated repository review artifact containing an
+  executive summary, requirement matrix, scenario matrix, exclusions and DoD
+  assessment, evidence index, gap register and recommended next decisions.
+- Technical boundary: no backend, API, persistence, browser storage,
+  integration, deployment, production access or source-state mutation is
+  authorized.
+- Contract gate: execution requires a separate machine-readable issue contract
+  bound to the exact `main` SHA produced by merge of this activation PR, plus
+  complete validation, exact-path review, Simplification Pass, independent
+  read-only review and controlled publication.
 
-Final product review and every other source or governance task remain inactive
-and unauthorized. No other product, governance, security or infrastructure
-task is `READY` or active.
+All source implementation, repair, governance, security and infrastructure tasks
+remain inactive and unauthorized. No other task is `READY` or active.
