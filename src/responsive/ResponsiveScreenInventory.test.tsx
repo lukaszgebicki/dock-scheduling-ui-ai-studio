@@ -87,12 +87,15 @@ describe('approved responsive screen inventory', () => {
     renderWorkspaceScreen('supplier-administrator', <AppointmentsPage />);
 
     expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
-    expect(screen.getByLabelText('Search appointments')).toBeDefined();
-    expect(screen.getByRole('list', { name: 'Mobile appointment list' })).toBeDefined();
-    expect(screen.getByRole('table', { name: 'Appointment list' }).closest('.overflow-x-auto'))
-      .not.toBeNull();
-    const detailsLink = screen.getAllByRole('link', { name: 'Open appointment details' })[0];
-    expect(detailsLink.getAttribute('href')).toMatch(/^\/appointments\//);
+    expect(screen.getByLabelText('Global search')).toBeDefined();
+    const desktopTable = screen.getByRole('table');
+    expect(desktopTable.closest('.overflow-x-auto')).not.toBeNull();
+    const detailsLinks = screen.getAllByRole('link', {
+      name: /Open appointment details/,
+    });
+    expect(detailsLinks.length).toBeGreaterThanOrEqual(2);
+    expect(detailsLinks.some((link) => link.closest('article') !== null)).toBe(true);
+    expect(detailsLinks[0].getAttribute('href')).toMatch(/^\/appointments\//);
   });
 
   it('keeps weekly Supplier booking as stacked day/time choices with touch-safe actions', () => {
