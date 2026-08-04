@@ -3,6 +3,7 @@ import { useAppointmentWorkspace } from '../appointments/AppointmentWorkspacePro
 import type { AppointmentWorkspaceRecord } from '../appointments/appointmentWorkspace';
 import { CapacityDemonstration } from '../capacity/CapacityDemonstration';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
+import { defaultResponsiveCalendarView } from '../responsive/ResponsivePrimitives';
 import {
   buildWorkspaceCalendarProjection,
   calendarFilterOptions,
@@ -33,7 +34,7 @@ function DeliveryContents({
   }
 
   return (
-    <div className="mt-4 overflow-x-auto">
+    <div className="mt-4 overflow-x-auto" data-responsive-overflow="delivery-contents">
       <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
         <thead>
           <tr>
@@ -99,17 +100,17 @@ function CalendarCard({
   return (
     <article
       aria-labelledby={titleId}
-      className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-gray-200"
+      className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200 sm:p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
             {record.plannedDate} · {record.plannedTime}
           </p>
-          <h3 id={titleId} className="mt-1 text-lg font-semibold text-gray-900">
+          <h3 id={titleId} className="mt-1 break-words text-lg font-semibold text-gray-900">
             {primaryReference(record)}
           </h3>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 break-words text-sm text-gray-600">
             {record.supplierName} · {record.warehouseName}
           </p>
         </div>
@@ -124,23 +125,23 @@ function CalendarCard({
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-6">
         <div>
           <dt className="text-gray-500">Lifecycle</dt>
-          <dd className="font-medium text-gray-900">{record.lifecycleStatus}</dd>
+          <dd className="break-words font-medium text-gray-900">{record.lifecycleStatus}</dd>
         </div>
         <div>
           <dt className="text-gray-500">Operational</dt>
-          <dd className="font-medium text-gray-900">{record.operationalStatus}</dd>
+          <dd className="break-words font-medium text-gray-900">{record.operationalStatus}</dd>
         </div>
         <div>
           <dt className="text-gray-500">Load type</dt>
-          <dd className="font-medium text-gray-900">{item.loadTypeLabel}</dd>
+          <dd className="break-words font-medium text-gray-900">{item.loadTypeLabel}</dd>
         </div>
         <div>
           <dt className="text-gray-500">Dock</dt>
-          <dd className="font-medium text-gray-900">{item.dockLabel}</dd>
+          <dd className="break-words font-medium text-gray-900">{item.dockLabel}</dd>
         </div>
         <div>
           <dt className="text-gray-500">Tractor</dt>
-          <dd className="font-medium text-gray-900">
+          <dd className="break-words font-medium text-gray-900">
             {record.supplierTransportDetails.tractorRegistration || '—'}
           </dd>
         </div>
@@ -161,7 +162,7 @@ function CalendarCard({
         aria-expanded={expanded}
         aria-controls={contentsId}
         onClick={onToggle}
-        className="mt-5 rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+        className="mt-5 min-h-11 w-full rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0] sm:w-auto"
       >
         Pokaż zawartość dostawy
       </button>
@@ -191,7 +192,7 @@ function GroupedCalendarView({
       {groups.map((group) => (
         <section key={group.id} aria-labelledby={`calendar-group-${group.id}`}>
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id={`calendar-group-${group.id}`} className="text-lg font-semibold text-gray-900">
+            <h2 id={`calendar-group-${group.id}`} className="break-words text-lg font-semibold text-gray-900">
               {group.label}
             </h2>
             <span className="text-sm text-gray-500">
@@ -227,7 +228,10 @@ function CalendarListView({
   onToggle: (id: string) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
+    <div
+      className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-gray-200"
+      data-responsive-overflow="calendar-list"
+    >
       <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
         <caption className="sr-only">Visible appointment calendar list</caption>
         <thead className="bg-gray-50">
@@ -268,7 +272,7 @@ function CalendarListView({
                       aria-expanded={expanded}
                       aria-controls={contentsId}
                       onClick={() => onToggle(item.record.id)}
-                      className="whitespace-nowrap rounded-md border border-[#023466] px-3 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
+                      className="min-h-11 whitespace-nowrap rounded-md border border-[#023466] px-3 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]"
                     >
                       Pokaż zawartość dostawy
                     </button>
@@ -293,16 +297,17 @@ function CalendarListView({
 export function PlanningCalendarPage() {
   const { activeActor, configuration } = useDemoDomain();
   const { visibleRecords } = useAppointmentWorkspace();
-  const [view, setView] = useState<CalendarViewId>('week');
+  const [view, setView] = useState<CalendarViewId>(() =>
+    defaultResponsiveCalendarView(activeActor.role));
   const [filters, setFilters] = useState<CalendarFilters>(emptyCalendarFilters);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const supplierView = Boolean(activeActor.supplierOrganizationId);
 
   useEffect(() => {
-    setView('week');
+    setView(defaultResponsiveCalendarView(activeActor.role));
     setFilters(emptyCalendarFilters);
     setExpandedId(null);
-  }, [activeActor.id]);
+  }, [activeActor.id, activeActor.role]);
 
   const options = useMemo(() => calendarFilterOptions(visibleRecords), [visibleRecords]);
   const projection = useMemo(() => buildWorkspaceCalendarProjection(
@@ -333,7 +338,12 @@ export function PlanningCalendarPage() {
   };
 
   return (
-    <section aria-labelledby="planning-calendar-title" className="mx-auto max-w-7xl">
+    <section
+      aria-labelledby="planning-calendar-title"
+      className="mx-auto max-w-7xl"
+      data-responsive-screen="role-calendar"
+      data-responsive-default-view={defaultResponsiveCalendarView(activeActor.role)}
+    >
       <header className="mb-6">
         <p className="text-sm font-medium text-[#023466]">Scoped appointment workspace · local demonstration</p>
         <h1 id="planning-calendar-title" className="mt-1 text-2xl font-semibold text-gray-900">
@@ -342,10 +352,19 @@ export function PlanningCalendarPage() {
         <p className="mt-2 max-w-3xl text-sm text-gray-600">
           Day, Week, Dock, Load Type, List and Workflow are read-only projections of the same visible appointment records. One card or row represents one appointment and PO header.
         </p>
+        {(supplierView || activeActor.role === 'Warehouse Operator') && (
+          <p className="mt-3 rounded-md border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900 sm:hidden">
+            Narrow-screen agenda starts in Day view. All six read-only views remain available below.
+          </p>
+        )}
       </header>
 
       <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-gray-200">
-        <div role="group" aria-label="Calendar view" className="flex flex-wrap gap-2">
+        <div
+          role="group"
+          aria-label="Calendar view"
+          className="flex max-w-full flex-nowrap gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0"
+        >
           {calendarViewIds.map((viewId) => (
             <button
               key={viewId}
@@ -355,7 +374,7 @@ export function PlanningCalendarPage() {
                 setView(viewId);
                 setExpandedId(null);
               }}
-              className={`rounded-md px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#7FA5D0] ${view === viewId ? 'bg-[#023466] text-white' : 'border border-[#023466] text-[#023466]'}`}
+              className={`min-h-11 flex-none whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#7FA5D0] ${view === viewId ? 'bg-[#023466] text-white' : 'border border-[#023466] text-[#023466]'}`}
             >
               {calendarViewLabels[viewId]} view
             </button>
@@ -417,14 +436,14 @@ export function PlanningCalendarPage() {
               </select>
             </label>
           </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={() => {
                 setFilters(emptyCalendarFilters);
                 setExpandedId(null);
               }}
-              className="rounded-md border border-gray-400 px-3 py-2 text-sm font-semibold text-gray-700"
+              className="min-h-11 w-full rounded-md border border-gray-400 px-3 py-2 text-sm font-semibold text-gray-700 sm:w-auto"
             >
               Clear calendar filters
             </button>
