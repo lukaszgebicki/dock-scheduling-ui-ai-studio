@@ -93,28 +93,60 @@ export function AppointmentWorkspaceProvider({
   const addRecord = (record: AppointmentWorkspaceRecord): string | null => {
     const isSupplier = activeActor.role === 'Supplier Administrator'
       || activeActor.role === 'Supplier User';
-    if (!isSupplier
-      || !activeActor.supplierOrganizationId
-      || record.supplierOrganizationId !== activeActor.supplierOrganizationId
-      || !canViewAppointment(record)) {
+    const isOperator = activeActor.role === 'Warehouse Operator';
+    const supplierOwnScope = isSupplier
+      && activeActor.supplierOrganizationId !== undefined
+      && record.supplierOrganizationId === activeActor.supplierOrganizationId
+      && canViewAppointment(record);
+
+    const warehouse = configuration.warehouses.find((candidate) =>
+      candidate.id === record.warehouseId);
+    const supplier = configuration.suppliers.find((candidate) =>
+      candidate.organizationId === record.supplierOrganizationId);
+    const operatorAssignedScope = isOperator
+      && activeActor.warehouseIds.includes(record.warehouseId)
+      && canViewAppointment(record)
+      && warehouse?.status === 'published'
+      && supplier?.status === 'active'
+      && supplier.warehouseIds.includes(record.warehouseId)
+      && warehouse.supplierOrganizationIds.includes(record.supplierOrganizationId);
+
+    if (!supplierOwnScope && !operatorAssignedScope) {
       return 'The active actor cannot add this appointment to the workspace.';
     }
 
-    const safeLocalRecord = record.sourceKind === 'NON_WEEKLY_DEMO'
-      && record.bookingOrigin === 'SUPPLIER_RESERVED'
+    const commonSafeLocalRecord = record.sourceKind === 'NON_WEEKLY_DEMO'
       && record.createdBy === activeActor.userId
       && record.skuLines.length === 0
       && Object.keys(record.importedTransportDetails).length === 0
       && record.importDiagnostic === undefined
       && record.batchLineage === undefined
       && record.internalPlanningNote === undefined
+      && record.documents.every((document) =>
+        document.name.trim().length > 0
+        && (document.status === 'AVAILABLE_METADATA'
+          || document.status === 'NOT_PROVIDED'))
       && record.comments.every((comment) =>
-        comment.visibility === 'SHARED_COMMENT'
-        && comment.actorId === activeActor.id
+        comment.actorId === activeActor.id
         && comment.userId === activeActor.userId)
       && record.statusHistory.every((entry) => entry.externalVisible);
-    if (!safeLocalRecord) {
-      return 'The appointment is not a safe local standard Supplier booking.';
+
+    const safeSupplierRecord = supplierOwnScope
+      && commonSafeLocalRecord
+      && record.bookingOrigin === 'SUPPLIER_RESERVED'
+      && record.comments.every((comment) =>
+        comment.visibility === 'SHARED_COMMENT');
+    const safeOperatorRecord = operatorAssignedScope
+      && commonSafeLocalRecord
+      && record.bookingOrigin === 'ADMIN_ADDED'
+      && record.comments.every((comment) =>
+        comment.visibility === 'SHARED_COMMENT'
+        || comment.visibility === 'INTERNAL_NOTE');
+
+    if (!safeSupplierRecord && !safeOperatorRecord) {
+      return isOperator
+        ? 'The appointment is not a safe local Operator booking.'
+        : 'The appointment is not a safe local standard Supplier booking.';
     }
 
     const duplicate = state.records.some((candidate) =>
