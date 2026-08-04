@@ -117,18 +117,28 @@ export function AppointmentWorkspaceProvider({
 
     const commonSafeLocalRecord = record.sourceKind === 'NON_WEEKLY_DEMO'
       && record.createdBy === activeActor.userId
+      && record.planningState === 'READY'
+      && (record.lifecycleStatus === 'CONFIRMED'
+        || record.lifecycleStatus === 'PENDING_APPROVAL')
+      && record.changeStatus === 'NO_CHANGE_REQUEST'
+      && record.operationalStatus === 'EXPECTED'
+      && record.assignedDockId === null
       && record.skuLines.length === 0
       && Object.keys(record.importedTransportDetails).length === 0
       && record.importDiagnostic === undefined
       && record.batchLineage === undefined
       && record.internalPlanningNote === undefined
+      && record.changeHistory.length === 0
+      && record.documents.length === 1
       && record.documents.every((document) =>
         document.name.trim().length > 0
         && (document.status === 'AVAILABLE_METADATA'
           || document.status === 'NOT_PROVIDED'))
       && record.comments.every((comment) =>
-        comment.actorId === activeActor.id
+        comment.text.trim().length > 0
+        && comment.actorId === activeActor.id
         && comment.userId === activeActor.userId)
+      && record.statusHistory.length === 1
       && record.statusHistory.every((entry) => entry.externalVisible);
 
     const safeSupplierRecord = supplierOwnScope
