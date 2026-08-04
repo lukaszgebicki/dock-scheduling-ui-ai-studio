@@ -42,8 +42,8 @@ afterEach(() => {
 describe('non-weekly booking AppRoutes integration', () => {
   it('redirects an internal actor from the standard Supplier route', async () => {
     renderApp('/appointments/new');
-    await waitFor(() => expect(screen.getByTestId('nonweekly-app-location').textContent).toBe('/appointments'));
-    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
+    await waitFor(() => expect(screen.getByTestId('nonweekly-app-location').textContent).toBe('/users'));
+    expect(screen.getByRole('heading', { name: 'Users & access' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Create standard Supplier appointment' })).toBeNull();
   });
 
@@ -71,7 +71,8 @@ describe('non-weekly booking AppRoutes integration', () => {
         target: { value: 'system-administrator' },
       });
     });
-    await waitFor(() => expect(screen.getByTestId('nonweekly-app-location').textContent).toBe('/appointments'));
+    await waitFor(() => expect(screen.getByTestId('nonweekly-app-location').textContent).toBe('/users'));
+    expect(screen.getByRole('heading', { name: 'Users & access' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Create standard Supplier appointment' })).toBeNull();
   });
 });
