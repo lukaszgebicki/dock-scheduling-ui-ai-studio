@@ -19,6 +19,7 @@ function renderGuard(actorId: DemoActorId) {
         <Routes>
           <Route path="/standing-appointments" element={<StandingAppointmentsGuard><h1>Standing series data</h1></StandingAppointmentsGuard>} />
           <Route path="/appointments" element={<h1>Appointments fallback</h1>} />
+          <Route path="/gate-operations" element={<h1>Gate fallback</h1>} />
           <Route path="/users" element={<h1>Users fallback</h1>} />
         </Routes>
         <LocationDisplay />
@@ -43,11 +44,17 @@ describe('StandingAppointmentsGuard', () => {
   it.each([
     'warehouse-operator',
     'supplier-user',
-    'security-officer',
-  ] as const)('redirects unauthorized actor %s fail closed', (actorId) => {
+  ] as const)('redirects unauthorized actor %s to appointments fail closed', (actorId) => {
     renderGuard(actorId);
     expect(screen.queryByRole('heading', { name: 'Standing series data' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Appointments fallback' })).toBeDefined();
     expect(screen.getByTestId('standing-location').textContent).toBe('/appointments');
+  });
+
+  it('redirects Security Officer to the existing gate default route', () => {
+    renderGuard('security-officer');
+    expect(screen.queryByRole('heading', { name: 'Standing series data' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Gate fallback' })).toBeDefined();
+    expect(screen.getByTestId('standing-location').textContent).toBe('/gate-operations');
   });
 });
