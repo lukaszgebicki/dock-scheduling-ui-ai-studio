@@ -48,6 +48,9 @@ import { canAccessStandingAppointments } from '../standingAppointments/standingA
 import { NonWeeklyBookingGuard } from '../nonWeeklyBooking/NonWeeklyBookingGuard';
 import { NonWeeklyBookingPage } from '../nonWeeklyBooking/NonWeeklyBookingPage';
 import { canAccessNonWeeklyBooking } from '../nonWeeklyBooking/nonWeeklyBookingDomain';
+import { OperatorManualBookingGuard } from '../operatorManualBooking/OperatorManualBookingGuard';
+import { OperatorManualBookingPage } from '../operatorManualBooking/OperatorManualBookingPage';
+import { canAccessOperatorManualBooking } from '../operatorManualBooking/operatorManualBookingDomain';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -69,6 +72,7 @@ function AppointmentsRoutePage() {
   const supplierOrganizationId = activeActor.supplierOrganizationId;
   const warehouseId = activeActor.warehouseIds[0];
   const canCreateStandard = canAccessNonWeeklyBooking(activeActor, configuration);
+  const canCreateManual = canAccessOperatorManualBooking(activeActor, configuration);
   const canReserveNextWeek = Boolean(
     supplierOrganizationId
     && warehouseId
@@ -148,6 +152,11 @@ function AppointmentsRoutePage() {
             Preview Friday CSV
           </Link>
         )}
+        {canCreateManual && (
+          <Link to="/appointments/manual/new" className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+            Create appointment for Supplier
+          </Link>
+        )}
         {canCreateStandard && (
           <Link to="/appointments/new" className="rounded-md bg-[#023466] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
             Create standard appointment
@@ -182,6 +191,7 @@ export function AppRoutes() {
               <Route path="/" element={<DefaultDemoRoute />} />
               <Route path="/appointments" element={<DemoRouteGuard route="/appointments"><AppointmentsRoutePage /></DemoRouteGuard>} />
               <Route path="/appointments/new" element={<NonWeeklyBookingGuard><NonWeeklyBookingPage /></NonWeeklyBookingGuard>} />
+              <Route path="/appointments/manual/new" element={<OperatorManualBookingGuard><OperatorManualBookingPage /></OperatorManualBookingGuard>} />
               <Route path="/appointments/:appointmentId" element={<DemoRouteGuard route="/appointments"><AppointmentDetailsGuard><AppointmentDetailsPage /></AppointmentDetailsGuard></DemoRouteGuard>} />
               <Route path="/appointments/reserve-next-week" element={<SupplierWeeklyBookingGuard><SupplierWeeklyBookingPage /></SupplierWeeklyBookingGuard>} />
               <Route path="/appointments/lifecycle" element={<LifecycleGuard><LifecyclePage /></LifecycleGuard>} />
