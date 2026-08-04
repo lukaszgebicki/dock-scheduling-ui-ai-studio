@@ -70,43 +70,20 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-CALENDAR-VIEWS-1 — complete six role-scoped calendar views | DONE; PR #127 squash-merged at `a9c6b04e9a4aaf70a0e3507e61b8091543d2a76f` |
 | UI-MVP-RESPONSIVE-COMPLETION-1-ACTIVATE — activate responsive completion | DONE; PR #129 squash-merged at `0fe3a4e0acbb9dea5c731d534dd64d2be737f6c6` |
 | UI-MVP-RESPONSIVE-COMPLETION-1 — complete responsive-web screen coverage | DONE; PR #131 squash-merged at `9211bc62590baa6fac5d4d8c642f8a4e26171b62` |
+| UI-MVP-PRODUCT-REVIEW-2-ACTIVATE — activate final scoped completion review | DONE; PR #133 squash-merged at `fe540c63212411378e2eb8e71b1ee56e65cd1192` |
+| UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review | DONE; PR #135 |
 
 ## Active and queued
 
-### UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review
+The frontend-only demonstrational UI MVP is closed as `PASS` under
+`docs/product/UI_MVP_SCOPE_ADDENDUM_v0.4.md` and
+`docs/codex/UI_MVP_PRODUCT_COMPLETION_REVIEW_V2.md`.
 
-- State: `READY`.
-- Risk class: Class A documentation and product-governance review.
-- Objective: repeat the complete product-level assessment on the exact current
-  source baseline, create an explicit UI MVP scope addendum and close the UI MVP
-  only when every requirement is supported as `PASS`, deliberately `DEFERRED`
-  by Product Authority, or already `EXCLUDED`.
-- Review coverage: all 29 BDP identifiers, all 43 acceptance scenarios, sections
-  22, 23, 24, 25, 27, 28, 29–30, `BDR-TRN-001`, the complete screen inventory,
-  Definition of Done, merged repair evidence and current CI.
-- Approved closure profile: Friday import input is CSV-only; XLSX input is
-  deferred. Standing appointment series is preview-only; durable holds,
-  automatic expiry/release and recurrence scheduling are deferred. KPIs that
-  require durable operational timestamps or production denominators are
-  deferred and must remain explicitly unavailable. Extended non-core
-  administration breadth is deferred.
-- Deferral boundary: a residual item may be marked `DEFERRED` only when it does
-  not weaken implemented actor scope, organization isolation, booking,
-  composite capacity, deterministic concurrency, approval safety, lifecycle,
-  gate operations, calendar, PO/SKU identity, reporting, transport authority,
-  accessibility or fail-closed validation.
-- Completion meaning: `PASS` is limited to the frontend-only demonstrational UI
-  MVP scope. It is not production readiness and does not authorize backend,
-  persistence, deployment, integration or production-repository work.
-- Deliverables: a dated product-scope addendum, a fresh evidence-backed product
-  completion review, and a roadmap closure update if and only if the review
-  passes with zero unresolved findings.
-- Technical boundary: no product source, test, dependency, CI, security,
-  backend, database, browser storage, e-mail, ERP/WMS/SAP integration,
-  deployment or production-repository access.
-- Contract gate: execution requires a separate exact-SHA issue after this
-  activation merge, complete CI, independent read-only review at least 8/10 and
-  controlled squash merge.
+There is no active or queued `READY` task.
 
-All other repairs remain inactive and unauthorized. No other product,
-governance, security or infrastructure task is `READY` or active.
+Any further product work requires a new Product Authority decision and a
+separate roadmap activation. Backend, persistence, production authentication,
+transactional multi-session reservation, integrations, real notification or
+document delivery, deployment, observability and operational controls belong to
+a separate Production Foundation program. No production repository is
+authorized by this roadmap closure.
