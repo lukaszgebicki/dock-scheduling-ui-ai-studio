@@ -82,6 +82,14 @@ function displayDeliveryType(record: AppointmentWorkspaceRecord): string {
   return record.deliveryType.trim() || 'Unspecified';
 }
 
+function stableKey(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase('en-US')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'unspecified';
+}
+
 function durationMinutes(record: AppointmentWorkspaceRecord): number {
   for (const entry of record.statusHistory.slice().reverse()) {
     const match = /(?:^| · )(\d+) min(?: · |$)/.exec(entry.reason);
@@ -129,7 +137,7 @@ function isoDate(date: Date): string {
 function weekIdentity(value: string): { key: string; label: string } {
   const date = new Date(`${value}T12:00:00Z`);
   if (Number.isNaN(date.getTime())) {
-    return { key: `invalid-${value}`, label: 'Invalid planned week' };
+    return { key: `invalid-${stableKey(value)}`, label: 'Invalid planned week' };
   }
   const monday = new Date(date);
   monday.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
@@ -153,15 +161,15 @@ function workflowIdentity(record: AppointmentWorkspaceRecord): {
   key: string;
   label: string;
 } {
-  const key = [
+  const evidence = [
     record.planningState,
     record.lifecycleStatus,
     record.operationalStatus,
     record.requiredAction,
-  ].join('|');
+  ];
   return {
-    key,
-    label: `${record.planningState} · ${record.lifecycleStatus} · ${record.operationalStatus} · ${record.requiredAction}`,
+    key: stableKey(evidence.join('-')),
+    label: evidence.join(' · '),
   };
 }
 
@@ -237,7 +245,7 @@ export function buildWorkspaceCalendarProjection(
         weekLabel: week.label,
         dockKey: dock,
         dockLabel: record.assignedDockId ?? 'Unassigned',
-        loadTypeKey: loadType,
+        loadTypeKey: stableKey(loadType),
         loadTypeLabel: loadType,
         workflowKey: workflow.key,
         workflowLabel: workflow.label,
@@ -249,13 +257,16 @@ function groupProjection(
   records: readonly CalendarProjectionRecord[],
   identity: (record: CalendarProjectionRecord) => { key: string; label: string },
 ): readonly CalendarProjectionGroup[] {
-  const groups = new Map<string, CalendarProjectionGroup>();
+  const groups = new Map<string, {
+    id: string;
+    label: string;
+    records: CalendarProjectionRecord[];
+  }>();
   records.forEach((record) => {
     const { key, label } = identity(record);
-    const existing = groups.get(key);
-    groups.set(key, existing
-      ? { ...existing, records: [...existing.records, record] }
-      : { id: key, label, records: [record] });
+    const group = groups.get(key);
+    if (group) group.records.push(record);
+    else groups.set(key, { id: key, label, records: [record] });
   });
   return Array.from(groups.values());
 }
