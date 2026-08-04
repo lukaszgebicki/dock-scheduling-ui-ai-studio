@@ -62,60 +62,66 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-PRODUCT-REVIEW-1 — product-level completion review | DONE; PR #111 squash-merged at `0bf350e3cef0ec6e511bd344721af80f9a048b74` |
 | UI-MVP-CAPACITY-COMPOSITE-1-ACTIVATE — activate composite capacity repair | DONE; PR #113 squash-merged at `731bd6a1adf5fb30dee4f62a7ced095f392e8ec3` |
 | UI-MVP-CAPACITY-COMPOSITE-1 — composite capacity and deterministic concurrency | DONE; PR #115 squash-merged at `a040e72299255a45ddbb59125cfb93f7f58c5847` |
-| UI-MVP-BOOKING-NONWEEKLY-1-ACTIVATE — activate standard Supplier booking | DONE after merge of this activation PR |
+| UI-MVP-BOOKING-NONWEEKLY-1-ACTIVATE — activate standard Supplier booking | DONE; PR #117 squash-merged at `994e52658ff14aaf36369a69ca242b44703ececf` |
+| UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking | DONE; PR #119 squash-merged at `e5ba6b4d5ddb8861bfb07ea75a8476484d297386` |
+| UI-MVP-OPERATOR-MANUAL-BOOKING-1-ACTIVATE — activate Operator manual booking | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking
+### UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: implement the approved five-step non-weekly Supplier booking flow
-  from configured delivery inputs through safe availability, summary and local
-  confirmation, using the existing scoped workspace as the visible result.
-- Product authority: `BDP-BOOK-001`, sections 4.1–4.4 and 5.1–5.3,
-  `BDP-WH-001`, `BDP-APR-001`, applicable `BDP-VAL-001`, `BDP-MOB-001`,
-  `AC-WAD-002`, `AC-SUP-001`, `AC-CONC-001` and the high-severity booking gap
-  in `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
-- Flow boundary: exactly five steps outside weekly planning — Warehouse and
-  delivery flow; Delivery data; Available slots; Transport, document metadata
-  and comments; Summary and confirmation. Weekly planning remains separate.
-- Scope boundary: only active Supplier Administrator and Supplier User actors
-  may create for their own organization, assigned published warehouses and
-  configured compatible flows. Internal manual creation is a future task.
-- Configuration boundary: required fields, cut-off, Supplier assignments,
-  approval and warehouse resources come from the published demo configuration.
-  No parallel form, warehouse, Supplier, capacity or approval authority is
-  allowed.
-- Duration boundary: data affecting compatibility and duration is collected
-  before availability. Duration is derived deterministically from approved
-  flow/volume/special-requirement inputs; Supplier cannot type arbitrary
-  duration or apply an override.
+- Objective: allow a Warehouse Operator to create one local non-weekly
+  appointment on behalf of an active Supplier in an assigned published
+  warehouse, using the existing configured form, capacity, approval and
+  workspace contracts.
+- Product authority: BDP section 3.3, relevant `BDP-RBAC-001`,
+  `BDP-BOOK-001`, `BDP-WH-001`, `BDP-CAP-001`, `BDP-APR-001`, applicable
+  `BDP-VAL-001`, `AC-WOP-001` and the manual-booking gap in
+  `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
+- Scope boundary: only the Warehouse Operator role receives this route and
+  action. The selected warehouse must be published and inside the active
+  Operator assignment; the selected Supplier must be active and assigned to
+  that same warehouse. No System Administrator, Warehouse Administrator,
+  Security or Supplier creation capability is added by this task.
+- Configuration boundary: warehouse, Supplier, flow and required fields come
+  from published demo configuration. No parallel Supplier catalog, warehouse
+  authority, form schema, capacity model or approval engine is allowed.
+- Data boundary: reference, configured PO/ASN fields, at least one positive
+  approved volume measure, vehicle type and required transport data are
+  collected before availability. Duration is derived deterministically in
+  15-minute units; the Operator cannot enter arbitrary duration.
 - Availability boundary: consume the shared composite-capacity contract and
-  show safe selectable/unavailable slots, duration, timezone, nearest slot and
-  three recommendations. Never expose competing identity, internal capacity
-  totals, block reason details, override evidence or audit metadata.
-- Concurrency boundary: confirmation revalidates the selected slot. A lost final
-  unit fails with `RESERVATION_CONFLICT` and deterministic compatible
-  alternatives; no double success or silent slot replacement is allowed.
-- Record boundary: successful confirmation adds one local non-weekly appointment
-  with explicit `SUPPLIER_RESERVED` origin, lifecycle/planning state, selected
-  slot, safe data and local history. It becomes visible through existing
-  list/details/dashboard/report consumers in the same workspace session.
-- Draft boundary: a local Draft may be previewed without capacity reservation,
-  operational-calendar visibility, persistence or later-session recovery.
-- Document boundary: only file-name/status metadata may be demonstrated. No file
-  bytes, storage, upload service, OCR or integration is authorized.
-- Data boundary: no SKU/import detail is created in this flow unless already
-  explicitly configured as Supplier-entered non-weekly delivery data. Weekly
-  PO/SKU authority, import lineage and internal notes remain protected.
-- Technical boundary: no API, backend, database, browser storage, e-mail,
-  ERP/WMS/SAP validation, real locking, background job, deployment, dependency
-  or production-repository access is authorized.
+  show only safe slot status, timezone, duration, nearest compatible slot and
+  deterministic recommendations. Internal capacity evidence, competing
+  appointment identity, Supplier-private data and override evidence remain
+  hidden.
+- Concurrency boundary: confirmation revalidates current workspace capacity. A
+  lost final unit returns `RESERVATION_CONFLICT` with safe deterministic
+  alternatives and creates no record or silent slot replacement.
+- Approval boundary: existing `evaluateApproval` remains authoritative. Manual
+  creation does not grant approval, rejection, cancellation, slot-change,
+  block, capacity-change or override permission to the Operator.
+- Record boundary: successful confirmation creates exactly one local
+  `ADMIN_ADDED`, `NON_WEEKLY_DEMO` workspace record on behalf of the selected
+  Supplier, with independent planning/lifecycle/operational states, creator
+  evidence, selected slot, duration/flow/volume evidence and safe shared or
+  internal comment/document metadata.
+- Publication boundary: the shared workspace accepts only an Operator-created
+  record in the active warehouse scope for a Supplier assigned there. Duplicate,
+  foreign-warehouse, unassigned-Supplier, imported transport, SKU/import
+  lineage and unsafe diagnostic payloads fail closed.
+- Consumer boundary: the record becomes visible through existing scoped
+  list/details/dashboard/reporting consumers in the same in-memory session.
+  Weekly planning, Friday import, Supplier creation and all lifecycle/gate
+  transitions remain unchanged.
+- Technical boundary: no API, backend, database, browser storage, file storage,
+  e-mail, ERP/WMS/SAP validation, real lock, background process, dependency,
+  deployment, integration or production-repository access is authorized.
 - Contract gate: execution requires a separate exact-SHA Class B issue after
-  activation merge, focused and complete CI, Simplification Pass, independent
-  read-only review and controlled squash merge.
+  activation merge, focused and complete CI, mandatory Simplification Pass,
+  independent read-only review and controlled squash merge.
 
-`UI-MVP-OPERATOR-MANUAL-BOOKING-1` and all other repairs remain inactive and
-unauthorized. No other product, governance, security or infrastructure task is
-`READY` or active.
+All other repairs remain inactive and unauthorized. No other product,
+governance, security or infrastructure task is `READY` or active.
