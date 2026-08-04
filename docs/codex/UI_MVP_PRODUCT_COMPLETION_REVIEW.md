@@ -27,7 +27,7 @@ This conclusion describes a demonstrational UI sandbox. It does **not** establis
 | --- | ---: | ---: | ---: | ---: | ---: |
 | BDP identifiers | 13 | 15 | 1 | 0 | 29 |
 | Acceptance scenarios | 39 | 1 | 3 | 0 | 43 |
-| Cross-cutting review items | 2 | 5 | 0 | 1 | 8 |
+| Cross-cutting review items | 3 | 4 | 0 | 1 | 8 |
 
 ### Strongest completed product chains
 
