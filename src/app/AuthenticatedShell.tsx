@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { type DemoActorId } from '../demoDomain/demoDomain';
+import { ResponsiveRouteNotice } from '../responsive/ResponsiveRouteNotice';
 
 interface BreadcrumbInfo {
   parent?: { label: string; to: string };
@@ -336,6 +337,7 @@ export function AuthenticatedShell() {
         </header>
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-8">
+          <ResponsiveRouteNotice pathname={location.pathname} role={activeActor.role} />
           <Outlet />
         </main>
       </div>
