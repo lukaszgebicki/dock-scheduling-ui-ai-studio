@@ -64,61 +64,56 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-CAPACITY-COMPOSITE-1 — composite capacity and deterministic concurrency | DONE; PR #115 squash-merged at `a040e72299255a45ddbb59125cfb93f7f58c5847` |
 | UI-MVP-BOOKING-NONWEEKLY-1-ACTIVATE — activate standard Supplier booking | DONE; PR #117 squash-merged at `994e52658ff14aaf36369a69ca242b44703ececf` |
 | UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking | DONE; PR #119 squash-merged at `e5ba6b4d5ddb8861bfb07ea75a8476484d297386` |
-| UI-MVP-OPERATOR-MANUAL-BOOKING-1-ACTIVATE — activate Operator manual booking | DONE after merge of this activation PR |
+| UI-MVP-OPERATOR-MANUAL-BOOKING-1-ACTIVATE — activate Operator manual booking | DONE; PR #121 squash-merged at `ea64365cc49bdb96ec090f0234183f6286dd9ba2` |
+| UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier | DONE; PR #123 squash-merged at `ea1e436bc563d68aecf15e9417fd9f627c432abf` |
 
 ## Active and queued
 
-### UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier
+### UI-MVP-CALENDAR-VIEWS-1 — complete Day, Week, Dock, Load Type, List and Workflow calendar
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: allow a Warehouse Operator to create one local non-weekly
-  appointment on behalf of an active Supplier in an assigned published
-  warehouse, using the existing configured form, capacity, approval and
-  workspace contracts.
-- Product authority: BDP section 3.3, relevant `BDP-RBAC-001`,
-  `BDP-BOOK-001`, `BDP-WH-001`, `BDP-CAP-001`, `BDP-APR-001`, applicable
-  `BDP-VAL-001`, `AC-WOP-001` and the manual-booking gap in
+- Objective: complete the existing `/calendar` experience with the six approved
+  role-scoped views, using the shared visible appointment workspace as the only
+  record source.
+- Product authority: `BDP-CAL-001`, `BDP-CAL-002`, relevant `BDP-RBAC-001`,
+  `BDP-DATA-001`, `BDP-STAT-001`, `BDP-MOB-001` and the calendar-view gap in
   `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
-- Scope boundary: only the Warehouse Operator role receives this route and
-  action. The selected warehouse must be published and inside the active
-  Operator assignment; the selected Supplier must be active and assigned to
-  that same warehouse. No System Administrator, Warehouse Administrator,
-  Security or Supplier creation capability is added by this task.
-- Configuration boundary: warehouse, Supplier, flow and required fields come
-  from published demo configuration. No parallel Supplier catalog, warehouse
-  authority, form schema, capacity model or approval engine is allowed.
-- Data boundary: reference, configured PO/ASN fields, at least one positive
-  approved volume measure, vehicle type and required transport data are
-  collected before availability. Duration is derived deterministically in
-  15-minute units; the Operator cannot enter arbitrary duration.
-- Availability boundary: consume the shared composite-capacity contract and
-  show only safe slot status, timezone, duration, nearest compatible slot and
-  deterministic recommendations. Internal capacity evidence, competing
-  appointment identity, Supplier-private data and override evidence remain
-  hidden.
-- Concurrency boundary: confirmation revalidates current workspace capacity. A
-  lost final unit returns `RESERVATION_CONFLICT` with safe deterministic
-  alternatives and creates no record or silent slot replacement.
-- Approval boundary: existing `evaluateApproval` remains authoritative. Manual
-  creation does not grant approval, rejection, cancellation, slot-change,
-  block, capacity-change or override permission to the Operator.
-- Record boundary: successful confirmation creates exactly one local
-  `ADMIN_ADDED`, `NON_WEEKLY_DEMO` workspace record on behalf of the selected
-  Supplier, with independent planning/lifecycle/operational states, creator
-  evidence, selected slot, duration/flow/volume evidence and safe shared or
-  internal comment/document metadata.
-- Publication boundary: the shared workspace accepts only an Operator-created
-  record in the active warehouse scope for a Supplier assigned there. Duplicate,
-  foreign-warehouse, unassigned-Supplier, imported transport, SKU/import
-  lineage and unsafe diagnostic payloads fail closed.
-- Consumer boundary: the record becomes visible through existing scoped
-  list/details/dashboard/reporting consumers in the same in-memory session.
-  Weekly planning, Friday import, Supplier creation and all lifecycle/gate
-  transitions remain unchanged.
-- Technical boundary: no API, backend, database, browser storage, file storage,
-  e-mail, ERP/WMS/SAP validation, real lock, background process, dependency,
-  deployment, integration or production-repository access is authorized.
+- View boundary: exactly Day, Week, Dock, Load Type, List and Workflow are
+  selectable inside the existing authenticated `/calendar` route. No parallel
+  calendar route, second calendar product or duplicated record model is added.
+- Source boundary: consume `AppointmentWorkspaceProvider.visibleRecords`, so
+  weekly-planning, standard Supplier and Operator-created records appear in the
+  same session when visible to the active actor. Static planning fixtures are
+  not a separate production authority.
+- Scope boundary: centralized `canViewAppointment` projection remains
+  authoritative. Supplier actors see only their organization and assigned
+  warehouses; internal actors see only assigned warehouse scope. Hidden
+  competing identity, import diagnostics, batch lineage and internal evidence
+  remain excluded from Supplier-safe projections.
+- Identity boundary: one appointment/PO header remains one primary card or row.
+  SKU lines are expandable delivery contents and never duplicate the appointment
+  across views.
+- Composition boundary: Day and Week group by planned local date/time; Dock
+  groups by assigned dock with an explicit Unassigned bucket; Load Type uses the
+  existing delivery flow/type; List is a deterministic accessible table;
+  Workflow groups by existing planning, lifecycle, operational and
+  required-action evidence without inventing states.
+- State boundary: selected view, filters and expansions are in-memory only and
+  reset or safely rescope on actor change. No browser storage, network request
+  or durable preference is introduced.
+- Mutation boundary: every calendar view is read-only. It cannot create, move,
+  approve, cancel, assign docks, reserve slots, modify capacity or mutate any
+  workspace record.
+- Compatibility boundary: preserve approved PO/SKU contents, existing conflict
+  and capacity-safe presentation where applicable, keyboard-accessible controls
+  and responsive composition. No design-system fork or new dependency.
+- Protected authority: capacity, lifecycle, gate operations, booking, import,
+  reporting, dashboard, notifications and standing-series behavior remain
+  unchanged.
+- Technical boundary: no API, backend, database, browser storage, e-mail, file
+  processing, ERP/WMS/SAP integration, deployment or production-repository
+  access is authorized.
 - Contract gate: execution requires a separate exact-SHA Class B issue after
   activation merge, focused and complete CI, mandatory Simplification Pass,
   independent read-only review and controlled squash merge.
