@@ -86,7 +86,7 @@ describe('non-weekly Supplier booking domain', () => {
       vehicleType: 'Container mega',
       isAdr: true,
       isControlledTemperature: true,
-    }))).toBe(90);
+    }))).toBe(105);
   });
 
   it('returns Supplier-safe configured slots with nearest and three recommendations', () => {
@@ -110,11 +110,19 @@ describe('non-weekly Supplier booking domain', () => {
     expect(JSON.stringify(model.slots)).not.toContain('effectiveLimit');
   });
 
-  it('uses existing approval evaluation for auto and manual outcomes', () => {
+  it('uses existing approval evaluation for automatic and manual outcomes', () => {
     expect(previewNonWeeklyApproval(actor, initialDemoConfiguration, validInput())).toMatchObject({
+      outcome: 'PENDING_APPROVAL',
+    });
+    expect(previewNonWeeklyApproval(actor, initialDemoConfiguration, validInput({
+      documentName: 'delivery-note.pdf',
+    }))).toMatchObject({
       outcome: 'CONFIRMED',
     });
-    expect(previewNonWeeklyApproval(actor, initialDemoConfiguration, validInput({ isAdr: true }))).toMatchObject({
+    expect(previewNonWeeklyApproval(actor, initialDemoConfiguration, validInput({
+      documentName: 'delivery-note.pdf',
+      isAdr: true,
+    }))).toMatchObject({
       outcome: 'PENDING_APPROVAL',
     });
   });
