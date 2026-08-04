@@ -99,6 +99,24 @@ export function AppointmentWorkspaceProvider({
       || !canViewAppointment(record)) {
       return 'The active actor cannot add this appointment to the workspace.';
     }
+
+    const safeLocalRecord = record.sourceKind === 'NON_WEEKLY_DEMO'
+      && record.bookingOrigin === 'SUPPLIER_RESERVED'
+      && record.createdBy === activeActor.userId
+      && record.skuLines.length === 0
+      && Object.keys(record.importedTransportDetails).length === 0
+      && record.importDiagnostic === undefined
+      && record.batchLineage === undefined
+      && record.internalPlanningNote === undefined
+      && record.comments.every((comment) =>
+        comment.visibility === 'SHARED_COMMENT'
+        && comment.actorId === activeActor.id
+        && comment.userId === activeActor.userId)
+      && record.statusHistory.every((entry) => entry.externalVisible);
+    if (!safeLocalRecord) {
+      return 'The appointment is not a safe local standard Supplier booking.';
+    }
+
     const duplicate = state.records.some((candidate) =>
       candidate.id === record.id
       || (candidate.supplierOrganizationId === record.supplierOrganizationId
