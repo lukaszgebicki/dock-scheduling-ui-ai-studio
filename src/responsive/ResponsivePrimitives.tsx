@@ -1,5 +1,6 @@
 import React from 'react';
 import type { UiMvpRole } from '../demoDomain/demoDomain';
+import './responsiveCompletion.css';
 
 export function ResponsiveActionGroup({
   children,
