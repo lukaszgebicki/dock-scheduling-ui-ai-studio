@@ -125,7 +125,8 @@ export const emptyNonWeeklyBookingInput: NonWeeklyBookingInput = {
 
 const slotReferenceDate = '2026-08-17';
 const slotSearchDays = 7;
-const slotDisplayLimit = 12;
+const minimumSlotDisplayCount = 12;
+const recommendationCount = 3;
 
 function normalize(value: string): string {
   return value.trim();
@@ -193,22 +194,25 @@ export function nonWeeklyBookingOptions(
     configuration,
     actor.supplierOrganizationId,
   );
-  return contract.warehouseFlowAssignments
-    .map((assignment) => {
-      const warehouse = configuration.warehouses.find((candidate) =>
-        candidate.id === assignment.warehouseId && candidate.status === 'published');
-      return warehouse ? {
-        warehouseId: warehouse.id,
-        warehouseName: warehouse.displayName,
-        timezone: warehouse.timezone,
-        flows: assignment.allowedFlows.filter((flow) =>
-          deliveryFlows.includes(flow)),
-      } : null;
-    })
-    .filter((option): option is NonWeeklyBookingOption =>
-      option !== null && option.flows.length > 0)
-    .sort((left, right) =>
-      left.warehouseName.localeCompare(right.warehouseName, 'en-US'));
+  const options: NonWeeklyBookingOption[] = [];
+
+  for (const assignment of contract.warehouseFlowAssignments) {
+    const warehouse = configuration.warehouses.find((candidate) =>
+      candidate.id === assignment.warehouseId && candidate.status === 'published');
+    if (!warehouse) continue;
+    const flows: readonly DeliveryFlow[] = assignment.allowedFlows.filter((flow) =>
+      deliveryFlows.includes(flow));
+    if (flows.length === 0) continue;
+    options.push({
+      warehouseId: warehouse.id,
+      warehouseName: warehouse.displayName,
+      timezone: warehouse.timezone,
+      flows,
+    });
+  }
+
+  return options.sort((left, right) =>
+    left.warehouseName.localeCompare(right.warehouseName, 'en-US'));
 }
 
 export function configuredNonWeeklyFields(
@@ -279,7 +283,7 @@ export function deriveNonWeeklyDurationMinutes(
     | 'isControlledTemperature'
   >,
 ): number {
-  let duration = input.flow === 'Finished Goods Pickup' ? 30 : 30;
+  let duration = 30;
   const pallets = numericValue(input.palletCount) ?? 0;
   const units = numericValue(input.unitCount) ?? 0;
   const weight = numericValue(input.grossWeight) ?? 0;
@@ -292,6 +296,14 @@ export function deriveNonWeeklyDurationMinutes(
   return Math.min(120, Math.max(30, Math.ceil(duration / 15) * 15));
 }
 
+function recordDurationMinutes(record: AppointmentWorkspaceRecord): number {
+  for (const entry of record.statusHistory.slice().reverse()) {
+    const match = /(?:^| · )(\d+) min(?: · |$)/.exec(entry.reason);
+    if (match) return Number(match[1]);
+  }
+  return 30;
+}
+
 function capacityAppointments(
   records: readonly AppointmentWorkspaceRecord[],
 ): readonly CapacityAppointment[] {
@@ -302,7 +314,7 @@ function capacityAppointments(
     plannedTime: record.plannedTime,
     appointmentStatus: record.lifecycleStatus,
     operationalStatus: record.operationalStatus,
-    durationMinutes: 30,
+    durationMinutes: recordDurationMinutes(record),
     flow: deliveryFlows.includes(record.deliveryType as DeliveryFlow)
       ? record.deliveryType as DeliveryFlow
       : 'Material Delivery',
@@ -332,8 +344,9 @@ export function buildNonWeeklySlotModel(
   const existing = capacityAppointments(records);
   const candidates: NonWeeklySlotOption[] = [];
   const reference = new Date(`${slotReferenceDate}T12:00:00Z`);
+  let enoughCandidates = false;
 
-  for (let dayOffset = 0; dayOffset < slotSearchDays && candidates.length < slotDisplayLimit; dayOffset += 1) {
+  for (let dayOffset = 0; dayOffset < slotSearchDays && !enoughCandidates; dayOffset += 1) {
     const date = new Date(reference);
     date.setUTCDate(reference.getUTCDate() + dayOffset);
     const dateValue = isoDate(date);
@@ -343,7 +356,7 @@ export function buildNonWeeklySlotModel(
     const closes = timeToMinutes(workingDay.closesAt);
     if (opens === null || closes === null) continue;
 
-    for (let minute = opens; minute + durationMinutes <= closes && candidates.length < slotDisplayLimit; minute += 15) {
+    for (let minute = opens; minute + durationMinutes <= closes; minute += 15) {
       const time = minutesToTime(minute);
       const result = evaluateCapacitySlot(configuration.warehouses, existing, {
         warehouseId: warehouse.id,
@@ -363,11 +376,17 @@ export function buildNonWeeklySlotModel(
         message: safe.message,
         recommended: false,
       });
+      const availableCount = candidates.filter((slot) => slot.available).length;
+      if (candidates.length >= minimumSlotDisplayCount
+        && availableCount >= recommendationCount) {
+        enoughCandidates = true;
+        break;
+      }
     }
   }
 
   const available = candidates.filter((slot) => slot.available);
-  const recommendedIds = new Set(available.slice(0, 3).map((slot) => slot.id));
+  const recommendedIds = new Set(available.slice(0, recommendationCount).map((slot) => slot.id));
   const slots = candidates.map((slot) => ({
     ...slot,
     recommended: recommendedIds.has(slot.id),
