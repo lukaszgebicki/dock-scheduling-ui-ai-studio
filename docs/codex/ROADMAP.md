@@ -58,43 +58,62 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-DASH-MOBILE-1 — role dashboards and responsive web views | DONE; PR #103 squash-merged at `06ea72d8e8f56d5d2004fd0fa06ab3de40c15ffc` |
 | UI-MVP-STANDING-1-ACTIVATE — activate standing appointment series | DONE; PR #105 squash-merged at `efa64744c4a97e166ad6120617ec2aa8c0a31b06` |
 | UI-MVP-STANDING-1 — local standing appointment series | DONE; PR #107 squash-merged at `5f507367a0c7a1cbcd1039f531c46b6891735458` |
+| UI-MVP-PRODUCT-REVIEW-1-ACTIVATE — activate product-level completion review | DONE; PR #109 squash-merged at `e3afdd098f27ddae086f92346ddf581a7a228d6e` |
+| UI-MVP-PRODUCT-REVIEW-1 — product-level completion review | DONE; PR #111 squash-merged at `0bf350e3cef0ec6e511bd344721af80f9a048b74` |
+| UI-MVP-CAPACITY-COMPOSITE-1-ACTIVATE — activate composite capacity repair | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-PRODUCT-REVIEW-1 — product-level completion review
+### UI-MVP-CAPACITY-COMPOSITE-1 — composite capacity and deterministic concurrency
 
 - State: `READY`.
-- Risk class: Class A read-only review.
-- Objective: evaluate the merged UI MVP against the complete approved product
-  authority and produce one traceable completion report without implementing or
-  repairing any feature.
-- Product authority: all 29 BDP identifiers, all 43 acceptance scenarios,
-  section 22 exceptional states, section 23 mobile coverage, section 24
-  exclusions, section 25 screen inventory, section 27 Definition of Done,
-  section 28 downstream configuration consequences, sections 29–30 weekly
-  planning decisions and `BDR-TRN-001`.
-- Evidence boundary: every conclusion must cite concrete repository evidence,
-  including merged task/PR lineage, implementation paths, focused tests and CI
-  results. Missing evidence is not equivalent to completion.
-- Assessment boundary: each requirement and acceptance scenario must receive an
-  explicit evidence-backed outcome such as `PASS`, `PARTIAL`, `GAP` or
-  `EXCLUDED`, with no silent aggregation that hides a missing behavior.
-- Scope boundary: the review may identify gaps and recommend separately named
-  repair tasks, but it may not modify `src/**`, configuration, dependencies,
-  CI, security controls, product authority or production repositories.
-- Repair boundary: no implementation fix, test repair, scope expansion or
-  product reinterpretation is authorized inside this task. Every repair needs a
-  separate exact-SHA contract and activation.
-- Output boundary: produce a dedicated repository review artifact containing an
-  executive summary, requirement matrix, scenario matrix, exclusions and DoD
-  assessment, evidence index, gap register and recommended next decisions.
-- Technical boundary: no backend, API, persistence, browser storage,
-  integration, deployment, production access or source-state mutation is
-  authorized.
-- Contract gate: execution requires a separate machine-readable issue contract
-  bound to the exact `main` SHA produced by merge of this activation PR, plus
-  complete validation, exact-path review, Simplification Pass, independent
-  read-only review and controlled publication.
+- Risk class: Class B.
+- Objective: replace the current simultaneous-count approximation with one
+  shared, deterministic UI-only capacity contract that supports exact duration
+  occupancy, composite constraints, controlled override evidence and the
+  approved final-capacity competition scenario.
+- Product authority: `BDP-CAP-001`, `BDP-CAL-001`, `BDP-BLOCK-001`, relevant
+  sections 5.1–7.3 and 9.4, `BDP-VAL-001`, `AC-WAD-001`, `AC-SUP-001`,
+  `AC-SUP-005` capacity release and `AC-CONC-001`, plus the capacity gap in
+  `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
+- Time boundary: use deterministic civil date/time values and exact configured
+  15-minute units. Duration occupies every intersecting unit; no wall-clock
+  timers, current-time dependency or timezone service is authorized.
+- Composite boundary: availability fails closed when the first applicable
+  warehouse, active-dock, compatible-flow, capacity-pool or block constraint is
+  unavailable. The contract must expose safe reason codes and internal evidence
+  without leaking another Supplier's booking identity or hidden capacity data.
+- Occupancy boundary: only approved capacity-holding planning/lifecycle states
+  consume capacity. Rejected, cancelled and completed/checked-out records do
+  not block new reservations, while retained history remains visible.
+- Override boundary: only System Administrator or an assigned Warehouse
+  Administrator may apply a local demonstration override. Every override
+  requires a non-empty reason and immutable before/after evidence; Supplier,
+  Warehouse Operator and Security actors cannot override capacity.
+- Concurrency boundary: a deterministic local scenario models two attempts for
+  the final compatible capacity unit. Exactly one attempt succeeds; the losing
+  attempt receives a reservation-conflict result and nearest compatible
+  alternatives. No optimistic double-success or silent replacement is allowed.
+- Consumer boundary: expose the shared contract for existing planning calendar,
+  weekly planning and lifecycle consumers. The future non-weekly booking and
+  Operator manual-booking tasks may consume it, but those creation flows are not
+  implemented in this task.
+- Data boundary: Supplier-facing availability exposes only selectable or
+  unavailable slots and safe next actions. It never exposes another Supplier,
+  exact competing record, internal capacity totals, override reasoning,
+  diagnostics, audit metadata or source lineage.
+- Mutation boundary: this task may add deterministic local capacity attempt and
+  override state only inside its focused demonstration. It may not mutate
+  appointment ownership, PO/SKU data, transport authority, lifecycle rules,
+  gate data, reporting, notifications, standing series or persistent storage.
+- Technical boundary: no backend, API, database, browser storage, locking
+  service, WebSocket, background process, integration, deployment, real
+  concurrency guarantee or production-repository access is authorized.
+- Contract gate: execution requires a separate machine-readable Class B issue
+  contract bound to the exact `main` SHA produced by merge of this activation
+  PR, complete focused and repository validation, Simplification Pass,
+  independent read-only review and controlled publication.
 
-All source implementation, repair, governance, security and infrastructure tasks
-remain inactive and unauthorized. No other task is `READY` or active.
+`UI-MVP-BOOKING-NONWEEKLY-1`, `UI-MVP-OPERATOR-MANUAL-BOOKING-1` and all other
+repairs remain inactive and unauthorized. No other product, governance,
+security or infrastructure task is `READY` or active.
