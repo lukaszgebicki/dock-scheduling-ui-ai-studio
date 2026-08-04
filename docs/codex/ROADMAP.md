@@ -72,37 +72,29 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-RESPONSIVE-COMPLETION-1 — complete responsive-web screen coverage | DONE; PR #131 squash-merged at `9211bc62590baa6fac5d4d8c642f8a4e26171b62` |
 | UI-MVP-PRODUCT-REVIEW-2-ACTIVATE — activate final scoped completion review | DONE; PR #133 squash-merged at `fe540c63212411378e2eb8e71b1ee56e65cd1192` |
 | UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review | DONE; PR #135 squash-merged at `4008906c4ce4640bbbae5e9d1deb8bafc224b7bc` |
+| PROD-FOUNDATION-PLAN-1-ACTIVATE — activate production foundation planning | DONE; PR #137 squash-merged at `cd293a11daf0bddd35ba5141c71f7ad6d8de6a98` |
+| PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan | DONE; PR #139 |
 
 ## Active and queued
 
-### PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan
+### PROD-REPO-ASSESSMENT-1 — read-only production repository assessment
 
-- State: `READY`.
-- Risk class: Class A documentation and architecture planning.
-- Objective: define the separate Production Foundation program required to turn
-  the completed frontend demonstration into a safely implementable production
-  system, without inspecting or modifying the production repository.
-- Required deliverables: program charter, target logical architecture,
-  production-readiness quality gates, migration and coexistence strategy,
-  phased implementation backlog, dependencies, risks, decision log and an
-  explicit authorization gate for production-repository assessment.
-- Core domains: production authentication and authorization, durable data and
-  audit history, transactional capacity reservation, API boundaries, background
-  work, notification/document delivery, integrations, deployment,
-  observability, security, privacy, backup/recovery and operational ownership.
-- Reuse boundary: the approved UI MVP behavior and Product Review 2 remain the
-  functional reference. Planning must distinguish reusable domain behavior from
-  demo-only local state and must not claim implementation exists.
-- Repository boundary: all work remains in
-  `lukaszgebicki/dock-scheduling-ui-ai-studio`. The production repository
-  `lukaszgebicki/dock-scheduling-app-ai-studio1707` must not be read, changed or
-  compared without a later explicit Product Authority authorization.
-- Technical boundary: documentation only. No product source, tests,
-  dependencies, CI, security configuration, cloud resource, deployment,
-  integration or production-repository work is authorized.
-- Contract gate: execution requires a separate exact-SHA Class A issue,
-  complete CI, fresh read-only review at least 8/10 and controlled squash merge.
+- State: `BLOCKED`.
+- Objective: inspect the named production repository, reconcile the target
+  architecture with actual code and produce a reuse/replace/retire decision,
+  risk register and exact implementation baseline.
+- Repository: `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
+- Blocker: Product Authority has not yet explicitly authorized repository access.
+- Required authorization: exact branch or SHA, permitted read actions and paths,
+  security/dependency scanning permission, local clone/worktree permission and
+  an explicit statement whether issue, branch or PR creation is prohibited or
+  permitted.
+- Default execution after authorization: read-only assessment. No source change,
+  branch, commit or PR is allowed unless separately authorized.
+- Planning authority: `docs/product/PRODUCTION_FOUNDATION_CHARTER_v0.1.md`,
+  `docs/architecture/PRODUCTION_TARGET_ARCHITECTURE_v0.1.md` and
+  `docs/codex/PRODUCTION_FOUNDATION_BACKLOG.md`.
 
-No implementation task is active. The first post-plan implementation step must
-be an explicitly authorized production-repository assessment or a separately
-approved foundation task in a named repository.
+No task is `READY`. No production implementation or production-repository
+access is authorized until the blocker above is explicitly resolved by Product
+Authority.
