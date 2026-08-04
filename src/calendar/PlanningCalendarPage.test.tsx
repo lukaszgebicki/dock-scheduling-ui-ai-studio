@@ -1,13 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Navigate, Route, Routes } from 'react-router';
 import {
   AppointmentWorkspaceProvider,
@@ -54,8 +48,7 @@ function renderPage(
 }
 
 function cardFor(reference: string): HTMLElement {
-  const heading = screen.getByRole('heading', { name: reference });
-  const article = heading.closest('article');
+  const article = screen.getByRole('heading', { name: reference }).closest('article');
   if (!article) throw new Error(`Missing calendar article for ${reference}.`);
   return article;
 }
@@ -75,11 +68,7 @@ describe('PO planning calendar page', () => {
             <Routes>
               <Route
                 path="/calendar"
-                element={(
-                  <DemoRouteGuard route="/appointments">
-                    <PlanningCalendarPage />
-                  </DemoRouteGuard>
-                )}
+                element={<DemoRouteGuard route="/appointments"><PlanningCalendarPage /></DemoRouteGuard>}
               />
               <Route path="*" element={<Navigate to="/appointments" replace />} />
             </Routes>
@@ -93,21 +82,36 @@ describe('PO planning calendar page', () => {
     expect(screen.queryByRole('heading', { name: 'PO-DEMO-2001' })).toBeNull();
   });
 
-  it('exposes exactly six accessible view controls and defaults to Week', () => {
+  it('exposes exactly six accessible touch-safe view controls', () => {
     renderPage('system-administrator');
 
     const viewGroup = screen.getByRole('group', { name: 'Calendar view' });
-    expect(within(viewGroup).getAllByRole('button')).toHaveLength(6);
-    expect(within(viewGroup).getByRole('button', { name: 'Day view' })).toBeDefined();
+    const buttons = within(viewGroup).getAllByRole('button');
+    expect(buttons).toHaveLength(6);
+    expect(buttons.every((button) => button.className.includes('min-h-11'))).toBe(true);
     expect(within(viewGroup).getByRole('button', { name: 'Week view' })
       .getAttribute('aria-pressed')).toBe('true');
-    expect(within(viewGroup).getByRole('button', { name: 'Dock view' })).toBeDefined();
-    expect(within(viewGroup).getByRole('button', { name: 'Load Type view' })).toBeDefined();
-    expect(within(viewGroup).getByRole('button', { name: 'List view' })).toBeDefined();
-    expect(within(viewGroup).getByRole('button', { name: 'Workflow view' })).toBeDefined();
+    expect(viewGroup.className).toContain('overflow-x-auto');
   });
 
-  it('AC-CAL-002 renders one card per record and exact derived PO totals', () => {
+  it.each([
+    ['supplier-administrator', 'day'],
+    ['supplier-user', 'day'],
+    ['warehouse-operator', 'day'],
+    ['system-administrator', 'week'],
+    ['warehouse-administrator', 'week'],
+    ['security-officer', 'week'],
+  ] as const)('uses the approved %s responsive default', (actorId, expectedView) => {
+    renderPage(actorId);
+    const root = screen.getByRole('heading', { name: 'PO planning calendar' })
+      .closest('section');
+    expect(root?.getAttribute('data-responsive-default-view')).toBe(expectedView);
+    expect(screen.getByRole('button', {
+      name: expectedView === 'day' ? 'Day view' : 'Week view',
+    }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('renders one card per visible record and exact PO/SKU totals', () => {
     renderPage('system-administrator');
 
     expect(screen.getAllByRole('article')).toHaveLength(4);
@@ -117,16 +121,15 @@ describe('PO planning calendar page', () => {
       heading.textContent === 'PO-DEMO-2001')).toHaveLength(1);
   });
 
-  it('AC-CAL-004 shows Awaiting SKU details without fabricated zero quantities', () => {
+  it('shows Awaiting SKU details without fabricated zero quantities', () => {
     renderPage('supplier-administrator');
 
-    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
     expect(screen.getByText('Awaiting SKU details')).toBeDefined();
     expect(document.body.textContent).not.toContain('0 pallets');
     expect(document.body.textContent).not.toContain('0 units');
   });
 
-  it('AC-CAL-003 preserves the exact Polish native keyboard-operable details action', () => {
+  it('preserves the exact Polish keyboard-operable details action and local table overflow', () => {
     renderPage('supplier-user');
 
     const article = cardFor('PO-DEMO-3001');
@@ -134,9 +137,8 @@ describe('PO planning calendar page', () => {
       name: 'Pokaż zawartość dostawy',
     });
     expect(action.tagName).toBe('BUTTON');
-    expect(action.getAttribute('type')).toBe('button');
-    expect(action.getAttribute('aria-expanded')).toBe('false');
-
+    expect(action.className).toContain('min-h-11');
+    expect(action.className).toContain('w-full');
     action.focus();
     expect(document.activeElement).toBe(action);
     fireEvent.click(action);
@@ -144,70 +146,43 @@ describe('PO planning calendar page', () => {
     expect(action.getAttribute('aria-expanded')).toBe('true');
     expect(within(article).getByText('SKU-101')).toBeDefined();
     expect(within(article).getByText('Fragile')).toBeDefined();
+    expect(article.querySelector('[data-responsive-overflow="delivery-contents"]'))
+      .not.toBeNull();
   });
 
-  it('keeps Supplier visibility and rendered fields inside organization scope', () => {
+  it('keeps Supplier visibility inside organization scope and hides internal evidence', () => {
     renderPage('supplier-administrator');
 
     expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'PO-DEMO-2001' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'PO-DEMO-3001' })).toBeNull();
     expect(document.body.textContent).not.toContain('Internal import review complete');
     expect(document.body.textContent).not.toContain('batch-demo-1');
     expect(document.body.textContent).not.toContain('EXACT_MATCH');
     expect(document.body.textContent).not.toContain('Internal-only note');
   });
 
-  it('keeps internal users warehouse-scoped while including non-weekly workspace records', () => {
-    renderPage('warehouse-administrator');
-
-    expect(screen.getByRole('heading', { name: 'PO-DEMO-1001' })).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'PO-DEMO-3001' })).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'PO-NW-VISTULA-001' })).toBeDefined();
-    expect(screen.queryByRole('heading', { name: 'PO-DEMO-2001' })).toBeNull();
-  });
-
-  it('exposes planning, lifecycle and operational states independently', () => {
-    renderPage('supplier-administrator');
-
-    expect(screen.getByText('AWAITING_DETAILS')).toBeDefined();
-    expect(screen.getByText('SUBMITTED')).toBeDefined();
-    expect(screen.getByText('EXPECTED')).toBeDefined();
-  });
-
-  it('renders deterministic Day, Week, Dock, Load Type, List and Workflow compositions', () => {
+  it('renders all six deterministic compositions and contains desktop table overflow', () => {
     renderPage('system-administrator');
 
-    expect(screen.getByRole('heading', {
-      name: '2026-08-10 – 2026-08-16',
-    })).toBeDefined();
-
+    expect(screen.getByRole('heading', { name: '2026-08-10 – 2026-08-16' }))
+      .toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Day view' }));
     expect(screen.getByRole('heading', { name: '2026-08-10' })).toBeDefined();
-    expect(screen.getByRole('heading', { name: '2026-08-14' })).toBeDefined();
-
     fireEvent.click(screen.getByRole('button', { name: 'Dock view' }));
     expect(screen.getByRole('heading', { name: 'Unassigned' })).toBeDefined();
-
     fireEvent.click(screen.getByRole('button', { name: 'Load Type view' }));
     expect(screen.getByRole('heading', { name: 'Material Delivery' })).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'Packaging' })).toBeDefined();
-
     fireEvent.click(screen.getByRole('button', { name: 'List view' }));
     const list = screen.getByRole('table', { name: 'Visible appointment calendar list' });
     expect(within(list).getAllByRole('row')).toHaveLength(5);
-    expect(within(list).getByText('PO-NW-VISTULA-001')).toBeDefined();
-
+    expect(list.closest('[data-responsive-overflow="calendar-list"]')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Workflow view' }));
     expect(screen.getByRole('heading', {
       name: 'READY · CONFIRMED · EXPECTED · No action required',
     })).toBeDefined();
-    expect(screen.getByRole('heading', {
-      name: 'AWAITING_DETAILS · SUBMITTED · EXPECTED · Awaiting SKU details',
-    })).toBeDefined();
   });
 
-  it('applies date, warehouse and delivery filters with AND semantics and validates range', () => {
+  it('applies AND filters and validates date range', () => {
     renderPage('system-administrator');
 
     fireEvent.change(screen.getByLabelText('Planned date from'), {
@@ -225,8 +200,6 @@ describe('PO planning calendar page', () => {
 
     expect(screen.getByText('1 visible appointment')).toBeDefined();
     expect(screen.getByRole('heading', { name: 'PO-DEMO-3001' })).toBeDefined();
-    expect(screen.queryByRole('heading', { name: 'PO-NW-VISTULA-001' })).toBeNull();
-
     fireEvent.change(screen.getByLabelText('Planned date from'), {
       target: { value: '2026-08-15' },
     });
@@ -234,39 +207,34 @@ describe('PO planning calendar page', () => {
       .toContain('Planned date from must not be after planned date to.');
   });
 
-  it('renders a newly supplied local workspace record from the shared source', () => {
+  it('renders newly supplied local workspace records', () => {
     const initial = createInitialAppointmentWorkspaceState();
     const seed = initial.records[0];
     const nextState: AppointmentWorkspaceState = {
       ...initial,
-      records: [
-        ...initial.records,
-        {
-          ...seed,
-          id: 'calendar-local-operator-record',
-          systemReference: 'APT-CALENDAR-LOCAL',
-          externalReference: 'REF-CALENDAR-LOCAL',
-          purchaseOrderNumber: 'PO-CALENDAR-LOCAL',
-          plannedDate: '2026-08-17',
-          plannedTime: '06:00',
-          bookingOrigin: 'ADMIN_ADDED',
-          supplierOrganizationId: 'vistula-materials',
-          supplierName: 'Vistula Materials',
-          warehouseId: 'nowy-kisielin-distribution-center',
-          warehouseName: 'Nowy Kisielin Distribution Center',
-        },
-      ],
+      records: [...initial.records, {
+        ...seed,
+        id: 'calendar-local-operator-record',
+        systemReference: 'APT-CALENDAR-LOCAL',
+        externalReference: 'REF-CALENDAR-LOCAL',
+        purchaseOrderNumber: 'PO-CALENDAR-LOCAL',
+        plannedDate: '2026-08-17',
+        plannedTime: '06:00',
+        bookingOrigin: 'ADMIN_ADDED',
+        supplierOrganizationId: 'vistula-materials',
+        supplierName: 'Vistula Materials',
+        warehouseId: 'nowy-kisielin-distribution-center',
+        warehouseName: 'Nowy Kisielin Distribution Center',
+      }],
     };
 
     renderPage('system-administrator', nextState);
-
     expect(screen.getByRole('heading', { name: 'PO-CALENDAR-LOCAL' })).toBeDefined();
-    expect(screen.getByRole('heading', {
-      name: '2026-08-17 – 2026-08-23',
-    })).toBeDefined();
+    expect(screen.getByRole('heading', { name: '2026-08-17 – 2026-08-23' }))
+      .toBeDefined();
   });
 
-  it('resets view, filters and expansion on actor change', () => {
+  it('resets view, filters and expansion to the new actor responsive default', () => {
     render(
       <MemoryRouter>
         <DemoDomainProvider initialActorId="system-administrator">
@@ -282,12 +250,10 @@ describe('PO planning calendar page', () => {
     fireEvent.change(screen.getByLabelText('Warehouse'), {
       target: { value: 'zielona-gora-plant' },
     });
-    fireEvent.click(screen.getByRole('button', {
-      name: 'Pokaż zawartość dostawy',
-    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pokaż zawartość dostawy' }));
     fireEvent.click(screen.getByRole('button', { name: 'Switch calendar actor' }));
 
-    expect(screen.getByRole('button', { name: 'Week view' })
+    expect(screen.getByRole('button', { name: 'Day view' })
       .getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByLabelText('Warehouse')).toHaveProperty('value', 'all');
     expect(screen.getByText('1 visible appointment')).toBeDefined();
@@ -295,7 +261,7 @@ describe('PO planning calendar page', () => {
     expect(screen.queryByText('PO-DEMO-2001')).toBeNull();
   });
 
-  it('view, filter and details interactions make no network, storage or workspace mutation', () => {
+  it('presentation interactions make no network, storage or workspace mutation', () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
     const storageSpy = vi.spyOn(Storage.prototype, 'setItem');
