@@ -43,9 +43,7 @@ describe('AuthenticatedShell', () => {
       </MemoryRouter>
     );
 
-    const logoutBtn = screen.getByRole('button', { name: 'Log out' });
-    fireEvent.click(logoutBtn);
-
+    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 
@@ -56,25 +54,30 @@ describe('AuthenticatedShell', () => {
       </MemoryRouter>
     );
 
-    const usersLink = screen.getByRole('link', { name: 'Users & access' });
-    expect(usersLink.getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: 'Users & access' })
+      .getAttribute('aria-current')).toBe('page');
   });
 
-  it('3. mobile navigation toggle works', () => {
+  it('3. mobile navigation toggle exposes state, controlled navigation and overlay close', () => {
     render(
       <MemoryRouter initialEntries={['/users']}>
         <AuthenticatedShell />
       </MemoryRouter>
     );
 
-    const openMenuBtn = screen.getByRole('button', { name: 'Open menu' });
-    fireEvent.click(openMenuBtn);
+    const openMenu = screen.getByRole('button', { name: 'Open menu' });
+    expect(openMenu.getAttribute('aria-expanded')).toBe('false');
+    expect(openMenu.getAttribute('aria-controls')).toBe('primary-navigation');
+    expect(openMenu.className).toContain('min-h-11');
+    fireEvent.click(openMenu);
 
-    const closeMenuBtn = screen.getByRole('button', { name: 'Close menu' });
-    expect(closeMenuBtn).toBeDefined();
+    const closeMenu = screen.getByRole('button', { name: 'Close menu' });
+    expect(closeMenu.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Close navigation overlay' })).toBeDefined();
 
-    fireEvent.click(closeMenuBtn);
-    expect(screen.getByRole('button', { name: 'Open menu' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Close navigation overlay' }));
+    expect(screen.getByRole('button', { name: 'Open menu' })
+      .getAttribute('aria-expanded')).toBe('false');
   });
 
   it('4. Supplier organizations link has exact href and is active on the overview route while Users and Warehouses are not active', () => {
@@ -95,14 +98,12 @@ describe('AuthenticatedShell', () => {
     expect(warehousesLink.getAttribute('aria-current')).toBeNull();
 
     const supplierLinkIcon = supplierLink.querySelector('svg');
-    if (!supplierLinkIcon) {
-      throw new Error('Expected the Supplier organizations link to contain a decorative icon.');
-    }
+    if (!supplierLinkIcon) throw new Error('Expected decorative Supplier icon.');
     expect(supplierLinkIcon.getAttribute('aria-hidden')).toBe('true');
     expect(supplierLink.textContent).toBe('Supplier organizations');
   });
 
-  it('5. Supplier organizations remains active on the add route and the breadcrumb contains the overview link plus current Add supplier organization item', () => {
+  it('5. Supplier organizations remains active on add route and breadcrumb links back', () => {
     render(
       <MemoryRouter initialEntries={['/supplier-organizations/new']}>
         <AuthenticatedShell />
@@ -110,16 +111,17 @@ describe('AuthenticatedShell', () => {
     );
 
     const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
-    const supplierLink = within(primaryNav).getByRole('link', { name: 'Supplier organizations' });
-    expect(supplierLink.getAttribute('aria-current')).toBe('page');
+    expect(within(primaryNav).getByRole('link', { name: 'Supplier organizations' })
+      .getAttribute('aria-current')).toBe('page');
 
     const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
-    const overviewLink = within(breadcrumb).getByRole('link', { name: 'Supplier organizations' });
-    expect(overviewLink.getAttribute('href')).toBe('/supplier-organizations');
-    expect(within(breadcrumb).getByText('Add supplier organization').textContent).toBe('Add supplier organization');
+    expect(within(breadcrumb).getByRole('link', { name: 'Supplier organizations' })
+      .getAttribute('href')).toBe('/supplier-organizations');
+    expect(within(breadcrumb).getByText('Add supplier organization').textContent)
+      .toBe('Add supplier organization');
   });
 
-  it('6. selecting Supplier organizations from an open mobile menu closes the menu', () => {
+  it('6. selecting a route from an open mobile menu closes the menu after navigation', () => {
     render(
       <MemoryRouter initialEntries={['/users']}>
         <AuthenticatedShell />
@@ -127,16 +129,16 @@ describe('AuthenticatedShell', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    expect(screen.getByRole('button', { name: 'Close menu' }).getAttribute('aria-label')).toBe('Close menu');
-
     const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
-    const supplierLink = within(primaryNav).getByRole('link', { name: 'Supplier organizations' });
-    fireEvent.click(supplierLink);
+    fireEvent.click(within(primaryNav).getByRole('link', { name: 'Slot calendar' }));
 
-    expect(screen.getByRole('button', { name: 'Open menu' }).getAttribute('aria-label')).toBe('Open menu');
+    expect(screen.getByRole('button', { name: 'Open menu' })
+      .getAttribute('aria-expanded')).toBe('false');
+    expect(within(primaryNav).getByRole('link', { name: 'Slot calendar' })
+      .getAttribute('aria-current')).toBe('page');
   });
 
-  it('7. unavailable navigation items expose disabled link semantics while remaining non-navigable', () => {
+  it('7. implemented overview and scheduling items are touch-safe navigable links', () => {
     render(
       <MemoryRouter initialEntries={['/users']}>
         <AuthenticatedShell />
@@ -144,13 +146,19 @@ describe('AuthenticatedShell', () => {
     );
 
     const primaryNav = screen.getByRole('navigation', { name: 'Primary navigation' });
-    const dashboard = within(primaryNav).getByRole('link', { name: /Dashboard\s*Soon/i });
-    const slotCalendar = within(primaryNav).getByRole('link', { name: /Slot calendar\s*Soon/i });
+    const expected = [
+      ['Dashboard', '/dashboard'],
+      ['Notifications', '/notifications'],
+      ['Appointments', '/appointments'],
+      ['Slot calendar', '/calendar'],
+    ] as const;
 
-    for (const item of [dashboard, slotCalendar]) {
-      expect(item.getAttribute('aria-disabled')).toBe('true');
-      expect(item.tagName).toBe('DIV');
-      expect(item.getAttribute('href')).toBeNull();
+    for (const [name, href] of expected) {
+      const item = within(primaryNav).getByRole('link', { name });
+      expect(item.tagName).toBe('A');
+      expect(item.getAttribute('href')).toBe(href);
+      expect(item.getAttribute('aria-disabled')).toBeNull();
+      expect(item.className).toContain('min-h-11');
     }
   });
 
@@ -165,7 +173,6 @@ describe('AuthenticatedShell', () => {
     const appointmentsLink = within(primaryNav).getByRole('link', { name: 'Appointments' });
     expect(appointmentsLink.getAttribute('href')).toBe('/appointments');
     expect(appointmentsLink.getAttribute('aria-current')).toBe('page');
-    expect(appointmentsLink.getAttribute('aria-disabled')).toBeNull();
 
     const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
     expect(within(breadcrumb).getByText('Scheduling').textContent).toBe('Scheduling');
@@ -182,6 +189,7 @@ describe('AuthenticatedShell', () => {
     const selector = screen.getByLabelText('Demo access context');
     expect(within(selector).getAllByRole('option')).toHaveLength(6);
     expect(selector.getAttribute('aria-describedby')).toBe('demo-role-context-help');
+    expect(selector.className).toContain('min-h-11');
     expect(screen.getByText(/does not change authentication or authorization/i).textContent)
       .toBe('UI-only demonstration. This does not change authentication or authorization.');
   });
@@ -203,5 +211,18 @@ describe('AuthenticatedShell', () => {
     expect(screen.queryByRole('link', { name: 'Users & access' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Warehouses' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Supplier organizations' })).toBeNull();
+  });
+
+  it('11. complex warehouse configuration shows responsive desktop guidance without hiding the route', () => {
+    render(
+      <MemoryRouter initialEntries={['/warehouses/nowy-kisielin-distribution-center/configuration']}>
+        <AuthenticatedShell />
+      </MemoryRouter>
+    );
+
+    const notice = screen.getByRole('complementary', { name: 'Desktop recommendation' });
+    expect(notice.textContent).toContain('Desktop recommended for complex configuration');
+    expect(notice.textContent).toContain('Basic review and actions remain available');
+    expect(screen.getByText('Warehouse configuration')).toBeDefined();
   });
 });

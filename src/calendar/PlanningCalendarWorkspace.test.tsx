@@ -77,6 +77,9 @@ describe('PlanningCalendarPage live workspace source', () => {
 
     expect(screen.getByLabelText('Calendar publication error').textContent).toBe('');
     expect(screen.getByRole('heading', { name: 'PO-CALENDAR-LIVE' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: '2026-08-17' })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Week view' }));
     expect(screen.getByRole('heading', {
       name: '2026-08-17 – 2026-08-23',
     })).toBeDefined();

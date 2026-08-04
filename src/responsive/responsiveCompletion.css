@@ -1,0 +1,84 @@
+/* Presentation-only responsive completion. No business or visibility rules live here. */
+
+main input:not([type='checkbox']):not([type='radio']),
+main select,
+main textarea {
+  min-height: 44px;
+}
+
+main button,
+main a[role='button'] {
+  min-height: 44px;
+}
+
+@media (max-width: 639px) {
+  main {
+    overflow-x: hidden;
+  }
+
+  section[aria-labelledby='nonweekly-booking-title'] > ol,
+  section[aria-labelledby='operator-booking-title'] > ol {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: x proximity;
+  }
+
+  section[aria-labelledby='nonweekly-booking-title'] > ol > li,
+  section[aria-labelledby='operator-booking-title'] > ol > li {
+    min-width: 10rem;
+    scroll-snap-align: start;
+  }
+
+  section[aria-labelledby='nonweekly-booking-title'] > div:last-child,
+  section[aria-labelledby='operator-booking-title'] > div:last-child {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  section[aria-labelledby='nonweekly-booking-title'] > div:last-child > button,
+  section[aria-labelledby='operator-booking-title'] > div:last-child > button,
+  section[aria-labelledby='lifecycle-title'] article > div[class*='flex-wrap'][class*='gap-3'] > button,
+  section[aria-labelledby='gate-ops-title'] article > div[class*='flex-wrap'][class*='gap-3'] > button,
+  section[aria-labelledby='gate-ops-title'] section[aria-labelledby='unannounced-title'] > button {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  section[aria-labelledby='gate-ops-title'] article label[class*='min-w-64'] {
+    min-width: 0;
+    width: 100%;
+  }
+
+  section[aria-labelledby='planning-calendar-title'] [role='group'][aria-label='Calendar view'] {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  section[aria-labelledby='planning-calendar-title'] [role='group'][aria-label='Calendar view'] > button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  section[aria-labelledby='planning-calendar-title'] article,
+  section[aria-labelledby='lifecycle-title'] article,
+  section[aria-labelledby='gate-ops-title'] article {
+    padding: 1rem;
+  }
+
+  section[aria-labelledby='lifecycle-title'] article > div[class*='flex-wrap'][class*='gap-3'],
+  section[aria-labelledby='gate-ops-title'] article > div[class*='flex-wrap'][class*='gap-3'] {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  [data-responsive-action-group='true'] > * {
+    min-height: 44px;
+    width: 100%;
+  }
+}
