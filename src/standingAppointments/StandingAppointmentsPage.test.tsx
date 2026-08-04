@@ -4,9 +4,57 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { AppointmentWorkspaceProvider, useAppointmentWorkspace } from '../appointments/AppointmentWorkspaceProvider';
+import { createInitialAppointmentWorkspaceState } from '../appointments/appointmentWorkspace';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
-import type { DemoActorId } from '../demoDomain/demoDomain';
+import {
+  canViewAppointment,
+  getDemoActor,
+  type DemoActorId,
+} from '../demoDomain/demoDomain';
 import { StandingAppointmentsPage } from './StandingAppointmentsPage';
+import {
+  standingScopeChoices,
+  type StandingScopeChoice,
+} from './standingAppointmentDomain';
+
+const sourceRecords = createInitialAppointmentWorkspaceState().records;
+
+function choicesFor(actorId: DemoActorId): readonly StandingScopeChoice[] {
+  const actor = getDemoActor(actorId);
+  const visibleRecords = sourceRecords.filter((record) => canViewAppointment(actor, record));
+  return standingScopeChoices(visibleRecords, actor);
+}
+
+function requireChoice(
+  choice: StandingScopeChoice | undefined,
+  message: string,
+): StandingScopeChoice {
+  if (!choice) throw new Error(message);
+  return choice;
+}
+
+const warehouseAdminChoices = choicesFor('warehouse-administrator');
+const warehouseAdminConflictChoice = requireChoice(
+  warehouseAdminChoices.find((choice) => sourceRecords.some((record) =>
+    record.supplierOrganizationId === choice.supplierOrganizationId
+    && record.warehouseId === choice.warehouseId
+    && record.plannedDate === '2026-08-10'
+    && record.plannedTime === '08:00')),
+  'Warehouse Administrator must have a visible choice with the default conflict fixture.',
+);
+const supplierAdminChoice = requireChoice(
+  choicesFor('supplier-administrator')[0],
+  'Supplier Administrator must have at least one visible standing scope choice.',
+);
+const warehouseAdminOnlyChoice = requireChoice(
+  warehouseAdminChoices.find((choice) =>
+    choice.supplierOrganizationId !== supplierAdminChoice.supplierOrganizationId),
+  'Warehouse Administrator must have a choice outside Supplier Administrator scope.',
+);
+
+function eligibilityLabel(choice: StandingScopeChoice): string {
+  return `Standing eligible ${choice.supplierName} at ${choice.warehouseName}`;
+}
 
 function renderPage(actorId: DemoActorId = 'warehouse-administrator') {
   return render(
@@ -35,8 +83,11 @@ function eligibilitySection(): HTMLElement {
 }
 
 function createWarehouseAdminPreview() {
+  fireEvent.change(screen.getByLabelText('Standing scope'), {
+    target: { value: warehouseAdminConflictChoice.key },
+  });
   fireEvent.click(screen.getByRole('checkbox', {
-    name: 'Standing eligible Northstar Packaging at Nowy Kisielin DC',
+    name: eligibilityLabel(warehouseAdminConflictChoice),
   }));
   fireEvent.click(screen.getByRole('button', { name: 'Create local series preview' }));
 }
@@ -51,18 +102,21 @@ describe('StandingAppointmentsPage', () => {
   it('starts eligibility disabled and blocks preview until the scoped pair is locally eligible', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined();
-    const northstar = screen.getByRole('checkbox', {
-      name: 'Standing eligible Northstar Packaging at Nowy Kisielin DC',
+    fireEvent.change(screen.getByLabelText('Standing scope'), {
+      target: { value: warehouseAdminConflictChoice.key },
     });
-    expect(northstar).toHaveProperty('checked', false);
-    expect(northstar).toHaveProperty('disabled', false);
+    const eligibleChoice = screen.getByRole('checkbox', {
+      name: eligibilityLabel(warehouseAdminConflictChoice),
+    });
+    expect(eligibleChoice).toHaveProperty('checked', false);
+    expect(eligibleChoice).toHaveProperty('disabled', false);
 
     fireEvent.click(screen.getByRole('button', { name: 'Create local series preview' }));
     expect(screen.getByRole('alert').textContent).toContain('not locally eligible');
     expect(screen.queryByRole('heading', { name: 'Occurrence preview' })).toBeNull();
 
-    fireEvent.click(northstar);
-    expect(northstar).toHaveProperty('checked', true);
+    fireEvent.click(eligibleChoice);
+    expect(eligibleChoice).toHaveProperty('checked', true);
     expect(screen.getByRole('status').textContent).toContain('Supplier configuration was not updated');
     fireEvent.click(screen.getByRole('button', { name: 'Create local series preview' }));
     expect(screen.getByRole('heading', { name: 'Occurrence preview' })).toBeDefined();
@@ -129,16 +183,31 @@ describe('StandingAppointmentsPage', () => {
   it('keeps Supplier Administrator choices and preview isolated to its organization', () => {
     renderPage('supplier-administrator');
     const section = eligibilitySection();
-    expect(within(section).getByText('Vistula Materials')).toBeDefined();
-    expect(within(section).queryByText('Baltic Freight')).toBeNull();
-    expect(within(section).queryByText('Northstar Packaging')).toBeNull();
+    expect(within(section).getAllByText(supplierAdminChoice.supplierName).length).toBeGreaterThan(0);
+
+    const otherSupplierNames = Array.from(new Set(
+      sourceRecords
+        .filter((record) =>
+          record.supplierOrganizationId !== supplierAdminChoice.supplierOrganizationId)
+        .map((record) => record.supplierName),
+    ));
+    for (const supplierName of otherSupplierNames) {
+      expect(within(section).queryByText(supplierName)).toBeNull();
+    }
+
     const eligible = screen.getByRole('checkbox', {
-      name: 'Standing eligible Vistula Materials at Nowy Kisielin DC',
+      name: eligibilityLabel(supplierAdminChoice),
     });
     fireEvent.click(eligible);
     fireEvent.click(screen.getByRole('button', { name: 'Create local series preview' }));
-    expect(screen.getByText(/Vistula Materials · Nowy Kisielin DC/)).toBeDefined();
-    expect(screen.queryByText('Baltic Freight')).toBeNull();
+    expect(screen.getByText((_content, element) =>
+      element?.tagName === 'P'
+      && element.textContent?.includes(
+        `${supplierAdminChoice.supplierName} · ${supplierAdminChoice.warehouseName} · Series state:`,
+      ) === true)).toBeDefined();
+    for (const supplierName of otherSupplierNames) {
+      expect(screen.queryByText(supplierName)).toBeNull();
+    }
     expect(screen.queryByText('EXACT_MATCH')).toBeNull();
     expect(screen.queryByText('batch-demo-1')).toBeNull();
     expect(screen.queryByText('Internal-only note')).toBeNull();
@@ -175,10 +244,10 @@ describe('StandingAppointmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Switch standing actor' }));
     expect(screen.queryByRole('heading', { name: 'Occurrence preview' })).toBeNull();
     const supplierEligibility = screen.getByRole('checkbox', {
-      name: 'Standing eligible Vistula Materials at Nowy Kisielin DC',
+      name: eligibilityLabel(supplierAdminChoice),
     });
     expect(supplierEligibility).toHaveProperty('checked', false);
-    expect(screen.queryByText('Northstar Packaging')).toBeNull();
+    expect(screen.queryByText(warehouseAdminOnlyChoice.supplierName)).toBeNull();
   });
 
   it('performs no network, browser storage or source appointment mutation', () => {
