@@ -363,12 +363,12 @@ export function evaluateCapacitySlot(
 
   const pools = compatiblePools(warehouse, unblockedDocks, request);
   if (pools.length === 0) return failure('CAPACITY_POOL_MISSING');
+  if (pools.some((pool) => warehouse.blocks.some((block) =>
+    poolBlockOverlaps(block, pool.id, units)))) {
+    return failure('CAPACITY_POOL_BLOCKED');
+  }
 
-  const activePools = pools.filter((pool) => !warehouse.blocks.some((block) =>
-    poolBlockOverlaps(block, pool.id, units)));
-  if (activePools.length === 0) return failure('CAPACITY_POOL_BLOCKED');
-
-  const effectiveLimit = Math.min(...activePools.map((pool) => pool.concurrentVehicles));
+  const effectiveLimit = Math.min(...pools.map((pool) => pool.concurrentVehicles));
   const relevantAppointments = appointments.filter((appointment) =>
     appointment.id !== request.excludeAppointmentId
     && appointment.warehouseId === request.warehouseId
@@ -389,7 +389,7 @@ export function evaluateCapacitySlot(
   const evidence: CapacityInternalEvidence = {
     unitStarts: units,
     eligibleDockIds: unblockedDocks.map((dock) => dock.id),
-    capacityPoolIds: activePools.map((pool) => pool.id),
+    capacityPoolIds: pools.map((pool) => pool.id),
     effectiveLimit,
     maximumExistingOccupancy,
     blockingAppointmentIds: Array.from(blockingAppointmentIds).sort(),
