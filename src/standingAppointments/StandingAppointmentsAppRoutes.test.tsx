@@ -62,20 +62,32 @@ describe('standing appointments AppRoutes integration', () => {
     }
   });
 
-  it('redirects Warehouse Operator, Supplier User and Security Officer fail closed', async () => {
-    for (const actorId of ['warehouse-operator', 'supplier-user', 'security-officer'] as const) {
-      cleanup();
-      renderApp('/standing-appointments');
-      await waitFor(() => expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined());
-      await act(async () => {
-        fireEvent.change(screen.getByLabelText('Demo access context'), {
-          target: { value: actorId },
-        });
+  it.each([
+    'warehouse-operator',
+    'supplier-user',
+  ] as const)('redirects unauthorized actor %s to appointments fail closed', async (actorId) => {
+    renderApp('/standing-appointments');
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined());
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Demo access context'), {
+        target: { value: actorId },
       });
-      await waitFor(() => expect(screen.getByTestId('standing-app-location').textContent).toBe('/appointments'));
-      expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
-      expect(screen.queryByRole('heading', { name: 'Standing appointment series' })).toBeNull();
-    }
+    });
+    await waitFor(() => expect(screen.getByTestId('standing-app-location').textContent).toBe('/appointments'));
+    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'Standing appointment series' })).toBeNull();
+  });
+
+  it('redirects Security Officer to the existing gate default route', async () => {
+    renderApp('/standing-appointments');
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Standing appointment series' })).toBeDefined());
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Demo access context'), {
+        target: { value: 'security-officer' },
+      });
+    });
+    await waitFor(() => expect(screen.getByTestId('standing-app-location').textContent).toBe('/gate-operations'));
+    expect(screen.queryByRole('heading', { name: 'Standing appointment series' })).toBeNull();
   });
 
   it('shows the standing-series link only to authorized roles', async () => {
