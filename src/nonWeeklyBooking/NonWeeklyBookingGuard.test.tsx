@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { DemoDomainProvider } from '../demoDomain/DemoDomainProvider';
-import type { DemoActorId } from '../demoDomain/demoDomain';
+import { getDefaultRoute, getDemoActor, type DemoActorId } from '../demoDomain/demoDomain';
 import { NonWeeklyBookingGuard } from './NonWeeklyBookingGuard';
 
 function LocationDisplay() {
@@ -19,6 +19,7 @@ function renderGuard(actorId: DemoActorId) {
         <Routes>
           <Route path="/appointments/new" element={<NonWeeklyBookingGuard><h1>Standard booking data</h1></NonWeeklyBookingGuard>} />
           <Route path="/appointments" element={<h1>Appointments fallback</h1>} />
+          <Route path="/users" element={<h1>Users fallback</h1>} />
         </Routes>
         <LocationDisplay />
       </DemoDomainProvider>
@@ -42,8 +43,10 @@ describe('NonWeeklyBookingGuard', () => {
     'security-officer',
   ] as const)('redirects unauthorized actor %s fail closed', (actorId) => {
     renderGuard(actorId);
+    const defaultRoute = getDefaultRoute(getDemoActor(actorId));
+    const fallbackHeading = defaultRoute === '/users' ? 'Users fallback' : 'Appointments fallback';
     expect(screen.queryByRole('heading', { name: 'Standard booking data' })).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Appointments fallback' })).toBeDefined();
-    expect(screen.getByTestId('nonweekly-location').textContent).toBe('/appointments');
+    expect(screen.getByRole('heading', { name: fallbackHeading })).toBeDefined();
+    expect(screen.getByTestId('nonweekly-location').textContent).toBe(defaultRoute);
   });
 });
