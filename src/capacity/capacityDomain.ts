@@ -223,17 +223,29 @@ function blockAffectsDock(
   dock: DockConfiguration,
   pools: readonly CapacityPoolConfiguration[],
 ): boolean {
-  switch (block.scope.type) {
+  const scope = block.scope;
+  switch (scope.type) {
     case 'warehouse':
       return true;
     case 'zone':
-      return block.scope.zone === dock.zone;
+      return scope.zone === dock.zone;
     case 'dock':
-      return block.scope.dockId === dock.id;
+      return scope.dockId === dock.id;
     case 'capacity-pool':
       return pools.some((pool) =>
-        pool.id === block.scope.capacityPoolId && pool.dockIds.includes(dock.id));
+        pool.id === scope.capacityPoolId && pool.dockIds.includes(dock.id));
   }
+}
+
+function poolBlockOverlaps(
+  block: WarehouseBlock,
+  poolId: CapacityPoolId,
+  units: readonly string[],
+): boolean {
+  const scope = block.scope;
+  return scope.type === 'capacity-pool'
+    && scope.capacityPoolId === poolId
+    && units.some((unit) => blockOverlapsUnit(block, unit));
 }
 
 function appointmentHoldsCapacity(appointment: CapacityAppointment): boolean {
@@ -355,9 +367,7 @@ export function evaluateCapacitySlot(
   if (pools.length === 0) return failure('CAPACITY_POOL_MISSING');
 
   const activePools = pools.filter((pool) => !warehouse.blocks.some((block) =>
-    block.scope.type === 'capacity-pool'
-    && block.scope.capacityPoolId === pool.id
-    && units.some((unit) => blockOverlapsUnit(block, unit))));
+    poolBlockOverlaps(block, pool.id, units)));
   if (activePools.length === 0) return failure('CAPACITY_POOL_BLOCKED');
 
   const effectiveLimit = Math.min(...activePools.map((pool) => pool.concurrentVehicles));
