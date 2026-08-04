@@ -60,60 +60,62 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-STANDING-1 — local standing appointment series | DONE; PR #107 squash-merged at `5f507367a0c7a1cbcd1039f531c46b6891735458` |
 | UI-MVP-PRODUCT-REVIEW-1-ACTIVATE — activate product-level completion review | DONE; PR #109 squash-merged at `e3afdd098f27ddae086f92346ddf581a7a228d6e` |
 | UI-MVP-PRODUCT-REVIEW-1 — product-level completion review | DONE; PR #111 squash-merged at `0bf350e3cef0ec6e511bd344721af80f9a048b74` |
-| UI-MVP-CAPACITY-COMPOSITE-1-ACTIVATE — activate composite capacity repair | DONE after merge of this activation PR |
+| UI-MVP-CAPACITY-COMPOSITE-1-ACTIVATE — activate composite capacity repair | DONE; PR #113 squash-merged at `731bd6a1adf5fb30dee4f62a7ced095f392e8ec3` |
+| UI-MVP-CAPACITY-COMPOSITE-1 — composite capacity and deterministic concurrency | DONE; PR #115 squash-merged at `a040e72299255a45ddbb59125cfb93f7f58c5847` |
+| UI-MVP-BOOKING-NONWEEKLY-1-ACTIVATE — activate standard Supplier booking | DONE after merge of this activation PR |
 
 ## Active and queued
 
-### UI-MVP-CAPACITY-COMPOSITE-1 — composite capacity and deterministic concurrency
+### UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: replace the current simultaneous-count approximation with one
-  shared, deterministic UI-only capacity contract that supports exact duration
-  occupancy, composite constraints, controlled override evidence and the
-  approved final-capacity competition scenario.
-- Product authority: `BDP-CAP-001`, `BDP-CAL-001`, `BDP-BLOCK-001`, relevant
-  sections 5.1–7.3 and 9.4, `BDP-VAL-001`, `AC-WAD-001`, `AC-SUP-001`,
-  `AC-SUP-005` capacity release and `AC-CONC-001`, plus the capacity gap in
-  `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
-- Time boundary: use deterministic civil date/time values and exact configured
-  15-minute units. Duration occupies every intersecting unit; no wall-clock
-  timers, current-time dependency or timezone service is authorized.
-- Composite boundary: availability fails closed when the first applicable
-  warehouse, active-dock, compatible-flow, capacity-pool or block constraint is
-  unavailable. The contract must expose safe reason codes and internal evidence
-  without leaking another Supplier's booking identity or hidden capacity data.
-- Occupancy boundary: only approved capacity-holding planning/lifecycle states
-  consume capacity. Rejected, cancelled and completed/checked-out records do
-  not block new reservations, while retained history remains visible.
-- Override boundary: only System Administrator or an assigned Warehouse
-  Administrator may apply a local demonstration override. Every override
-  requires a non-empty reason and immutable before/after evidence; Supplier,
-  Warehouse Operator and Security actors cannot override capacity.
-- Concurrency boundary: a deterministic local scenario models two attempts for
-  the final compatible capacity unit. Exactly one attempt succeeds; the losing
-  attempt receives a reservation-conflict result and nearest compatible
-  alternatives. No optimistic double-success or silent replacement is allowed.
-- Consumer boundary: expose the shared contract for existing planning calendar,
-  weekly planning and lifecycle consumers. The future non-weekly booking and
-  Operator manual-booking tasks may consume it, but those creation flows are not
-  implemented in this task.
-- Data boundary: Supplier-facing availability exposes only selectable or
-  unavailable slots and safe next actions. It never exposes another Supplier,
-  exact competing record, internal capacity totals, override reasoning,
-  diagnostics, audit metadata or source lineage.
-- Mutation boundary: this task may add deterministic local capacity attempt and
-  override state only inside its focused demonstration. It may not mutate
-  appointment ownership, PO/SKU data, transport authority, lifecycle rules,
-  gate data, reporting, notifications, standing series or persistent storage.
-- Technical boundary: no backend, API, database, browser storage, locking
-  service, WebSocket, background process, integration, deployment, real
-  concurrency guarantee or production-repository access is authorized.
-- Contract gate: execution requires a separate machine-readable Class B issue
-  contract bound to the exact `main` SHA produced by merge of this activation
-  PR, complete focused and repository validation, Simplification Pass,
-  independent read-only review and controlled publication.
+- Objective: implement the approved five-step non-weekly Supplier booking flow
+  from configured delivery inputs through safe availability, summary and local
+  confirmation, using the existing scoped workspace as the visible result.
+- Product authority: `BDP-BOOK-001`, sections 4.1–4.4 and 5.1–5.3,
+  `BDP-WH-001`, `BDP-APR-001`, applicable `BDP-VAL-001`, `BDP-MOB-001`,
+  `AC-WAD-002`, `AC-SUP-001`, `AC-CONC-001` and the high-severity booking gap
+  in `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
+- Flow boundary: exactly five steps outside weekly planning — Warehouse and
+  delivery flow; Delivery data; Available slots; Transport, document metadata
+  and comments; Summary and confirmation. Weekly planning remains separate.
+- Scope boundary: only active Supplier Administrator and Supplier User actors
+  may create for their own organization, assigned published warehouses and
+  configured compatible flows. Internal manual creation is a future task.
+- Configuration boundary: required fields, cut-off, Supplier assignments,
+  approval and warehouse resources come from the published demo configuration.
+  No parallel form, warehouse, Supplier, capacity or approval authority is
+  allowed.
+- Duration boundary: data affecting compatibility and duration is collected
+  before availability. Duration is derived deterministically from approved
+  flow/volume/special-requirement inputs; Supplier cannot type arbitrary
+  duration or apply an override.
+- Availability boundary: consume the shared composite-capacity contract and
+  show safe selectable/unavailable slots, duration, timezone, nearest slot and
+  three recommendations. Never expose competing identity, internal capacity
+  totals, block reason details, override evidence or audit metadata.
+- Concurrency boundary: confirmation revalidates the selected slot. A lost final
+  unit fails with `RESERVATION_CONFLICT` and deterministic compatible
+  alternatives; no double success or silent slot replacement is allowed.
+- Record boundary: successful confirmation adds one local non-weekly appointment
+  with explicit `SUPPLIER_RESERVED` origin, lifecycle/planning state, selected
+  slot, safe data and local history. It becomes visible through existing
+  list/details/dashboard/report consumers in the same workspace session.
+- Draft boundary: a local Draft may be previewed without capacity reservation,
+  operational-calendar visibility, persistence or later-session recovery.
+- Document boundary: only file-name/status metadata may be demonstrated. No file
+  bytes, storage, upload service, OCR or integration is authorized.
+- Data boundary: no SKU/import detail is created in this flow unless already
+  explicitly configured as Supplier-entered non-weekly delivery data. Weekly
+  PO/SKU authority, import lineage and internal notes remain protected.
+- Technical boundary: no API, backend, database, browser storage, e-mail,
+  ERP/WMS/SAP validation, real locking, background job, deployment, dependency
+  or production-repository access is authorized.
+- Contract gate: execution requires a separate exact-SHA Class B issue after
+  activation merge, focused and complete CI, Simplification Pass, independent
+  read-only review and controlled squash merge.
 
-`UI-MVP-BOOKING-NONWEEKLY-1`, `UI-MVP-OPERATOR-MANUAL-BOOKING-1` and all other
-repairs remain inactive and unauthorized. No other product, governance,
-security or infrastructure task is `READY` or active.
+`UI-MVP-OPERATOR-MANUAL-BOOKING-1` and all other repairs remain inactive and
+unauthorized. No other product, governance, security or infrastructure task is
+`READY` or active.
