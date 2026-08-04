@@ -66,54 +66,55 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking | DONE; PR #119 squash-merged at `e5ba6b4d5ddb8861bfb07ea75a8476484d297386` |
 | UI-MVP-OPERATOR-MANUAL-BOOKING-1-ACTIVATE — activate Operator manual booking | DONE; PR #121 squash-merged at `ea64365cc49bdb96ec090f0234183f6286dd9ba2` |
 | UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier | DONE; PR #123 squash-merged at `ea1e436bc563d68aecf15e9417fd9f627c432abf` |
+| UI-MVP-CALENDAR-VIEWS-1-ACTIVATE — activate complete calendar views | DONE; PR #125 squash-merged at `3311ee07c4fb508ddcec0fb09a4b9ea4a0f8ab38` |
+| UI-MVP-CALENDAR-VIEWS-1 — complete six role-scoped calendar views | DONE; PR #127 squash-merged at `a9c6b04e9a4aaf70a0e3507e61b8091543d2a76f` |
 
 ## Active and queued
 
-### UI-MVP-CALENDAR-VIEWS-1 — complete Day, Week, Dock, Load Type, List and Workflow calendar
+### UI-MVP-RESPONSIVE-COMPLETION-1 — complete approved responsive-web screen coverage
 
 - State: `READY`.
 - Risk class: Class B.
-- Objective: complete the existing `/calendar` experience with the six approved
-  role-scoped views, using the shared visible appointment workspace as the only
-  record source.
-- Product authority: `BDP-CAL-001`, `BDP-CAL-002`, relevant `BDP-RBAC-001`,
-  `BDP-DATA-001`, `BDP-STAT-001`, `BDP-MOB-001` and the calendar-view gap in
-  `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
-- View boundary: exactly Day, Week, Dock, Load Type, List and Workflow are
-  selectable inside the existing authenticated `/calendar` route. No parallel
-  calendar route, second calendar product or duplicated record model is added.
-- Source boundary: consume `AppointmentWorkspaceProvider.visibleRecords`, so
-  weekly-planning, standard Supplier and Operator-created records appear in the
-  same session when visible to the active actor. Static planning fixtures are
-  not a separate production authority.
-- Scope boundary: centralized `canViewAppointment` projection remains
-  authoritative. Supplier actors see only their organization and assigned
-  warehouses; internal actors see only assigned warehouse scope. Hidden
-  competing identity, import diagnostics, batch lineage and internal evidence
-  remain excluded from Supplier-safe projections.
-- Identity boundary: one appointment/PO header remains one primary card or row.
-  SKU lines are expandable delivery contents and never duplicate the appointment
-  across views.
-- Composition boundary: Day and Week group by planned local date/time; Dock
-  groups by assigned dock with an explicit Unassigned bucket; Load Type uses the
-  existing delivery flow/type; List is a deterministic accessible table;
-  Workflow groups by existing planning, lifecycle, operational and
-  required-action evidence without inventing states.
-- State boundary: selected view, filters and expansions are in-memory only and
-  reset or safely rescope on actor change. No browser storage, network request
-  or durable preference is introduced.
-- Mutation boundary: every calendar view is read-only. It cannot create, move,
-  approve, cancel, assign docks, reserve slots, modify capacity or mutate any
-  workspace record.
-- Compatibility boundary: preserve approved PO/SKU contents, existing conflict
-  and capacity-safe presentation where applicable, keyboard-accessible controls
-  and responsive composition. No design-system fork or new dependency.
-- Protected authority: capacity, lifecycle, gate operations, booking, import,
-  reporting, dashboard, notifications and standing-series behavior remain
-  unchanged.
-- Technical boundary: no API, backend, database, browser storage, e-mail, file
-  processing, ERP/WMS/SAP integration, deployment or production-repository
-  access is authorized.
+- Objective: close the approved mobile/tablet coverage gap across existing
+  Supplier and operational routes without changing their product behavior,
+  authority or local-only data model.
+- Product authority: `BDP-MOB-001`, sections 23, 23.1, 23.2 and 25, relevant
+  `BDP-BOOK-001`, `BDP-LIST-001`, `BDP-DET-001`, `BDP-OPS-001`,
+  `BDP-CAL-001`, `BDP-EDIT-001`, `BDP-CAN-001` and the responsive-completion
+  recommendation in `UI_MVP_PRODUCT_COMPLETION_REVIEW.md`.
+- Scope boundary: responsive composition, navigation ergonomics, touch and
+  keyboard accessibility and rendered regression tests only. No new domain
+  rule, permission, status, record, route, API, storage or workflow is allowed.
+- Supplier boundary: existing login, appointments list, weekly and standard
+  creation, slot selection, summary/success, details, reschedule/cancel,
+  document metadata, driver/vehicle and confirmation surfaces must remain usable
+  as readable stacked forms, cards and day/time choices on narrow screens rather
+  than compressed desktop grids.
+- Operator boundary: existing dashboard/agenda, list/details, manual booking,
+  search, status, dock, comments, exceptions and No Show must remain usable on
+  phone/tablet, with primary actions reachable without horizontal page scroll.
+- Security boundary: existing responsive search, check-in, check-out and
+  unannounced-visit coverage receives regression verification only. No gate
+  authority or data visibility may expand.
+- Warehouse Administrator boundary: overview and basic actions remain accessible
+  responsively. Complex warehouse/calendar configuration may display a clear
+  desktop recommendation instead of pretending complete phone suitability.
+- Calendar boundary: preserve the six existing views and workspace source.
+  Supplier narrow-screen composition favors list/day-time choices; Operator
+  favors agenda composition; explicit table/dock overflow is limited to
+  tablet/desktop-compatible containers.
+- Integrity boundary: preserve centralized actor scope, guards,
+  one-record/one-appointment identity, PO/SKU hierarchy, comment visibility,
+  capacity, lifecycle, booking and gate authority. Responsive presentation must
+  not mutate business state.
+- Accessibility boundary: interactive controls keep native semantics, visible
+  labels, keyboard focus and touch-friendly targets. Visual order must not
+  contradict reading or tab order.
+- Exclusion boundary: no native application, QR, OCR, plate recognition, camera
+  processing, real upload/storage, geolocation, ETA or gate-device integration.
+- Technical boundary: no dependency, backend, database, browser storage,
+  network request, e-mail, ERP/WMS/SAP integration, deployment or
+  production-repository access.
 - Contract gate: execution requires a separate exact-SHA Class B issue after
   activation merge, focused and complete CI, mandatory Simplification Pass,
   independent read-only review and controlled squash merge.
