@@ -74,6 +74,18 @@ function WorkspaceHarness() {
       >
         Publish foreign booking
       </button>
+      <button
+        type="button"
+        onClick={() => setError(addRecord({
+          ...confirmedRecord,
+          id: 'appointment-nonweekly-unsafe-001',
+          systemReference: 'APT-NW-UNSAFE-001',
+          externalReference: 'REF-WORKSPACE-UNSAFE',
+          internalPlanningNote: 'Supplier must not inject internal notes',
+        }))}
+      >
+        Publish unsafe booking
+      </button>
       <output aria-label="Workspace publication error">{error ?? ''}</output>
       <output aria-label="Visible workspace record count">{visibleRecords.length}</output>
       <output aria-label="Published booking reference">{published?.externalReference ?? ''}</output>
@@ -112,11 +124,15 @@ describe('non-weekly booking workspace publication', () => {
       .toBe(String(initialVisibleCount + 1));
   });
 
-  it('rejects another Supplier organization and internal actors fail closed', () => {
+  it('rejects foreign scope, unsafe payloads and internal actors fail closed', () => {
     const supplierRender = renderHarness('supplier-administrator');
     fireEvent.click(screen.getByRole('button', { name: 'Publish foreign booking' }));
     expect(screen.getByLabelText('Workspace publication error').textContent)
       .toBe('The active actor cannot add this appointment to the workspace.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publish unsafe booking' }));
+    expect(screen.getByLabelText('Workspace publication error').textContent)
+      .toBe('The appointment is not a safe local standard Supplier booking.');
     supplierRender.unmount();
 
     renderHarness('system-administrator');
