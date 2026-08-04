@@ -45,21 +45,50 @@ describe('standing appointment domain', () => {
   });
 
   it('derives unique scope choices only from supplied visible records', () => {
-    expect(systemChoices.map((choice) => choice.key)).toEqual([
-      'baltic-freight:zielona-gora-plant',
-      'northstar-packaging:nowy-kisielin-dc',
-      'vistula-materials:nowy-kisielin-dc',
-    ]);
+    const expectedSystemKeys = Array.from(new Set(
+      records.map((record) => `${record.supplierOrganizationId}:${record.warehouseId}`),
+    )).sort();
+    expect(systemChoices.map((choice) => choice.key).slice().sort()).toEqual(expectedSystemKeys);
+    expect(systemChoices).toHaveLength(expectedSystemKeys.length);
+
+    for (const choice of systemChoices) {
+      const sourceRecord = records.find((record) =>
+        record.supplierOrganizationId === choice.supplierOrganizationId
+        && record.warehouseId === choice.warehouseId);
+      expect(sourceRecord).toBeDefined();
+      expect(choice).toEqual(expect.objectContaining({
+        supplierName: sourceRecord?.supplierName,
+        warehouseName: sourceRecord?.warehouseName,
+      }));
+    }
+
     const supplierActor = getDemoActor('supplier-administrator');
+    const supplierOrganizationId = supplierActor.supplierOrganizationId;
+    expect(supplierOrganizationId).toBeDefined();
+    if (!supplierOrganizationId) throw new Error('Supplier Administrator demo actor must have an organization.');
+
     const supplierVisible = records.filter((record) =>
-      record.supplierOrganizationId === supplierActor.supplierOrganizationId);
-    const supplierChoices = standingScopeChoices(supplierVisible, supplierActor);
-    expect(supplierChoices).toEqual([expect.objectContaining({
-      supplierOrganizationId: 'vistula-materials',
-      warehouseId: 'nowy-kisielin-dc',
-      supplierName: 'Vistula Materials',
-    })]);
-    expect(JSON.stringify(supplierChoices)).not.toContain('Baltic Freight');
+      record.supplierOrganizationId === supplierOrganizationId);
+    const supplierChoices = standingScopeChoices(records, supplierActor);
+    const expectedSupplierKeys = Array.from(new Set(
+      supplierVisible.map((record) => `${record.supplierOrganizationId}:${record.warehouseId}`),
+    )).sort();
+
+    expect(supplierChoices.map((choice) => choice.key).slice().sort()).toEqual(expectedSupplierKeys);
+    expect(supplierChoices.every((choice) =>
+      choice.supplierOrganizationId === supplierOrganizationId)).toBe(true);
+
+    for (const choice of supplierChoices) {
+      const sourceRecord = supplierVisible.find((record) =>
+        record.warehouseId === choice.warehouseId);
+      expect(sourceRecord).toBeDefined();
+      expect(choice).toEqual(expect.objectContaining({
+        supplierOrganizationId,
+        warehouseId: sourceRecord?.warehouseId,
+        supplierName: sourceRecord?.supplierName,
+        warehouseName: sourceRecord?.warehouseName,
+      }));
+    }
   });
 
   it('finds the first selected weekday on or after the start date', () => {
