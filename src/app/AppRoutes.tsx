@@ -42,6 +42,9 @@ import { ReportingPage } from '../reporting/ReportingPage';
 import { canAccessReporting } from '../reporting/reportingDomain';
 import { NotificationsPage } from '../notifications/NotificationsPage';
 import { DashboardPage } from '../dashboard/DashboardPage';
+import { StandingAppointmentsGuard } from '../standingAppointments/StandingAppointmentsGuard';
+import { StandingAppointmentsPage } from '../standingAppointments/StandingAppointmentsPage';
+import { canAccessStandingAppointments } from '../standingAppointments/standingAppointmentDomain';
 import { DemoDomainProvider, useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import { DemoActionGuard } from '../demoDomain/DemoActionGuard';
 import { DemoRouteGuard } from '../demoDomain/DemoRouteGuard';
@@ -97,6 +100,7 @@ function AppointmentsRoutePage() {
     resolveWorkflow,
   ).length > 0;
   const canOpenReporting = canAccessReporting(activeActor.role);
+  const canOpenStanding = canAccessStandingAppointments(activeActor.role);
 
   return (
     <>
@@ -110,6 +114,11 @@ function AppointmentsRoutePage() {
         <Link to="/notifications" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
           Open notifications and states
         </Link>
+        {canOpenStanding && (
+          <Link to="/standing-appointments" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
+            Open standing appointment series
+          </Link>
+        )}
         {canOpenReporting && (
           <Link to="/reports" className="rounded-md border border-[#023466] px-4 py-2 text-sm font-semibold text-[#023466] focus:outline-none focus:ring-2 focus:ring-[#7FA5D0]">
             Open PO/SKU reports
@@ -171,6 +180,7 @@ export function AppRoutes() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/reports" element={<ReportingGuard><ReportingPage /></ReportingGuard>} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/standing-appointments" element={<StandingAppointmentsGuard><StandingAppointmentsPage /></StandingAppointmentsGuard>} />
               <Route path="/imports/friday-details" element={<FridayImportGuard><FridayImportPage /></FridayImportGuard>} />
               <Route path="/weekly-planning" element={<WeeklyPlanningGuard><WeeklyPlanningPage /></WeeklyPlanningGuard>} />
               <Route path="/users" element={<DemoRouteGuard route="/users"><UsersAccessPage /></DemoRouteGuard>} />
