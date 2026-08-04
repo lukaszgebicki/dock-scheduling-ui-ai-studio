@@ -72,7 +72,8 @@ describe('NonWeeklyBookingPage', () => {
     expect(screen.getByText(/configured fields affect the form: purchase-order, vehicle-registration/)).toBeDefined();
     const beforeDraft = screen.getByLabelText('Workspace booking records').textContent;
     fireEvent.click(screen.getByRole('button', { name: 'Save local Draft preview' }));
-    expect(screen.getByRole('status').textContent).toContain('No workspace record or capacity reservation was created');
+    expect(screen.getByText(/Draft preview retained only on this page/).textContent)
+      .toContain('No workspace record or capacity reservation was created');
     expect(screen.getByLabelText('Workspace booking records').textContent).toBe(beforeDraft);
 
     fireEvent.change(screen.getByLabelText('Reference number *'), { target: { value: 'REF-UI-001' } });
@@ -98,7 +99,8 @@ describe('NonWeeklyBookingPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm local standard appointment' }));
 
     expect(screen.getByRole('heading', { name: 'Standard appointment created' })).toBeDefined();
-    expect(screen.getByRole('status').textContent).toContain('was added to the local workspace');
+    expect(screen.getByText(/was added to the local workspace/).textContent)
+      .toContain('was added to the local workspace');
     const probe = screen.getByLabelText('Workspace booking records').textContent ?? '';
     expect(probe).toContain('REF-UI-001');
     expect(probe).toContain('PO-UI-001');
@@ -118,15 +120,15 @@ describe('NonWeeklyBookingPage', () => {
     expect(within(alert).getByText('Vehicle type is required before slot selection.')).toBeDefined();
     expect(within(alert).getByText('At least one positive volume measure is required.')).toBeDefined();
     expect(within(alert).getByText('Purchase order number is required by warehouse configuration.')).toBeDefined();
-    expect(screen.getByText('Delivery data')).toBeDefined();
+    expect(screen.getByRole('group', { name: 'Delivery data' })).toBeDefined();
   });
 
   it('resets wizard and success state when Supplier actor changes', () => {
     renderPage();
     completeToSummary();
-    expect(screen.getByText('Summary and confirmation')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Summary and confirmation' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Switch Supplier actor' }));
-    expect(screen.getByText('Warehouse and delivery flow')).toBeDefined();
+    expect(screen.getByRole('group', { name: 'Warehouse and delivery flow' })).toBeDefined();
     expect(screen.queryByText('REF-UI-001')).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Standard appointment created' })).toBeNull();
   });
