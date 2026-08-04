@@ -221,7 +221,6 @@ function blockOverlapsUnit(block: WarehouseBlock, unit: string): boolean {
 function blockAffectsDock(
   block: WarehouseBlock,
   dock: DockConfiguration,
-  pools: readonly CapacityPoolConfiguration[],
 ): boolean {
   const scope = block.scope;
   switch (scope.type) {
@@ -232,8 +231,7 @@ function blockAffectsDock(
     case 'dock':
       return scope.dockId === dock.id;
     case 'capacity-pool':
-      return pools.some((pool) =>
-        pool.id === scope.capacityPoolId && pool.dockIds.includes(dock.id));
+      return false;
   }
 }
 
@@ -359,7 +357,7 @@ export function evaluateCapacitySlot(
 
   const unblockedDocks = docks.filter((dock) => !warehouse.blocks.some((block) =>
     block.scope.type !== 'warehouse'
-    && blockAffectsDock(block, dock, warehouse.capacityPools)
+    && blockAffectsDock(block, dock)
     && units.some((unit) => blockOverlapsUnit(block, unit))));
   if (unblockedDocks.length === 0) return failure('WAREHOUSE_BLOCKED');
 
