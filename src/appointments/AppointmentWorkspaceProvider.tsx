@@ -24,6 +24,7 @@ interface AppointmentWorkspaceContextValue {
   savedViews: readonly WorkspaceSavedView[];
   getRecord: (id: string) => AppointmentWorkspaceRecord | null;
   getVisibleRecord: (id: string) => AppointmentWorkspaceRecord | null;
+  addRecord: (record: AppointmentWorkspaceRecord) => string | null;
   updateField: (
     recordId: string,
     field: WorkspaceSafeField,
@@ -53,6 +54,7 @@ const AppointmentWorkspaceContext = createContext<AppointmentWorkspaceContextVal
   savedViews: [],
   getRecord: () => null,
   getVisibleRecord: () => null,
+  addRecord: () => 'Appointment workspace provider is missing.',
   updateField: () => 'Appointment workspace provider is missing.',
   addComment: () => 'Appointment workspace provider is missing.',
   saveView: () => ({
@@ -87,6 +89,28 @@ export function AppointmentWorkspaceProvider({
     state.records.find((record) => record.id === id) ?? null;
   const getVisibleRecord = (id: string) =>
     visibleRecords.find((record) => record.id === id) ?? null;
+
+  const addRecord = (record: AppointmentWorkspaceRecord): string | null => {
+    const isSupplier = activeActor.role === 'Supplier Administrator'
+      || activeActor.role === 'Supplier User';
+    if (!isSupplier
+      || !activeActor.supplierOrganizationId
+      || record.supplierOrganizationId !== activeActor.supplierOrganizationId
+      || !canViewAppointment(record)) {
+      return 'The active actor cannot add this appointment to the workspace.';
+    }
+    const duplicate = state.records.some((candidate) =>
+      candidate.id === record.id
+      || (candidate.supplierOrganizationId === record.supplierOrganizationId
+        && candidate.warehouseId === record.warehouseId
+        && candidate.externalReference.toLocaleLowerCase('en-US')
+          === record.externalReference.toLocaleLowerCase('en-US')
+        && candidate.plannedDate === record.plannedDate
+        && candidate.plannedTime === record.plannedTime));
+    if (duplicate) return 'This local standard booking is already present in the workspace.';
+    setState((current) => ({ ...current, records: [...current.records, record] }));
+    return null;
+  };
 
   const updateField = (
     recordId: string,
@@ -168,6 +192,7 @@ export function AppointmentWorkspaceProvider({
       savedViews,
       getRecord,
       getVisibleRecord,
+      addRecord,
       updateField,
       addComment,
       saveView,
