@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createBlockId,
   initialDemoConfiguration,
   type WarehouseConfiguration,
 } from '../demoDomain/configuration';
@@ -93,6 +94,31 @@ describe('composite capacity domain', () => {
       status: 'draft',
       docks: warehouse.docks.map((dock) => ({ ...dock, active: false })),
     }], [], request()).reasonCode).toBe('WAREHOUSE_NOT_PUBLISHED');
+  });
+
+  it('reports a capacity-pool block without collapsing it into a dock block', () => {
+    const pool = warehouse.capacityPools[0];
+    const poolBlocked: WarehouseConfiguration = {
+      ...constrainedWarehouse(),
+      blocks: [{
+        id: createBlockId('capacity-pool-test-block'),
+        reasonType: 'Capacity Reduction',
+        reason: 'Capacity pool unavailable',
+        scope: { type: 'capacity-pool', capacityPoolId: pool.id },
+        schedule: {
+          kind: 'one-time',
+          date: '2026-08-10',
+          allDay: false,
+          startsAt: '08:00',
+          endsAt: '09:00',
+        },
+      }],
+    };
+
+    expect(evaluateCapacitySlot([poolBlocked], [], request())).toMatchObject({
+      available: false,
+      reasonCode: 'CAPACITY_POOL_BLOCKED',
+    });
   });
 
   it('releases capacity for cancelled and completed records', () => {
