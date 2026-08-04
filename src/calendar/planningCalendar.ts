@@ -122,7 +122,7 @@ function calendarConflict(
     INVALID_SLOT:
       'The booked date, time or duration is invalid. The slot remains unchanged for review.',
     NO_ACTIVE_DOCK:
-      'No active compatible dock is configured. The booked slot is preserved and cannot be treated as operationally ready.',
+      'No active dock compatible with this flow is configured. The booked slot is preserved and cannot be treated as operationally ready.',
     OUTSIDE_WORKING_HOURS:
       'The booked duration is outside configured working hours. It remains unchanged for review.',
     WAREHOUSE_BLOCKED:
