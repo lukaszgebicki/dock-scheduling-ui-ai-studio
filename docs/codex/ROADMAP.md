@@ -71,19 +71,38 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-RESPONSIVE-COMPLETION-1-ACTIVATE — activate responsive completion | DONE; PR #129 squash-merged at `0fe3a4e0acbb9dea5c731d534dd64d2be737f6c6` |
 | UI-MVP-RESPONSIVE-COMPLETION-1 — complete responsive-web screen coverage | DONE; PR #131 squash-merged at `9211bc62590baa6fac5d4d8c642f8a4e26171b62` |
 | UI-MVP-PRODUCT-REVIEW-2-ACTIVATE — activate final scoped completion review | DONE; PR #133 squash-merged at `fe540c63212411378e2eb8e71b1ee56e65cd1192` |
-| UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review | DONE; PR #135 |
+| UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review | DONE; PR #135 squash-merged at `4008906c4ce4640bbbae5e9d1deb8bafc224b7bc` |
 
 ## Active and queued
 
-The frontend-only demonstrational UI MVP is closed as `PASS` under
-`docs/product/UI_MVP_SCOPE_ADDENDUM_v0.4.md` and
-`docs/codex/UI_MVP_PRODUCT_COMPLETION_REVIEW_V2.md`.
+### PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan
 
-There is no active or queued `READY` task.
+- State: `READY`.
+- Risk class: Class A documentation and architecture planning.
+- Objective: define the separate Production Foundation program required to turn
+  the completed frontend demonstration into a safely implementable production
+  system, without inspecting or modifying the production repository.
+- Required deliverables: program charter, target logical architecture,
+  production-readiness quality gates, migration and coexistence strategy,
+  phased implementation backlog, dependencies, risks, decision log and an
+  explicit authorization gate for production-repository assessment.
+- Core domains: production authentication and authorization, durable data and
+  audit history, transactional capacity reservation, API boundaries, background
+  work, notification/document delivery, integrations, deployment,
+  observability, security, privacy, backup/recovery and operational ownership.
+- Reuse boundary: the approved UI MVP behavior and Product Review 2 remain the
+  functional reference. Planning must distinguish reusable domain behavior from
+  demo-only local state and must not claim implementation exists.
+- Repository boundary: all work remains in
+  `lukaszgebicki/dock-scheduling-ui-ai-studio`. The production repository
+  `lukaszgebicki/dock-scheduling-app-ai-studio1707` must not be read, changed or
+  compared without a later explicit Product Authority authorization.
+- Technical boundary: documentation only. No product source, tests,
+  dependencies, CI, security configuration, cloud resource, deployment,
+  integration or production-repository work is authorized.
+- Contract gate: execution requires a separate exact-SHA Class A issue,
+  complete CI, fresh read-only review at least 8/10 and controlled squash merge.
 
-Any further product work requires a new Product Authority decision and a
-separate roadmap activation. Backend, persistence, production authentication,
-transactional multi-session reservation, integrations, real notification or
-document delivery, deployment, observability and operational controls belong to
-a separate Production Foundation program. No production repository is
-authorized by this roadmap closure.
+No implementation task is active. The first post-plan implementation step must
+be an explicitly authorized production-repository assessment or a separately
+approved foundation task in a named repository.
