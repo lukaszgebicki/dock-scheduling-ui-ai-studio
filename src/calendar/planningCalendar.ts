@@ -1,11 +1,13 @@
 import type {
-  SupplierOrganizationId,
-  WarehouseId,
-} from '../demoDomain/demoDomain';
-import type {
-  WarehouseBlock,
+  DeliveryFlow,
+  DockId,
   WarehouseConfiguration,
 } from '../demoDomain/configuration';
+import type { SupplierOrganizationId, WarehouseId } from '../demoDomain/demoDomain';
+import {
+  evaluateCapacitySlot,
+  type CapacityReasonCode,
+} from '../capacity/capacityDomain';
 
 export type BookingOrigin = 'SUPPLIER_RESERVED' | 'ADMIN_ADDED';
 export type PlanningState =
@@ -43,6 +45,10 @@ export interface PlanningAppointment {
   tractorRegistration: string;
   trailerOrContainerRegistration: string;
   skuLines: readonly PlanningSkuLine[];
+  durationMinutes?: number;
+  flow?: DeliveryFlow;
+  assignedDockId?: DockId | null;
+  operationalStatus?: string;
   internalPlanningNote?: string;
   importDiagnostic?: string;
   batchLineage?: string;
@@ -59,9 +65,11 @@ export interface CalendarConflict {
     | 'WAREHOUSE_CONFIGURATION_MISSING'
     | 'WAREHOUSE_CONFIGURATION_AMBIGUOUS'
     | 'WAREHOUSE_NOT_PUBLISHED'
+    | 'INVALID_SLOT'
     | 'NO_ACTIVE_DOCK'
     | 'OUTSIDE_WORKING_HOURS'
     | 'WAREHOUSE_BLOCKED'
+    | 'CAPACITY_CONFIGURATION_MISSING'
     | 'CAPACITY_EXCEEDED';
   message: string;
 }
@@ -72,92 +80,60 @@ export interface PlanningCalendarCard {
   conflict: CalendarConflict | null;
 }
 
-function minutes(value: string): number {
-  const match = /^(\d{2}):(\d{2})$/.exec(value);
-  if (!match) return Number.NaN;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function weekday(date: string): number {
-  return new Date(`${date}T12:00:00Z`).getUTCDay();
-}
-
-function blockApplies(block: WarehouseBlock, appointment: PlanningAppointment): boolean {
-  if (block.scope.type !== 'warehouse') return false;
-  if (block.schedule.kind === 'one-time') {
-    if (block.schedule.date !== appointment.plannedDate) return false;
-    if (block.schedule.allDay) return true;
-    const planned = minutes(appointment.plannedTime);
-    return planned >= minutes(block.schedule.startsAt)
-      && planned < minutes(block.schedule.endsAt);
-  }
-  if (!block.schedule.weekdays.includes(weekday(appointment.plannedDate) as 0 | 1 | 2 | 3 | 4 | 5 | 6)) {
-    return false;
-  }
-  const planned = minutes(appointment.plannedTime);
-  return planned >= minutes(block.schedule.startsAt)
-    && planned < minutes(block.schedule.endsAt);
-}
-
-function configurationConflict(
+function calendarConflict(
   appointment: PlanningAppointment,
-  matchingWarehouses: readonly WarehouseConfiguration[],
+  warehouses: readonly WarehouseConfiguration[],
   appointments: readonly PlanningAppointment[],
 ): CalendarConflict | null {
-  if (matchingWarehouses.length === 0) {
-    return {
-      kind: 'WAREHOUSE_CONFIGURATION_MISSING',
-      message: 'Calendar configuration is missing. Keep the booked slot and contact an Administrator.',
-    };
-  }
-  if (matchingWarehouses.length > 1) {
-    return {
-      kind: 'WAREHOUSE_CONFIGURATION_AMBIGUOUS',
-      message: 'More than one warehouse configuration matches this booking. The slot remains unchanged until configuration is corrected.',
-    };
-  }
-  const warehouse = matchingWarehouses[0];
-  if (warehouse.status !== 'published') {
-    return {
-      kind: 'WAREHOUSE_NOT_PUBLISHED',
-      message: 'Warehouse configuration is not published. The booked slot was not changed.',
-    };
-  }
-  if (!warehouse.docks.some((dock) => dock.active)) {
-    return {
-      kind: 'NO_ACTIVE_DOCK',
-      message: 'No active dock is configured. The booked slot is preserved and cannot be treated as operationally ready.',
-    };
-  }
-  const day = warehouse.workingDays.find((candidate) => candidate.weekday === weekday(appointment.plannedDate));
-  const planned = minutes(appointment.plannedTime);
-  if (!day?.enabled || planned < minutes(day.opensAt) || planned >= minutes(day.closesAt)) {
-    return {
-      kind: 'OUTSIDE_WORKING_HOURS',
-      message: 'The booked slot is outside configured working hours. It remains unchanged for review.',
-    };
-  }
-  if (warehouse.blocks.some((block) => blockApplies(block, appointment))) {
-    return {
-      kind: 'WAREHOUSE_BLOCKED',
-      message: 'A configured block conflicts with this booking. No move, cancellation or override occurred.',
-    };
-  }
-  const configuredCapacity = warehouse.capacityPools.reduce(
-    (sum, pool) => sum + Math.max(0, pool.concurrentVehicles),
-    0,
-  );
-  const simultaneous = appointments.filter((candidate) =>
-    candidate.warehouseId === appointment.warehouseId
-    && candidate.plannedDate === appointment.plannedDate
-    && candidate.plannedTime === appointment.plannedTime).length;
-  if (configuredCapacity <= 0 || simultaneous > configuredCapacity) {
-    return {
-      kind: 'CAPACITY_EXCEEDED',
-      message: 'Configured capacity is exceeded. The selected slot is preserved and requires Administrator review.',
-    };
-  }
-  return null;
+  const result = evaluateCapacitySlot(warehouses, appointments, {
+    warehouseId: appointment.warehouseId,
+    date: appointment.plannedDate,
+    time: appointment.plannedTime,
+    durationMinutes: appointment.durationMinutes ?? 15,
+    flow: appointment.flow ?? 'Material Delivery',
+    dockId: appointment.assignedDockId ?? undefined,
+    excludeAppointmentId: appointment.id,
+  });
+  if (result.available) return null;
+
+  const kindByReason: Readonly<Record<
+    Exclude<CapacityReasonCode, 'AVAILABLE'>,
+    CalendarConflict['kind']
+  >> = {
+    WAREHOUSE_CONFIGURATION_MISSING: 'WAREHOUSE_CONFIGURATION_MISSING',
+    WAREHOUSE_CONFIGURATION_AMBIGUOUS: 'WAREHOUSE_CONFIGURATION_AMBIGUOUS',
+    WAREHOUSE_NOT_PUBLISHED: 'WAREHOUSE_NOT_PUBLISHED',
+    INVALID_SLOT: 'INVALID_SLOT',
+    OUTSIDE_WORKING_HOURS: 'OUTSIDE_WORKING_HOURS',
+    NO_ACTIVE_COMPATIBLE_DOCK: 'NO_ACTIVE_DOCK',
+    WAREHOUSE_BLOCKED: 'WAREHOUSE_BLOCKED',
+    CAPACITY_POOL_MISSING: 'CAPACITY_CONFIGURATION_MISSING',
+    CAPACITY_POOL_BLOCKED: 'WAREHOUSE_BLOCKED',
+    CAPACITY_EXCEEDED: 'CAPACITY_EXCEEDED',
+  };
+
+  const messages: Readonly<Record<CalendarConflict['kind'], string>> = {
+    WAREHOUSE_CONFIGURATION_MISSING:
+      'Calendar configuration is missing. Keep the booked slot and contact an Administrator.',
+    WAREHOUSE_CONFIGURATION_AMBIGUOUS:
+      'More than one warehouse configuration matches this booking. The slot remains unchanged until configuration is corrected.',
+    WAREHOUSE_NOT_PUBLISHED:
+      'Warehouse configuration is not published. The booked slot was not changed.',
+    INVALID_SLOT:
+      'The booked date, time or duration is invalid. The slot remains unchanged for review.',
+    NO_ACTIVE_DOCK:
+      'No active compatible dock is configured. The booked slot is preserved and cannot be treated as operationally ready.',
+    OUTSIDE_WORKING_HOURS:
+      'The booked duration is outside configured working hours. It remains unchanged for review.',
+    WAREHOUSE_BLOCKED:
+      'A configured block conflicts with this booking. No move, cancellation or override occurred.',
+    CAPACITY_CONFIGURATION_MISSING:
+      'Compatible capacity configuration is missing. The booked slot remains unchanged for Administrator review.',
+    CAPACITY_EXCEEDED:
+      'Configured capacity is exceeded for at least one occupied 15-minute unit. The selected slot is preserved and requires Administrator review.',
+  };
+  const kind = kindByReason[result.reasonCode as Exclude<CapacityReasonCode, 'AVAILABLE'>];
+  return { kind, message: messages[kind] };
 }
 
 export function aggregatePlanningLines(lines: readonly PlanningSkuLine[]): PlanningCardTotals | null {
@@ -182,11 +158,7 @@ export function buildPlanningCalendar(
     .map((appointment) => ({
       appointment,
       totals: aggregatePlanningLines(appointment.skuLines),
-      conflict: configurationConflict(
-        appointment,
-        warehouses.filter((warehouse) => warehouse.id === appointment.warehouseId),
-        appointments,
-      ),
+      conflict: calendarConflict(appointment, warehouses, appointments),
     }));
 }
 
@@ -206,6 +178,8 @@ export const planningAppointments: readonly PlanningAppointment[] = [
     tractorRegistration: 'TR-100',
     trailerOrContainerRegistration: 'TRL-200',
     skuLines: [],
+    durationMinutes: 30,
+    flow: 'Material Delivery',
   },
   {
     id: 'planning-baltic-2001',
@@ -258,6 +232,8 @@ export const planningAppointments: readonly PlanningAppointment[] = [
         sourceRowId: 'row-3',
       },
     ],
+    durationMinutes: 45,
+    flow: 'Material Delivery',
     internalPlanningNote: 'Internal import review complete',
     importDiagnostic: 'EXACT_MATCH',
     batchLineage: 'batch-demo-1',
@@ -286,5 +262,7 @@ export const planningAppointments: readonly PlanningAppointment[] = [
       goodsCategory: 'PACKAGING',
       handling: 'Fragile',
     }],
+    durationMinutes: 30,
+    flow: 'Material Delivery',
   },
 ];
