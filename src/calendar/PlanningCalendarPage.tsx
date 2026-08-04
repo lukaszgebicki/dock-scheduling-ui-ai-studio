@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CapacityDemonstration } from '../capacity/CapacityDemonstration';
 import { useDemoDomain } from '../demoDomain/DemoDomainProvider';
 import {
   buildPlanningCalendar,
@@ -170,6 +171,8 @@ export function PlanningCalendarPage() {
           })}
         </div>
       )}
+
+      <CapacityDemonstration actor={activeActor} warehouses={configuration.warehouses} />
     </section>
   );
 }
