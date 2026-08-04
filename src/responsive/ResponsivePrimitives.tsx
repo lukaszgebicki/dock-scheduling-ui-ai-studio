@@ -25,40 +25,6 @@ export function ResponsiveActionGroup({
   );
 }
 
-export function MobileStepProgress({
-  current,
-  total,
-  label,
-}: {
-  current: number;
-  total: number;
-  label: string;
-}) {
-  const progress = Math.round((current / total) * 100);
-  return (
-    <section
-      aria-label="Mobile booking progress"
-      data-responsive-screen="mobile-step-progress"
-      className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 sm:hidden"
-    >
-      <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="font-semibold text-[#023466]">Step {current} of {total}</span>
-        <span className="min-w-0 truncate text-right text-gray-700">{label}</span>
-      </div>
-      <div
-        role="progressbar"
-        aria-label="Booking progress"
-        aria-valuemin={1}
-        aria-valuemax={total}
-        aria-valuenow={current}
-        className="mt-3 h-2 overflow-hidden rounded-full bg-white ring-1 ring-blue-200"
-      >
-        <span className="block h-full bg-[#023466]" style={{ width: `${progress}%` }} />
-      </div>
-    </section>
-  );
-}
-
 export function DesktopRecommendedNotice({
   title = 'Desktop recommended for complex configuration',
   children,
@@ -87,5 +53,3 @@ export function defaultResponsiveCalendarView(
     ? 'day'
     : 'week';
 }
-
-export const touchTargetClass = 'min-h-11';
