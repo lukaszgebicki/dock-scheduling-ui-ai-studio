@@ -59,7 +59,8 @@ material. It is not canonical for current production code.
 
 ## Next-step gate
 
-- `PROD-GOVERNANCE-SYNC-1` is the current governance task in issue #143.
+- `PROD-GOVERNANCE-SYNC-1`: `PR_OPEN` in issue #143 with Draft PR #144.
+- PR #144 has not been merged; Product Authority approval remains required.
 - Completion of the assessment and this governance synchronization does not automatically activate another production task.
 - `PROD-OBSERVABILITY-FOUNDATION-1` and the first transactional booking vertical slice are recommended directions only.
 - Any next production task requires a separate Product Authority decision, exact production base SHA, allowed/protected paths, validation contract and merge gate.

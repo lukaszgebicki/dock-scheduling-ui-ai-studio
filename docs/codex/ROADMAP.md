@@ -80,14 +80,15 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 
 ### PROD-GOVERNANCE-SYNC-1 — reconcile production program governance
 
-- State: `IN_PROGRESS`.
+- State: `PR_OPEN`.
 - Issue: #143.
+- Draft Pull Request: #144.
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Exact UI base SHA: `03c8561795ffdcc72eaea0469a1d43f3a11d4b14`.
 - Production repository is reference-only for this task.
 - Exact production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
 - Objective: reconcile active planning and governance with the completed assessment and the verified implementation state of the production repository.
-- Publication boundary: one Draft Pull Request; no merge without Product Authority approval.
+- Merge gate: Product Authority approval is required; the task is not `DONE`.
 
 No production implementation task is `READY`. Completion of this governance
 synchronization does not activate implementation work.

@@ -41,28 +41,42 @@ The UI repository is not the canonical source for current production code.
 ## Operating rules
 
 - Only one implementation task may be `READY` at a time unless Product Authority explicitly approves parallel work.
-- Every implementation task requires a separate exact production base SHA, named repository, allowed and protected paths, validation depth and review gate.
+- Every task requires an exact base SHA, named repository, allowed paths, protected paths, CI depth and review gate.
+- Production-repository work requires a separately scoped exact-SHA task and explicit authorization.
+- Architecture decisions must be reconciled with actual repository evidence before implementation.
 - The UI MVP is a functional reference, not a production code-completeness or production-readiness claim.
-- Architecture and planning must be reconciled with current production-repository evidence before implementation.
-- No task may weaken six-role scope, Supplier organization isolation, transactional capacity, approval safety, immutable audit evidence or fail-closed validation.
+- No task may weaken six-role scope, Supplier organization isolation, transactional capacity, approval safety, audit evidence or fail-closed validation.
 - Production deployment, cloud resources, production data and secrets require separate explicit authorization.
 - No new production task is activated by this backlog update.
 
 ## Phase overview
 
-| Phase | Current state | Exit result |
+| Phase | Objective | Exit result |
 | --- | --- | --- |
-| P0 — Authorization and assessment | `DONE` through issue #141 and merged PR #142. | Approved evolve-not-replace decision, evidence, risk register and implementation baseline. |
-| P1 — Platform foundation | `PARTIAL`; major security, CI, identity, RBAC and administration foundations completed; operational platform foundations remain. | Deployable, secure and observable platform with controlled delivery and recovery. |
-| P2 — Transactional vertical slice | `NOT_ACTIVATED`. | Durable Supplier booking that cannot oversubscribe capacity. |
-| P3 — Core operational workflows | `NOT_ACTIVATED`. | Core warehouse operation works against durable data. |
-| P4 — Planning and delivery services | `NOT_ACTIVATED`. | Supporting workflows are durable, idempotent and observable. |
-| P5 — Hardening and migration | `NOT_ACTIVATED`. | Production-readiness gates, recovery and migration evidence pass. |
-| P6 — Pilot and release | `NOT_ACTIVATED`. | Product Authority signs off controlled release. |
+| P0 — Authorization and assessment | Understand the named production repository and reconcile the plan with reality. | Approved reuse/replace/retire map, risk register and implementation baseline. |
+| P1 — Platform foundation | Establish deployable, secure, durable technical foundations. | Environments, API, database, migrations, CI/CD, auth skeleton and observability foundation. |
+| P2 — Transactional vertical slice | Prove one secure end-to-end booking journey. | Supplier booking persists durably and cannot oversubscribe capacity. |
+| P3 — Core operational workflows | Add approval, lifecycle, gate and operator workflows. | Core warehouse operation works against durable data. |
+| P4 — Planning and delivery services | Add weekly planning/import, files, notifications and reporting. | Principal supporting workflows are durable, idempotent and observable. |
+| P5 — Hardening and migration | Prove performance, security, recovery and data transition. | Production-readiness gates G4–G5 pass. |
+| P6 — Pilot and release | Controlled launch with rollback and support. | Product Authority signs off production release. |
+
+## Current status overlay
+
+- P0 is `DONE` through issue #141 and merged PR #142.
+- P1 is partial: security/API hardening, critical/high dependency remediation, PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged mutation audit, global System Administrator lifecycle, invitation issuance/acceptance and immutable per-user audit reads are implemented in the production repository.
+- P2–P6 are not activated.
+- The implemented foundations do not make Dock Scheduling production-ready.
+- Observability remains within `PROD-OBSERVABILITY-FOUNDATION-1` and is a recommended direction only.
+- Final multi-instance rate limiting remains an open security-hardening concern within the approved P5 security work.
+- Deployment and environment promotion remain open within the approved CI/CD, performance/reliability and release work.
+- Business configuration remains open within the approved data foundation and booking vertical-slice contracts.
+- Transactional outbox and workers remain open within the approved notification-delivery contract.
+- The first transactional booking vertical slice remains a recommendation only and requires a separate Product Authority decision and exact-SHA task contract.
 
 ## P0 — Authorization and assessment
 
-### PROD-REPO-ASSESSMENT-1 — production repository assessment
+### PROD-REPO-ASSESSMENT-1 — read-only production repository assessment
 
 **State:** `DONE`.
 
@@ -71,7 +85,34 @@ The UI repository is not the canonical source for current production code.
 - Issue #141 was completed by merged PR #142.
 - Historical issue #140 is superseded and closed as not planned; its original text remains historical evidence of the pre-authorization blocker.
 - Assessment conclusion: evolve the existing production repository and preserve the authentication/monorepo nucleus.
-- The first recommended remediations were executed in the production repository through separately scoped issues and Pull Requests.
+- Production repository writes during the assessment: none.
+
+Approved assessment scope:
+
+- repository topology, applications, packages and ownership;
+- current architecture and runtime assumptions;
+- dependency and security posture;
+- authentication, authorization and persistence status;
+- API, schema, migrations and data model;
+- tests, CI/CD, deployment and environment configuration;
+- existing UI MVP overlap and divergence;
+- reusable, replaceable and removable components;
+- operational, compliance and migration risks.
+
+Completed deliverables:
+
+- `PRODUCTION_REPOSITORY_ASSESSMENT.md`;
+- source-to-target architecture comparison;
+- reuse/replace/retire matrix;
+- prioritized remediation list;
+- recommended exact baseline for P1;
+- ADR backlog updates.
+
+Exit criteria result:
+
+- zero production repository writes during assessment;
+- evidence-backed recommendation approved by Product Authority;
+- subsequent production work executed only through separately scoped issues and Pull Requests.
 
 ## Completed Production Foundation groups
 
@@ -93,65 +134,105 @@ reference SHA `11c253ef08708cc8095c5218e3b4e3a447013be1`:
 The repository was developed in place; it was not replaced. These completed
 foundation groups do not establish complete production readiness.
 
-## Open platform foundations
+## P1 — Platform foundation
 
-### PROD-OBSERVABILITY-FOUNDATION-1 — logs, metrics, traces and operations
+Sequence may change after P0 evidence.
 
-**State:** `RECOMMENDED_NOT_ACTIVATED`.
+### PROD-ARCH-ADR-1 — architecture decision baseline
 
-Open scope:
+Create and approve the required ADR set for repository topology, identity, authorization, persistence, capacity, outbox/jobs, files, notifications, observability, hosting and migration.
 
-- structured redacted logs across API, database and future workers;
-- metrics and traces;
+Exit criteria:
+
+- decisions reference actual repository evidence;
+- rejected options and consequences are recorded;
+- no unresolved high-risk architecture ambiguity blocks implementation.
+
+### PROD-CI-CD-FOUNDATION-1 — controlled delivery pipeline
+
+Scope:
+
+- reproducible install/build/test;
+- branch and PR checks;
+- dependency, secret and static-analysis scanning;
+- immutable artifacts;
+- environment promotion and rollback;
+- protected production deployment approval.
+
+Exit criteria:
+
+- clean ephemeral build from lockfile;
+- required checks block merge;
+- production deployment cannot occur from an unreviewed branch;
+- release version is observable.
+
+### PROD-DATA-FOUNDATION-1 — PostgreSQL schema and migrations
+
+Scope:
+
+- managed relational database contract;
+- migration tooling and expand/contract policy;
+- core tenant, warehouse, Supplier, user, configuration and audit entities;
+- local/integration test database lifecycle;
+- backup and point-in-time recovery configuration design.
+
+Exit criteria:
+
+- migrations run forward from empty database;
+- rollback/forward-fix procedure documented;
+- tenant and warehouse constraints are represented;
+- audit records are append-only by contract.
+
+### PROD-AUTH-RBAC-1 — production identity and server authorization
+
+Scope:
+
+- OIDC/session integration;
+- user-to-identity mapping;
+- six-role model;
+- Supplier organization and warehouse grants;
+- server authorization middleware/policies;
+- inactive/revoked access;
+- privileged-change audit.
+
+Exit criteria:
+
+- negative cross-organization and cross-warehouse tests pass;
+- hidden UI controls are not relied upon;
+- all protected endpoints require authenticated scope;
+- privileged actions are audited.
+
+### PROD-OBSERVABILITY-FOUNDATION-1 — logs, metrics and traces
+
+Scope:
+
+- correlation IDs;
+- structured redacted logs;
+- request/job traces;
+- API/database/queue baseline metrics;
 - error monitoring;
-- service-level objectives and alert ownership;
-- health/readiness operational integration;
-- actionable runbook templates.
+- health/readiness endpoints;
+- alert ownership and runbook template.
 
-### PROD-RATE-LIMITING-FINAL-1 — final multi-instance abuse protection
+Exit criteria:
 
-**State:** `PLANNED_NOT_ACTIVATED`.
-
-The current in-process limiter and security controls are not the final
-multi-instance production control. The final design must define trusted proxy
-topology and a shared edge or distributed limiter without secret-bearing keys.
-
-### PROD-DELIVERY-ENVIRONMENT-1 — deployment and environment promotion
-
-**State:** `PLANNED_NOT_ACTIVATED`.
-
-Open scope includes immutable artifacts, environment configuration contracts,
-promotion, protected production approval, rollback and release observability.
-
-### PROD-BACKUP-DR-1 — backup, restore and runbooks
-
-**State:** `PLANNED_NOT_ACTIVATED`.
-
-Open scope includes backup policy, point-in-time recovery, restore rehearsal,
-measured RPO/RTO and disaster runbooks.
-
-### PROD-BUSINESS-CONFIG-1 — durable business configuration
-
-**State:** `PLANNED_NOT_ACTIVATED`.
-
-Open scope includes warehouse scheduling rules, Supplier participation,
-capacity calendars, working hours, blocks and other approved configuration
-needed by a booking vertical slice.
+- one request is traceable through API, database and worker;
+- sensitive values are absent from telemetry;
+- alerts identify owner and actionable response.
 
 ## P2 — Transactional vertical slice
 
 ### PROD-BOOKING-VERTICAL-SLICE-1 — Supplier booking to durable appointment
 
-**State:** `RECOMMENDED_NOT_ACTIVATED`.
+Dependencies:
 
-Dependencies remain:
+- architecture ADRs;
+- CI/CD foundation;
+- data foundation;
+- auth/RBAC;
+- observability foundation.
 
-- an approved architecture contract for the slice;
-- usable observability;
-- final decisions for business configuration and capacity persistence;
-- exact production base SHA and separate Product Authority activation.
-
-Planned scope:
+Scope:
 
 - published warehouse/Supplier configuration reads;
 - five-step standard Supplier booking API and web integration;
@@ -163,69 +244,289 @@ Planned scope:
 - list/details projection;
 - integration and concurrency tests.
 
-Exit evidence must prove exactly one success for concurrent attempts at the last
-capacity unit, deterministic idempotent replay, Supplier isolation, atomic
-state/audit/outbox behavior and service-level telemetry.
+Exit criteria:
+
+- two concurrent attempts for the last unit yield exactly one success;
+- retry with the same idempotency key returns the original result;
+- Supplier cannot access another organization’s record;
+- database state, audit and response are consistent after failure injection;
+- service-level telemetry exists.
 
 ### PROD-CAPACITY-TRANSACTION-1 — capacity model hardening
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+May be part of the vertical slice or a focused follow-up.
 
-May be part of the first vertical slice or a separately approved follow-up. It
-must establish duration-aware constraints, reservation lifecycle, bounded
-contention behavior and audited override without oversubscription.
+Scope:
+
+- duration units/intervals;
+- dock and capacity-pool constraints;
+- blocks and working hours;
+- reservation lifecycle and release;
+- alternatives;
+- reasoned authorized override;
+- contention/performance tests.
+
+Exit criteria:
+
+- database constraints/locking prevent oversubscription;
+- deadlock/retry behavior is bounded and observable;
+- override is audited and alerted;
+- representative load meets approved latency targets.
 
 ## P3 — Core operational workflows
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+### PROD-APPROVAL-LIFECYCLE-1
 
-Planned work remains:
+Scope:
 
-- `PROD-APPROVAL-LIFECYCLE-1`;
-- `PROD-OPERATOR-MANUAL-BOOKING-1`;
-- `PROD-GATE-OPS-1`.
+- auto/manual/rule approval;
+- routed authorized work queues;
+- request data, approve and reject;
+- reschedule/cancel with cut-offs and capacity revalidation;
+- independent planning/change/operational states;
+- immutable history and notifications intent.
 
-These tasks require durable booking/capacity foundations and separate Product
-Authority activation.
+Exit criteria:
+
+- transition matrix tests pass server-side;
+- missing actor/rule/configuration fails closed;
+- concurrent updates use expected version and reject lost writes.
+
+### PROD-OPERATOR-MANUAL-BOOKING-1
+
+Scope:
+
+- Warehouse Operator creates for assigned active Supplier;
+- same configuration, validation, capacity and approval services as Supplier booking;
+- actor-on-behalf-of evidence;
+- durable `ADMIN_ADDED` origin.
+
+Exit criteria:
+
+- no duplicate booking engine or weakened scope;
+- all actions are attributable to the Operator and Supplier context.
+
+### PROD-GATE-OPS-1
+
+Scope:
+
+- scoped search;
+- arrival/driver evidence;
+- check-in/out;
+- waiting, dock, unloading and completion;
+- registration correction;
+- No Show;
+- unannounced visit;
+- degraded/offline operating decision.
+
+Exit criteria:
+
+- role and warehouse scope enforced by API;
+- dock/capacity compatibility preserved;
+- all transitions and corrections are audited.
 
 ## P4 — Planning and delivery services
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+### PROD-WEEKLY-PLANNING-IMPORT-1
 
-Planned work remains:
+Scope:
 
-- weekly planning and idempotent import;
-- files/object storage and quarantine;
-- transactional outbox, workers and notification delivery;
-- reporting, dashboards and controlled exports.
+- weekly reservation persistence;
+- exact Friday CSV preview and apply;
+- import batch/group storage;
+- fingerprints and idempotency;
+- unmatched and ambiguous workflow;
+- transport reconciliation;
+- file quarantine and audit.
 
-### PROD-OUTBOX-WORKERS-1 — transactional outbox and workers
+Exit criteria:
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+- duplicate file/group application has no duplicate effect;
+- preview and apply remain separate;
+- exact identity and Supplier transport authority are preserved.
 
-This foundation remains open and must precede reliable asynchronous
-notifications and other background delivery workflows.
+### PROD-FILES-1
+
+Scope:
+
+- object storage;
+- signed upload/download;
+- metadata, checksums and authorization;
+- scan/quarantine;
+- retention and deletion.
+
+Exit criteria:
+
+- unauthorized access fails;
+- unsafe/unscanned files are unavailable;
+- signed URLs are short-lived and not logged.
+
+### PROD-NOTIFICATIONS-1
+
+Scope:
+
+- transactional outbox;
+- worker and provider adapter;
+- recipient resolution and preferences;
+- retries/dead letter;
+- delivery evidence;
+- templates and localization decision.
+
+Exit criteria:
+
+- domain commit is independent from provider availability;
+- retries cannot duplicate user-visible notification beyond defined semantics;
+- failure is observable and replayable.
+
+### PROD-REPORTING-DASHBOARD-1
+
+Scope:
+
+- scoped server queries;
+- durable KPI denominators/timestamps;
+- asynchronous large exports;
+- expiring download artifacts;
+- audit of export request and scope.
+
+Exit criteria:
+
+- report totals reconcile to source records;
+- no cross-tenant export leakage;
+- unavailable metrics are not fabricated.
 
 ## P5 — Hardening and migration
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+### PROD-SECURITY-HARDENING-1
 
-Remaining work includes threat modeling, independent security review,
-performance/contention tests, operational resilience, backup/restore proof and
-any required data migration rehearsal.
+Scope:
+
+- threat model;
+- secure configuration review;
+- SAST/dependency/container/IaC scans;
+- rate and abuse protection;
+- privileged access review;
+- penetration test or independent security review;
+- remediation.
+
+Exit criteria:
+
+- zero unresolved critical/high findings;
+- accepted residual risks have owner and expiry.
+
+### PROD-PERFORMANCE-RELIABILITY-1
+
+Scope:
+
+- load and contention tests;
+- database indexes and query plans;
+- worker throughput;
+- provider outage tests;
+- deployment rollback;
+- graceful degradation.
+
+Exit criteria:
+
+- approved p95 and throughput targets pass;
+- capacity correctness survives contention;
+- alerts and runbooks are verified.
+
+### PROD-BACKUP-DR-1
+
+Scope:
+
+- backup policy;
+- point-in-time recovery;
+- object recovery;
+- restore rehearsal;
+- RPO/RTO measurement;
+- disaster runbook.
+
+Exit criteria:
+
+- restore succeeds in a clean environment;
+- measured RPO/RTO meet approved targets;
+- evidence is retained.
+
+### PROD-DATA-MIGRATION-1
+
+Scope depends on assessment and data sources.
+
+Required pattern:
+
+- source inventory and classification;
+- mapping and transform rules;
+- dry-run;
+- reconciliation counts/checksums;
+- exception handling;
+- rollback/source snapshot;
+- approval before cutover.
+
+Exit criteria:
+
+- representative rehearsal reconciles completely or approved exceptions are documented;
+- no source is destroyed before acceptance and retention approval.
 
 ## P6 — Pilot and release
 
-**State:** `PLANNED_NOT_ACTIVATED`.
+### PROD-UAT-PILOT-1
 
-Pilot and release require production-like environment evidence, representative
-UAT, support ownership, rollback proof and explicit Product Authority sign-off.
+Scope:
+
+- representative users for all required roles;
+- limited warehouse/Supplier cohort;
+- production-like environment and support;
+- success metrics, stop conditions and feedback triage;
+- migration and rollback rehearsal.
+
+Exit criteria:
+
+- UAT scenarios pass;
+- operational owners accept dashboards/runbooks;
+- Product Authority approves pilot result.
+
+### PROD-RELEASE-1
+
+Scope:
+
+- production change approval;
+- final security and operational review;
+- migration/cutover;
+- monitoring and hypercare;
+- rollback decision window;
+- post-release reconciliation.
+
+Exit criteria:
+
+- Gates G0–G7 pass;
+- no unresolved critical finding;
+- Product Authority, engineering, security and operations sign off.
+
+## Dependency chain
+
+```text
+PROD-REPO-ASSESSMENT-1
+  -> PROD-ARCH-ADR-1
+  -> PROD-CI-CD-FOUNDATION-1
+  -> PROD-DATA-FOUNDATION-1
+  -> PROD-AUTH-RBAC-1
+  -> PROD-OBSERVABILITY-FOUNDATION-1
+  -> PROD-BOOKING-VERTICAL-SLICE-1
+  -> core operational workflows
+  -> planning/delivery services
+  -> security/performance/recovery/migration
+  -> UAT pilot
+  -> production release
+```
+
+Some P1 tasks may run in controlled parallel after assessment, but the booking vertical slice cannot start until identity, authorization, persistence, delivery and observability foundations are usable.
 
 ## Current program state
 
-- `PROD-REPO-ASSESSMENT-1`: `DONE` through issue #141 and PR #142.
-- `PROD-GOVERNANCE-SYNC-1`: `IN_PROGRESS` in issue #143.
+- `PROD-REPO-ASSESSMENT-1`: `DONE` through issue #141 and merged PR #142.
+- Historical issue #140: superseded and closed as not planned.
+- `PROD-GOVERNANCE-SYNC-1`: `PR_OPEN` in issue #143 with Draft PR #144.
 - Current production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
+- No merge has occurred; Product Authority approval remains required.
 - No production implementation task is `READY`.
 - `PROD-OBSERVABILITY-FOUNDATION-1` and the first transactional booking vertical slice are recommendations only.
 - The next implementation direction requires a separate Product Authority decision and exact-SHA task contract.
