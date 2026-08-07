@@ -74,27 +74,68 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-PRODUCT-REVIEW-2 — final scoped UI MVP completion review | DONE; PR #135 squash-merged at `4008906c4ce4640bbbae5e9d1deb8bafc224b7bc` |
 | PROD-FOUNDATION-PLAN-1-ACTIVATE — activate production foundation planning | DONE; PR #137 squash-merged at `cd293a11daf0bddd35ba5141c71f7ad6d8de6a98` |
 | PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan | DONE; PR #139 |
+| PROD-REPO-ASSESSMENT-1 — authorized production repository assessment | DONE; issue #141 completed by merged PR #142; assessed production SHA `c758e8403a4693fa7ba96081254072ad5d743aba` |
 
-## Active and queued
+## Active
 
-### PROD-REPO-ASSESSMENT-1 — read-only production repository assessment
+### PROD-GOVERNANCE-SYNC-1 — reconcile production program governance
 
-- State: `BLOCKED`.
-- Objective: inspect the named production repository, reconcile the target
-  architecture with actual code and produce a reuse/replace/retire decision,
-  risk register and exact implementation baseline.
-- Repository: `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
-- Blocker: Product Authority has not yet explicitly authorized repository access.
-- Required authorization: exact branch or SHA, permitted read actions and paths,
-  security/dependency scanning permission, local clone/worktree permission and
-  an explicit statement whether issue, branch or PR creation is prohibited or
-  permitted.
-- Default execution after authorization: read-only assessment. No source change,
-  branch, commit or PR is allowed unless separately authorized.
-- Planning authority: `docs/product/PRODUCTION_FOUNDATION_CHARTER_v0.1.md`,
-  `docs/architecture/PRODUCTION_TARGET_ARCHITECTURE_v0.1.md` and
-  `docs/codex/PRODUCTION_FOUNDATION_BACKLOG.md`.
+- State: `PR_OPEN`.
+- Issue: #143.
+- Draft Pull Request: #144.
+- Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
+- Exact UI base SHA: `03c8561795ffdcc72eaea0469a1d43f3a11d4b14`.
+- Production repository is reference-only for this task.
+- Exact production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
+- Objective: reconcile active planning and governance with the completed assessment and the verified implementation state of the production repository.
+- Merge gate: Product Authority approval is required; the task is not `DONE`.
 
-No task is `READY`. No production implementation or production-repository
-access is authorized until the blocker above is explicitly resolved by Product
-Authority.
+No production implementation task is `READY`. Completion of this governance
+synchronization does not activate implementation work.
+
+## Production Foundation status
+
+The authorized assessment concluded that the production repository should be
+evolved rather than replaced. Since the historical assessed SHA, separately
+scoped production work has completed these foundation groups:
+
+- security and API baseline hardening;
+- critical/high dependency remediation and blocking audit evidence;
+- required PostgreSQL integration CI;
+- scoped six-role server RBAC and persisted scope assignments;
+- organization, Supplier organization, warehouse and participation identities;
+- privileged role and user-status mutations with immutable audit evidence;
+- global System Administrator user directory and lifecycle administration;
+- one-time invitation issuance and atomic invitation acceptance;
+- immutable per-user reads for role, status, invitation and creation audit history.
+
+These completed groups are foundations, not a claim that Dock Scheduling is
+production-ready. Observability, final multi-instance rate limiting,
+deployment and environment promotion, backup/restore and runbooks, business
+configuration, transactional booking and capacity, and outbox/workers remain
+open.
+
+## Recommended next directions — not activated
+
+The following are planning recommendations only and require a separate Product
+Authority decision, exact-SHA issue and task contract before they can become
+`READY`:
+
+1. `PROD-OBSERVABILITY-FOUNDATION-1` — complete logs, metrics, traces, alert ownership and operational runbooks.
+2. The first transactional booking vertical slice — durable Supplier booking with server-side validation, idempotency and oversubscription-safe capacity.
+
+## Canonical sources of truth
+
+### Production implementation
+
+`lukaszgebicki/dock-scheduling-app-ai-studio1707` is canonical for production
+code, schema and migrations, API behavior, implemented security and RBAC,
+tests, current technical implementation status, and production issues and Pull
+Requests.
+
+### Product and program governance
+
+`lukaszgebicki/dock-scheduling-ui-ai-studio` remains canonical for the approved
+UI MVP as functional reference, Product Authority decisions, product
+documentation, program planning, governance and historical assessment
+material. It is not the canonical source for current production code.

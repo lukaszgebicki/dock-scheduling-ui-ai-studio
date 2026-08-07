@@ -3,20 +3,51 @@
 ## Backlog identity
 
 - Program: Production Foundation.
-- Date: 2026-08-04.
+- Governance status date: 2026-08-06.
 - Functional reference: UI MVP Product Review 2, result `PASS`.
-- Planning baseline: `cd293a11daf0bddd35ba5141c71f7ad6d8de6a98`.
+- Governance repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
+- Governance baseline for this synchronization: `03c8561795ffdcc72eaea0469a1d43f3a11d4b14`.
 - Production repository: `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
-- Current authorization: no read or write access to the production repository.
+- Historical assessed production SHA: `c758e8403a4693fa7ba96081254072ad5d743aba`.
+- Current production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
+- Current authorization: the production repository has Product Authority authorization for separately scoped exact-SHA assessment and implementation tasks. This governance task is read-only for the production repository and authorizes no production write.
+
+## Canonical sources of truth
+
+### Production repository
+
+`lukaszgebicki/dock-scheduling-app-ai-studio1707` is canonical for:
+
+- production code;
+- schema and migrations;
+- API behavior and contracts as implemented;
+- security and RBAC implementation;
+- automated tests and CI evidence;
+- current technical implementation status;
+- production-repository issues and Pull Requests.
+
+### UI and governance repository
+
+`lukaszgebicki/dock-scheduling-ui-ai-studio` is canonical for:
+
+- the approved UI MVP as functional reference;
+- Product Authority decisions;
+- product documentation;
+- program planning and governance;
+- historical production-repository assessment material.
+
+The UI repository is not the canonical source for current production code.
 
 ## Operating rules
 
 - Only one implementation task may be `READY` at a time unless Product Authority explicitly approves parallel work.
 - Every task requires an exact base SHA, named repository, allowed paths, protected paths, CI depth and review gate.
-- Production-repository assessment is read-only unless a later issue explicitly grants write authority.
+- Production-repository work requires a separately scoped exact-SHA task and explicit authorization.
 - Architecture decisions must be reconciled with actual repository evidence before implementation.
-- The UI MVP is a functional reference, not a production code-completeness claim.
+- The UI MVP is a functional reference, not a production code-completeness or production-readiness claim.
 - No task may weaken six-role scope, Supplier organization isolation, transactional capacity, approval safety, audit evidence or fail-closed validation.
+- Production deployment, cloud resources, production data and secrets require separate explicit authorization.
+- No new production task is activated by this backlog update.
 
 ## Phase overview
 
@@ -30,22 +61,33 @@
 | P5 — Hardening and migration | Prove performance, security, recovery and data transition. | Production-readiness gates G4–G5 pass. |
 | P6 — Pilot and release | Controlled launch with rollback and support. | Product Authority signs off production release. |
 
+## Current status overlay
+
+- P0 is `DONE` through issue #141 and merged PR #142.
+- P1 is partial: security/API hardening, critical/high dependency remediation, PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged mutation audit, global System Administrator lifecycle, invitation issuance/acceptance and immutable per-user audit reads are implemented in the production repository.
+- P2–P6 are not activated.
+- The implemented foundations do not make Dock Scheduling production-ready.
+- Observability remains within `PROD-OBSERVABILITY-FOUNDATION-1` and is a recommended direction only.
+- Final multi-instance rate limiting remains an open security-hardening concern within the approved P5 security work.
+- Deployment and environment promotion remain open within the approved CI/CD, performance/reliability and release work.
+- Business configuration remains open within the approved data foundation and booking vertical-slice contracts.
+- Transactional outbox and workers remain open within the approved notification-delivery contract.
+- The first transactional booking vertical slice remains a recommendation only and requires a separate Product Authority decision and exact-SHA task contract.
+
 ## P0 — Authorization and assessment
 
 ### PROD-REPO-ASSESSMENT-1 — read-only production repository assessment
 
-**State:** `BLOCKED` — requires explicit Product Authority authorization.
+**State:** `DONE`.
 
-Required authorization must name:
+- Product Authority authorization is recorded in `PROD_REPO_ASSESSMENT_AUTHORIZATION.md`.
+- Assessment was performed on production SHA `c758e8403a4693fa7ba96081254072ad5d743aba`.
+- Issue #141 was completed by merged PR #142.
+- Historical issue #140 is superseded and closed as not planned; its original text remains historical evidence of the pre-authorization blocker.
+- Assessment conclusion: evolve the existing production repository and preserve the authentication/monorepo nucleus.
+- Production repository writes during the assessment: none.
 
-- repository `lukaszgebicki/dock-scheduling-app-ai-studio1707`;
-- exact base branch or SHA;
-- allowed read actions and paths;
-- whether dependency/security scanning is allowed;
-- whether local clone/worktree is allowed;
-- whether issue, branch or PR creation is prohibited or permitted.
-
-Assessment scope after authorization:
+Approved assessment scope:
 
 - repository topology, applications, packages and ownership;
 - current architecture and runtime assumptions;
@@ -57,7 +99,7 @@ Assessment scope after authorization:
 - reusable, replaceable and removable components;
 - operational, compliance and migration risks.
 
-Deliverables:
+Completed deliverables:
 
 - `PRODUCTION_REPOSITORY_ASSESSMENT.md`;
 - source-to-target architecture comparison;
@@ -66,11 +108,31 @@ Deliverables:
 - recommended exact baseline for P1;
 - ADR backlog updates.
 
-Exit criteria:
+Exit criteria result:
 
-- zero production repository writes unless separately authorized;
+- zero production repository writes during assessment;
 - evidence-backed recommendation approved by Product Authority;
-- one P1 task activated with exact scope.
+- subsequent production work executed only through separately scoped issues and Pull Requests.
+
+## Completed Production Foundation groups
+
+The following groups are implemented in the production repository at current
+reference SHA `11c253ef08708cc8095c5218e3b4e3a447013be1`:
+
+| Foundation group | Implemented result | Boundary that remains |
+| --- | --- | --- |
+| Security/API baseline | Diagnostic error route removed; 5xx responses redacted; correlation IDs bounded; readiness fails closed in production; graceful shutdown and truthful environment documentation added. | Does not provide full observability, deployment or business functionality. |
+| Dependency remediation | Critical/high runtime and complete-tree advisories remediated and blocking audit gates established; remaining moderate findings stay visible. | Future upgrades and accepted moderate risk still require normal dependency governance. |
+| PostgreSQL integration CI | Disposable PostgreSQL, migration deployment and database integration/E2E tests are required in CI. | This is test infrastructure, not production database operations or backup/recovery. |
+| Scoped six-role RBAC | Exactly six server roles, scoped authorization, persisted assignments, fail-closed guards and administrative mutation/read paths implemented. | Delegated administration and full business-endpoint policy coverage remain future work. |
+| Scope identity persistence | Root organizations, Supplier organizations, warehouses and Supplier–warehouse participation persisted with active-state and integrity constraints. | Business configuration and booking/capacity entities remain open. |
+| Privileged mutation audit | Role-assignment and user-status changes are atomic, idempotent and recorded in immutable audit ledgers with administrator-continuity protection. | Global audit search/export/retention and broader business audit remain open. |
+| Global System Administrator user lifecycle | Protected user directory, assignment reads, inactive user provisioning and status administration implemented. | Delegated administration, UI integration and broader identity operations remain open. |
+| Invitation lifecycle | One-time invitation issuance, atomic acceptance/activation and security cleanup implemented. | Notification delivery, reissue/revocation product workflows and UI remain open. |
+| Immutable per-user audit reads | Protected reads for role, status, invitation issuance/acceptance and user-creation histories implemented. | Cross-user audit search/export/retention remains open. |
+
+The repository was developed in place; it was not replaced. These completed
+foundation groups do not establish complete production readiness.
 
 ## P1 — Platform foundation
 
@@ -460,7 +522,11 @@ Some P1 tasks may run in controlled parallel after assessment, but the booking v
 
 ## Current program state
 
-- `PROD-FOUNDATION-PLAN-1`: in execution until its PR merges.
-- `PROD-REPO-ASSESSMENT-1`: `BLOCKED`.
+- `PROD-REPO-ASSESSMENT-1`: `DONE` through issue #141 and merged PR #142.
+- Historical issue #140: superseded and closed as not planned.
+- `PROD-GOVERNANCE-SYNC-1`: `PR_OPEN` in issue #143 with Draft PR #144.
+- Current production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
+- No merge has occurred; Product Authority approval remains required.
 - No production implementation task is `READY`.
-- No access to `lukaszgebicki/dock-scheduling-app-ai-studio1707` is authorized.
+- `PROD-OBSERVABILITY-FOUNDATION-1` and the first transactional booking vertical slice are recommendations only.
+- The next implementation direction requires a separate Product Authority decision and exact-SHA task contract.
