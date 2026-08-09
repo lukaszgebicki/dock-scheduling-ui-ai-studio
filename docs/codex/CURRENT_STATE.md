@@ -1,15 +1,15 @@
 # Verified current state
 
 Verified on 2026-08-09 at
-`3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2`.
+`b94a123fb1bf3974e06f5c0526dc3b42878450a6`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2`, the squash merge commit
-  for governance-state bootstrap pull request #146.
+  `b94a123fb1bf3974e06f5c0526dc3b42878450a6`, the squash merge commit
+  for the issue #147 state-update pull request #148.
 - This repository is the frontend-only Dock Scheduling UI sandbox and
   functional reference. It is not a production system and provides no
   production persistence or production authorization enforcement.
@@ -27,6 +27,7 @@ Verified on 2026-08-09 at
 | Authorized production-repository assessment | issue #141 completed by merged PR #142 |
 | Production program governance synchronization | issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
 | Governance-state bootstrap | issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
+| Production governance synchronization state | issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
 
 ## Scoped UI MVP result
 
@@ -111,6 +112,35 @@ PR #144 changed exactly `docs/codex/ROADMAP.md`,
 `docs/codex/PROD_REPO_ASSESSMENT_ACTIVATION_STATUS.md`. It made no application,
 dependency, lockfile, workflow or production-repository change.
 
+## DEV-SEC-002 read-only audit evidence
+
+The development dependency preflight ran from a clean external worktree at the
+exact verified `origin/main` baseline
+`b94a123fb1bf3974e06f5c0526dc3b42878450a6` on Node.js 24.14.0 and npm
+11.16.0. No manifest, lockfile, source, configuration, workflow, test or
+production-repository file was changed.
+
+| Command | Verified result |
+| --- | --- |
+| `npm ci` | PASS; 199 packages added, 200 packages audited; full graph reported 2 vulnerabilities |
+| `npm audit` | Expected non-zero exit 1; 1 moderate and 1 high vulnerability |
+| `npm audit --json` | Expected non-zero exit 1; exactly `postcss` and `nanoid`, both indirect |
+| `npm audit --omit=dev` | PASS; 0 vulnerabilities |
+
+The installed development-only path is root `devDependency` `vite@6.4.3` to
+`postcss@8.5.21` to `nanoid@3.3.16`. The audit identifies:
+
+- `postcss`: `GHSA-fxqj-rqcc-2cmp` / `CVE-2026-69153`, moderate in npm audit,
+  affected through 8.5.22 and first patched in 8.5.23;
+- `nanoid`: `GHSA-2v37-7h3g-55p8` / `CVE-2026-67213`, high, affected below
+  3.3.17 and first patched in 3.3.17 for the installed major line.
+
+The existing transitive ranges already permit patched releases. A read-only
+targeted dry-run selected `postcss@8.5.26` and `nanoid@3.3.18` without a broad
+toolchain upgrade. This supports a `package-lock.json`-only implementation
+contract, but the implementation must stop if an actual targeted update changes
+`package.json` or any other protected path.
+
 ## Main branch governance
 
 - Active ruleset `Protect main` (ID `19850347`) targets `refs/heads/main`.
@@ -119,21 +149,17 @@ dependency, lockfile, workflow or production-repository change.
 - Force pushes and deletion of `main` are blocked.
 - Automated PASS never replaces human merge authorization.
 
-## Post-merge task state
+## Next controlled task
 
-This section becomes effective only after human merge of the issue #147
-state-update pull request.
+After human merge of the `DEV-SEC-002-ACTIVATE` pull request,
+`DEV-SEC-002-REMEDIATE` is the only `READY` task. It is a Class C remediation
+limited to `package-lock.json`; `package.json` and every other path remain
+protected. Implementation requires a new machine-readable contract bound to
+the resulting exact `main` SHA, E4 with `build_high`, a separate `review_high`
+Reviewer, complete validation, `publish_feature`, and a mandatory stop before
+merge.
 
-After that merge, `PROD-GOVERNANCE-SYNC-1-STATE` is `DONE` and no task is
-`READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN`.
-
-The following remain recommendations only and are not selected or activated:
-
-1. `PROD-OBSERVABILITY-FOUNDATION-1` — logs, metrics, traces, alert ownership
-   and operational runbooks.
-2. The first transactional booking vertical slice — durable Supplier booking
-   with server-side validation, idempotency and oversubscription-safe capacity.
-
-Either direction requires a separate Product Authority decision, exact
-production and governance baselines, allowed/protected paths, validation
-contract, independent review and human merge gate.
+No dependency update is authorized by the activation pull request itself. The
+production `PROD-APPROVAL-LIFECYCLE-1` pull request #54 remains a separate
+project critical path supplied by Product Authority and is outside this task's
+repository and scope; it was not opened, fetched or inspected for this update.
