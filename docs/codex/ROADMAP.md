@@ -76,29 +76,14 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan | DONE; PR #139 |
 | PROD-REPO-ASSESSMENT-1 — authorized production repository assessment | DONE; issue #141 completed by merged PR #142; assessed production SHA `c758e8403a4693fa7ba96081254072ad5d743aba` |
 | PROD-GOVERNANCE-SYNC-1 — reconcile production program governance | DONE; issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
+| Governance-state bootstrap | DONE; issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
+| PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion | DONE after human merge of the issue #147 state-update pull request |
 
 ## Active
 
-### PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion
-
-- State: `READY`.
-- Risk class: Class C.
-- Bootstrap issue: #145.
-- Objective: reconcile `CURRENT_STATE.md` and this roadmap with completed issue
-  #143, squash-merged PR #144 and its exact merge commit, without activating a
-  production implementation task.
-- Allowed later execution paths: `docs/codex/CURRENT_STATE.md` and
-  `docs/codex/ROADMAP.md` only.
-- Contract gate: create a separate issue with explicit Class C authorization,
-  the `class-c-approved` label and the exact `main` SHA produced by human merge
-  of the bootstrap pull request.
-- Evidence boundary: use only the verified UI-repository PR #144 and issue #143
-  record; production-repository access is not authorized for this state update.
-- Delivery boundary: complete validation, independent read-only Reviewer PASS,
-  one documentation-only pull request and mandatory stop before human merge.
-
-No production implementation task is `READY`. This state reconciliation does
-not activate implementation work.
+No task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN` after human merge of
+the issue #147 state-update pull request. No production implementation task is
+activated by this state reconciliation.
 
 ## Production Foundation status
 
