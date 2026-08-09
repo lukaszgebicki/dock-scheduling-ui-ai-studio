@@ -75,23 +75,30 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | PROD-FOUNDATION-PLAN-1-ACTIVATE — activate production foundation planning | DONE; PR #137 squash-merged at `cd293a11daf0bddd35ba5141c71f7ad6d8de6a98` |
 | PROD-FOUNDATION-PLAN-1 — production foundation charter and execution plan | DONE; PR #139 |
 | PROD-REPO-ASSESSMENT-1 — authorized production repository assessment | DONE; issue #141 completed by merged PR #142; assessed production SHA `c758e8403a4693fa7ba96081254072ad5d743aba` |
+| PROD-GOVERNANCE-SYNC-1 — reconcile production program governance | DONE; issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
 
 ## Active
 
-### PROD-GOVERNANCE-SYNC-1 — reconcile production program governance
+### PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion
 
-- State: `PR_OPEN`.
-- Issue: #143.
-- Draft Pull Request: #144.
-- Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- Exact UI base SHA: `03c8561795ffdcc72eaea0469a1d43f3a11d4b14`.
-- Production repository is reference-only for this task.
-- Exact production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
-- Objective: reconcile active planning and governance with the completed assessment and the verified implementation state of the production repository.
-- Merge gate: Product Authority approval is required; the task is not `DONE`.
+- State: `READY`.
+- Risk class: Class C.
+- Bootstrap issue: #145.
+- Objective: reconcile `CURRENT_STATE.md` and this roadmap with completed issue
+  #143, squash-merged PR #144 and its exact merge commit, without activating a
+  production implementation task.
+- Allowed later execution paths: `docs/codex/CURRENT_STATE.md` and
+  `docs/codex/ROADMAP.md` only.
+- Contract gate: create a separate issue with explicit Class C authorization,
+  the `class-c-approved` label and the exact `main` SHA produced by human merge
+  of the bootstrap pull request.
+- Evidence boundary: use only the verified UI-repository PR #144 and issue #143
+  record; production-repository access is not authorized for this state update.
+- Delivery boundary: complete validation, independent read-only Reviewer PASS,
+  one documentation-only pull request and mandatory stop before human merge.
 
-No production implementation task is `READY`. Completion of this governance
-synchronization does not activate implementation work.
+No production implementation task is `READY`. This state reconciliation does
+not activate implementation work.
 
 ## Production Foundation status
 
