@@ -53,3 +53,37 @@
 - The remediation used no dependency overrides, audit suppression,
   `npm audit fix`, `npm audit fix --force`, force push, configuration
   change, CI change, or production behavior change.
+
+## DEV-SEC-002 — renewed development dependency audit findings
+
+- Status: `OPEN`; remediation task `DEV-SEC-002-REMEDIATE` becomes the only
+  `READY` task after the activation pull request is human-merged. Implementation
+  must wait for a new exact-SHA GitHub issue contract.
+- Baseline: clean `origin/main` at
+  `b94a123fb1bf3974e06f5c0526dc3b42878450a6`, verified on 2026-08-09 with
+  Node.js 24.14.0 and npm 11.16.0.
+- Full audit: `npm audit` and `npm audit --json` exit 1 with exactly 2 indirect
+  vulnerabilities: 1 moderate and 1 high. The JSON inventory reports 13
+  production, 263 development, 81 optional and 275 total dependencies.
+- Runtime audit: `npm audit --omit=dev` exits 0 with 0 vulnerabilities. Both
+  findings are confined to the development dependency graph.
+- Dependency path: root `devDependency` `vite@6.4.3` resolves
+  `postcss@8.5.21`, which resolves `nanoid@3.3.16`.
+- `postcss@8.5.21`: `GHSA-fxqj-rqcc-2cmp` / `CVE-2026-69153`; npm severity
+  moderate; vulnerable through 8.5.22; first patched version 8.5.23.
+- `nanoid@3.3.16`: `GHSA-2v37-7h3g-55p8` / `CVE-2026-67213`; severity high;
+  vulnerable below 3.3.17 on the installed major line; first patched version
+  3.3.17.
+- Lockfile-only evidence: Vite's existing `postcss` range is `^8.5.3`, and
+  PostCSS's existing `nanoid` range is `^3.3.16`. A read-only
+  `npm update postcss nanoid --dry-run --json` selected only
+  `postcss@8.5.26` and `nanoid@3.3.18`. The minimum security boundaries are
+  8.5.23 and 3.3.17; the higher dry-run selections are current compatible
+  patches, not pre-assumed security minima.
+- Authorized remediation shape: targeted `package-lock.json` update only,
+  complete validation, Simplification Pass, exact inventory and independent
+  read-only review. If any other tracked file must change, stop for a new Class
+  C contract.
+- Prohibited shortcuts: no `npm audit fix`, `npm audit fix --force`, dependency
+  override, audit suppression, broad upgrade, force push, direct `main` write
+  or autonomous merge.

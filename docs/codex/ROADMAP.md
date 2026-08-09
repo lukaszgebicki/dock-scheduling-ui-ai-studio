@@ -77,13 +77,47 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | PROD-REPO-ASSESSMENT-1 — authorized production repository assessment | DONE; issue #141 completed by merged PR #142; assessed production SHA `c758e8403a4693fa7ba96081254072ad5d743aba` |
 | PROD-GOVERNANCE-SYNC-1 — reconcile production program governance | DONE; issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
 | Governance-state bootstrap | DONE; issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
-| PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion | DONE after human merge of the issue #147 state-update pull request |
+| PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion | DONE; issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
+| DEV-SEC-002-ACTIVATE — activate development dependency remediation | DONE after human merge of this activation pull request |
 
 ## Active
 
-No task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN` after human merge of
-the issue #147 state-update pull request. No production implementation task is
-activated by this state reconciliation.
+### DEV-SEC-002-REMEDIATE — development dependency remediation
+
+- State: `READY` after human merge of the `DEV-SEC-002-ACTIVATE` pull request.
+- Risk class: Class C.
+- Objective: remove the current development-only `postcss` and `nanoid`
+  advisory findings with the smallest targeted lockfile update while
+  preserving application, runtime and toolchain behavior.
+- Authorized path: `package-lock.json` only.
+- Protected paths: `package.json`, source code, tests, Vite/Vitest/TypeScript
+  configuration, workflows, repository configuration, product specifications,
+  and every other file.
+- Class C authorization: Product Authority explicitly approved the future
+  targeted lockfile remediation in the activation task on 2026-08-09. It does
+  not authorize an update before this activation pull request is human-merged.
+- Delivery: E4, `build_high`, separate `review_high` Reviewer, standard context,
+  quality-first token posture, complete validation, `publish_feature`, and
+  mandatory stop before merge.
+- Contract gate: after this activation change is human-merged, create a new
+  machine-readable GitHub issue contract bound to the resulting exact `main`
+  SHA, using branch `security/dev-sec-002-remediate` and a new external
+  worktree.
+- Acceptance: `npm audit` and `npm audit --omit=dev` report 0 vulnerabilities;
+  `npm ci`, typecheck, the complete test suite and build pass; the exact changed
+  inventory is only `package-lock.json`; `git diff --check`, the Simplification
+  Pass and independent read-only Reviewer PASS are recorded.
+- Prohibited shortcuts: no `npm audit fix`, `npm audit fix --force`, override,
+  suppression, broad dependency upgrade, test weakening, force push, direct
+  `main` write or autonomous merge.
+- Stop condition: if remediation requires `package.json`, a test,
+  configuration, workflow or any other protected path, stop and require a new
+  explicitly approved Class C contract.
+
+No other task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN`. The production
+`PROD-APPROVAL-LIFECYCLE-1` pull request #54 remains a separate project
+critical path and cannot expand `DEV-SEC-002` scope; the production repository
+is not authorized for access by this task.
 
 ## Production Foundation status
 
