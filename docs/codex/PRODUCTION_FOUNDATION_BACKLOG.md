@@ -3,13 +3,13 @@
 ## Backlog identity
 
 - Program: Production Foundation.
-- Governance status date: 2026-08-06.
+- Governance status date: 2026-08-10.
 - Functional reference: UI MVP Product Review 2, result `PASS`.
 - Governance repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- Governance baseline for this synchronization: `03c8561795ffdcc72eaea0469a1d43f3a11d4b14`.
+- Governance baseline for this reconciliation: `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
 - Production repository: `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
 - Historical assessed production SHA: `c758e8403a4693fa7ba96081254072ad5d743aba`.
-- Current production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
+- Current production reference SHA: `dbe1127ae64c24e601828f38a0b88a749b79b858`.
 - Current authorization: the production repository has Product Authority authorization for separately scoped exact-SHA assessment and implementation tasks. This governance task is read-only for the production repository and authorizes no production write.
 
 ## Canonical sources of truth
@@ -64,15 +64,26 @@ The UI repository is not the canonical source for current production code.
 ## Current status overlay
 
 - P0 is `DONE` through issue #141 and merged PR #142.
-- P1 is partial: security/API hardening, critical/high dependency remediation, PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged mutation audit, global System Administrator lifecycle, invitation issuance/acceptance and immutable per-user audit reads are implemented in the production repository.
-- P2–P6 are not activated.
+- P1 is partial: security/API hardening, critical/high dependency remediation,
+  PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged
+  mutation audit, global System Administrator lifecycle, invitation
+  issuance/acceptance, immutable per-user audit reads and the observability
+  foundation are implemented in the production repository.
+- P2 is `DONE` through Supplier booking PR #50 and capacity hardening PR #52.
+- P3 is partial: the manual approval lifecycle is `DONE` through PR #54;
+  Booking Configuration Administration, reschedule/cancel, Operator manual
+  booking and Gate Ops remain.
+- P4-P6 are incomplete.
 - The implemented foundations do not make Dock Scheduling production-ready.
-- Observability remains within `PROD-OBSERVABILITY-FOUNDATION-1` and is a recommended direction only.
+- `PROD-SEC-REACT-ROUTER-MIGRATION-1` / production issue #57 is the next
+  planned security task.
 - Final multi-instance rate limiting remains an open security-hardening concern within the approved P5 security work.
 - Deployment and environment promotion remain open within the approved CI/CD, performance/reliability and release work.
-- Business configuration remains open within the approved data foundation and booking vertical-slice contracts.
+- Booking Configuration Administration remains the next product direction
+  after security; it is not activated by this reconciliation.
 - Transactional outbox and workers remain open within the approved notification-delivery contract.
-- The first transactional booking vertical slice remains a recommendation only and requires a separate Product Authority decision and exact-SHA task contract.
+- Deployment/environment promotion, backup/restore, outbox delivery workers,
+  release and the remaining P3-P6 scopes require separate tasks.
 
 ## P0 — Authorization and assessment
 
@@ -117,7 +128,7 @@ Exit criteria result:
 ## Completed Production Foundation groups
 
 The following groups are implemented in the production repository at current
-reference SHA `11c253ef08708cc8095c5218e3b4e3a447013be1`:
+reference SHA `dbe1127ae64c24e601828f38a0b88a749b79b858`:
 
 | Foundation group | Implemented result | Boundary that remains |
 | --- | --- | --- |
@@ -130,6 +141,11 @@ reference SHA `11c253ef08708cc8095c5218e3b4e3a447013be1`:
 | Global System Administrator user lifecycle | Protected user directory, assignment reads, inactive user provisioning and status administration implemented. | Delegated administration, UI integration and broader identity operations remain open. |
 | Invitation lifecycle | One-time invitation issuance, atomic acceptance/activation and security cleanup implemented. | Notification delivery, reissue/revocation product workflows and UI remain open. |
 | Immutable per-user audit reads | Protected reads for role, status, invitation issuance/acceptance and user-creation histories implemented. | Cross-user audit search/export/retention remains open. |
+| Observability foundation | W3C trace propagation, redacted structured telemetry, bounded metrics and operational runbook delivered by PR #48. | Production exporters, approved SLO thresholds and deployment integration remain open. |
+| Supplier booking vertical slice | Server-authoritative published configuration reads, idempotent durable booking, capacity-safe appointment creation, immutable history and transactional outbox intent delivered by PR #50. | Configuration administration and later operational lifecycles remain open. |
+| Capacity transaction hardening | Immutable reservation ownership and database reconciliation prevent committed counter/ledger/appointment drift through PR #52. | Release/reschedule lifecycle beyond the delivered approval rejection path remains open. |
+| Green production baseline | PR #61 resolved the Nano ID HIGH blocker and deterministic invitation-expiry fixture without masking React Router debt. | Production issue #57 remains planned security debt. |
+| Manual approval lifecycle | PR #54 delivered approve, reject, request-information and respond-information with versioning, authorization, atomic history/outbox and exact-once rejection release. | Reschedule/cancel, Operator manual booking and Gate Ops remain open P3 work. |
 
 The repository was developed in place; it was not replaced. These completed
 foundation groups do not establish complete production readiness.
@@ -204,6 +220,9 @@ Exit criteria:
 
 ### PROD-OBSERVABILITY-FOUNDATION-1 — logs, metrics and traces
 
+**State:** `DONE` through production PR #48 at
+`e5784e06b0500a1a50f0de8957742e25f75369e6`.
+
 Scope:
 
 - correlation IDs;
@@ -223,6 +242,9 @@ Exit criteria:
 ## P2 — Transactional vertical slice
 
 ### PROD-BOOKING-VERTICAL-SLICE-1 — Supplier booking to durable appointment
+
+**State:** `DONE` through production PR #50 at
+`7f2a87708ff38adb984a2f792cc414d7ecf52378`.
 
 Dependencies:
 
@@ -254,6 +276,9 @@ Exit criteria:
 
 ### PROD-CAPACITY-TRANSACTION-1 — capacity model hardening
 
+**State:** `DONE` through production PR #52 at
+`592d86bf75337abf97268233d5a9caa9325da1c2`.
+
 May be part of the vertical slice or a focused follow-up.
 
 Scope:
@@ -276,6 +301,12 @@ Exit criteria:
 ## P3 — Core operational workflows
 
 ### PROD-APPROVAL-LIFECYCLE-1
+
+**State:** manual approve/reject/request-information/respond-information scope
+is `DONE` through production issue #53 and PR #54 at
+`dbe1127ae64c24e601828f38a0b88a749b79b858`.
+
+Reschedule/cancel was not delivered by that task and remains separate P3 scope.
 
 Scope:
 
@@ -524,9 +555,10 @@ Some P1 tasks may run in controlled parallel after assessment, but the booking v
 
 - `PROD-REPO-ASSESSMENT-1`: `DONE` through issue #141 and merged PR #142.
 - Historical issue #140: superseded and closed as not planned.
-- `PROD-GOVERNANCE-SYNC-1`: `PR_OPEN` in issue #143 with Draft PR #144.
-- Current production reference SHA: `11c253ef08708cc8095c5218e3b4e3a447013be1`.
-- No merge has occurred; Product Authority approval remains required.
-- No production implementation task is `READY`.
-- `PROD-OBSERVABILITY-FOUNDATION-1` and the first transactional booking vertical slice are recommendations only.
-- The next implementation direction requires a separate Product Authority decision and exact-SHA task contract.
+- `PROD-GOVERNANCE-SYNC-1`: `DONE` through issue #143 and PR #144.
+- Current production reference SHA: `dbe1127ae64c24e601828f38a0b88a749b79b858`.
+- P2 is `DONE`; P3 is partially implemented through the manual approval
+  lifecycle. P4-P6 and deployment/release remain incomplete.
+- Production issue #57 is `PLANNED / SECURITY NEXT`.
+- `PROD-BOOKING-CONFIG-ADMIN-1` is the recommended product direction after
+  security and is not activated for implementation.

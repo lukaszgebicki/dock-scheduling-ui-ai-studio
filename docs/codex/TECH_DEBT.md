@@ -56,34 +56,36 @@
 
 ## DEV-SEC-002 — renewed development dependency audit findings
 
-- Status: `OPEN`; remediation task `DEV-SEC-002-REMEDIATE` becomes the only
-  `READY` task after the activation pull request is human-merged. Implementation
-  must wait for a new exact-SHA GitHub issue contract.
-- Baseline: clean `origin/main` at
-  `b94a123fb1bf3974e06f5c0526dc3b42878450a6`, verified on 2026-08-09 with
-  Node.js 24.14.0 and npm 11.16.0.
-- Full audit: `npm audit` and `npm audit --json` exit 1 with exactly 2 indirect
-  vulnerabilities: 1 moderate and 1 high. The JSON inventory reports 13
-  production, 263 development, 81 optional and 275 total dependencies.
-- Runtime audit: `npm audit --omit=dev` exits 0 with 0 vulnerabilities. Both
-  findings are confined to the development dependency graph.
-- Dependency path: root `devDependency` `vite@6.4.3` resolves
-  `postcss@8.5.21`, which resolves `nanoid@3.3.16`.
-- `postcss@8.5.21`: `GHSA-fxqj-rqcc-2cmp` / `CVE-2026-69153`; npm severity
-  moderate; vulnerable through 8.5.22; first patched version 8.5.23.
-- `nanoid@3.3.16`: `GHSA-2v37-7h3g-55p8` / `CVE-2026-67213`; severity high;
-  vulnerable below 3.3.17 on the installed major line; first patched version
-  3.3.17.
-- Lockfile-only evidence: Vite's existing `postcss` range is `^8.5.3`, and
-  PostCSS's existing `nanoid` range is `^3.3.16`. A read-only
-  `npm update postcss nanoid --dry-run --json` selected only
-  `postcss@8.5.26` and `nanoid@3.3.18`. The minimum security boundaries are
-  8.5.23 and 3.3.17; the higher dry-run selections are current compatible
-  patches, not pre-assumed security minima.
-- Authorized remediation shape: targeted `package-lock.json` update only,
-  complete validation, Simplification Pass, exact inventory and independent
-  read-only review. If any other tracked file must change, stop for a new Class
-  C contract.
-- Prohibited shortcuts: no `npm audit fix`, `npm audit fix --force`, dependency
-  override, audit suppression, broad upgrade, force push, direct `main` write
-  or autonomous merge.
+- Status: `RESOLVED` through issue #150 and squash-merged PR #151 at
+  `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
+- Resolution: the lockfile-only remediation moved `postcss 8.5.21 → 8.5.26`
+  and `nanoid 3.3.16 → 3.3.18`, including matching registry metadata and the
+  PostCSS dependency floor `^3.3.17`.
+- Current evidence: full and runtime audits report 0 vulnerabilities;
+  typecheck, 72 test files / 726 tests and production build pass.
+- Scope evidence: only `package-lock.json` changed. No manifest, override,
+  suppression, broad update, source, test, configuration or workflow change
+  was used.
+
+## PROD-BASELINE-CI-UNBLOCK-1 — production baseline blockers
+
+- Status: `RESOLVED` through production PR #61 at
+  `5c60fa0b960d83b56a8cf17cc061510f8a2ed744`.
+- Resolution: `nanoid 3.3.16 → 3.3.17` removed the production HIGH audit
+  blocker, and the invitation audit fixture received a deterministic future
+  expiry date.
+- Boundary: production auth/session behavior, constraints and migrations were
+  unchanged. React Router advisories remained visible and unsuppressed.
+
+## PROD-SEC-REACT-ROUTER-MIGRATION-1 — supported-line migration
+
+- Status: `PLANNED / SECURITY NEXT` in production issue #57.
+- Current evidence: production `apps/web` resolves `react-router-dom 6.30.4`
+  and nested `react-router 6.30.4`; two moderate advisories remain visible.
+- Required direction: migrate to a currently supported security-clean line
+  under a dedicated Class C contract with route, redirect, authenticated-shell
+  and complete web regression evidence.
+- Prohibited shortcuts: no advisory suppression, audit ignore, backend auth
+  change or unrelated dependency upgrade.
+- Product direction after this security task is Booking Configuration
+  Administration; that product feature is not activated here.
