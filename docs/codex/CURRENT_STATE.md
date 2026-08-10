@@ -1,15 +1,15 @@
 # Verified current state
 
-Verified on 2026-08-09 at
-`b94a123fb1bf3974e06f5c0526dc3b42878450a6`.
+Verified on 2026-08-10 at
+`27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
 
 ## Repository and delivery state
 
 - Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
 - Visibility: public.
 - The verified `origin/main` baseline is
-  `b94a123fb1bf3974e06f5c0526dc3b42878450a6`, the squash merge commit
-  for the issue #147 state-update pull request #148.
+  `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`, the squash merge commit
+  for `DEV-SEC-002-REMEDIATE` pull request #151.
 - This repository is the frontend-only Dock Scheduling UI sandbox and
   functional reference. It is not a production system and provides no
   production persistence or production authorization enforcement.
@@ -28,6 +28,7 @@ Verified on 2026-08-09 at
 | Production program governance synchronization | issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
 | Governance-state bootstrap | issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
 | Production governance synchronization state | issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
+| Development dependency remediation | issue #150 completed by squash-merged PR #151 at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8` |
 
 ## Scoped UI MVP result
 
@@ -74,11 +75,20 @@ repository.
 - `PROD-GOVERNANCE-SYNC-1` is `DONE` through closed issue #143 and
   squash-merged PR #144 at
   `8746888257a763f714a66c3948b53c4c1f636332`.
-- The completed foundations recorded by PR #144 do not establish complete
-  production readiness. Observability, final multi-instance rate limiting,
-  deployment and environment promotion, backup/restore and runbooks, business
-  configuration, transactional booking/capacity and outbox/workers remain
-  open program concerns.
+- The historical assessed production SHA remains
+  `c758e8403a4693fa7ba96081254072ad5d743aba`; it is not the current
+  implementation reference.
+- The verified current production `main` is
+  `dbe1127ae64c24e601828f38a0b88a749b79b858`.
+- Production observability, the Supplier booking vertical slice, capacity
+  transaction hardening and the manual approval lifecycle are `DONE` through
+  PRs #48, #50, #52 and #54 respectively.
+- Baseline CI unblock PR #61 resolved the Nano ID HIGH blocker and the
+  invitation-expiry fixture time bomb before PR #54 was integrated and merged.
+- These completed foundations do not establish production readiness.
+  Deployment/environment promotion, backup/restore, Booking Configuration
+  Administration, reschedule/cancel, Operator manual booking, Gate Ops,
+  outbox delivery workers and P4-P6 remain incomplete.
 
 ### Canonical sources of truth
 
@@ -91,8 +101,8 @@ repository.
   governance and historical assessment material. It is not canonical for
   current production code.
 
-This state update used only verified UI-repository evidence. It did not open,
-fetch, clone, inspect or modify the production repository.
+This reconciliation used Product Authority-authorized read-only production
+repository evidence. It made no production repository write.
 
 ## PR #144 validation evidence
 
@@ -112,34 +122,19 @@ PR #144 changed exactly `docs/codex/ROADMAP.md`,
 `docs/codex/PROD_REPO_ASSESSMENT_ACTIVATION_STATUS.md`. It made no application,
 dependency, lockfile, workflow or production-repository change.
 
-## DEV-SEC-002 read-only audit evidence
+## DEV-SEC-002 remediation result
 
-The development dependency preflight ran from a clean external worktree at the
-exact verified `origin/main` baseline
-`b94a123fb1bf3974e06f5c0526dc3b42878450a6` on Node.js 24.14.0 and npm
-11.16.0. No manifest, lockfile, source, configuration, workflow, test or
-production-repository file was changed.
+`DEV-SEC-002-REMEDIATE` is `DONE` through issue #150 and squash-merged PR #151
+at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
 
-| Command | Verified result |
-| --- | --- |
-| `npm ci` | PASS; 199 packages added, 200 packages audited; full graph reported 2 vulnerabilities |
-| `npm audit` | Expected non-zero exit 1; 1 moderate and 1 high vulnerability |
-| `npm audit --json` | Expected non-zero exit 1; exactly `postcss` and `nanoid`, both indirect |
-| `npm audit --omit=dev` | PASS; 0 vulnerabilities |
-
-The installed development-only path is root `devDependency` `vite@6.4.3` to
-`postcss@8.5.21` to `nanoid@3.3.16`. The audit identifies:
-
-- `postcss`: `GHSA-fxqj-rqcc-2cmp` / `CVE-2026-69153`, moderate in npm audit,
-  affected through 8.5.22 and first patched in 8.5.23;
-- `nanoid`: `GHSA-2v37-7h3g-55p8` / `CVE-2026-67213`, high, affected below
-  3.3.17 and first patched in 3.3.17 for the installed major line.
-
-The existing transitive ranges already permit patched releases. A read-only
-targeted dry-run selected `postcss@8.5.26` and `nanoid@3.3.18` without a broad
-toolchain upgrade. This supports a `package-lock.json`-only implementation
-contract, but the implementation must stop if an actual targeted update changes
-`package.json` or any other protected path.
+- `postcss` moved from `8.5.21` to `8.5.26`.
+- `nanoid` moved from `3.3.16` to `3.3.18`.
+- The final diff changed only `package-lock.json`; no manifest, source, test,
+  configuration, workflow or production behavior changed.
+- Repeated local validation reported 72 test files and 726 passing tests;
+  typecheck and production build passed.
+- Full and runtime dependency audits report 0 vulnerabilities.
+- Exact-head CI run #265 and independent `review_high` passed with no findings.
 
 ## Main branch governance
 
@@ -149,17 +144,14 @@ contract, but the implementation must stop if an actual targeted update changes
 - Force pushes and deletion of `main` are blocked.
 - Automated PASS never replaces human merge authorization.
 
-## Next controlled task
+## Next controlled direction
 
-After human merge of the `DEV-SEC-002-ACTIVATE` pull request,
-`DEV-SEC-002-REMEDIATE` is the only `READY` task. It is a Class C remediation
-limited to `package-lock.json`; `package.json` and every other path remain
-protected. Implementation requires a new machine-readable contract bound to
-the resulting exact `main` SHA, E4 with `build_high`, a separate `review_high`
-Reviewer, complete validation, `publish_feature`, and a mandatory stop before
-merge.
-
-No dependency update is authorized by the activation pull request itself. The
-production `PROD-APPROVAL-LIFECYCLE-1` pull request #54 remains a separate
-project critical path supplied by Product Authority and is outside this task's
-repository and scope; it was not opened, fetched or inspected for this update.
+- Security next: production issue #57
+  `PROD-SEC-REACT-ROUTER-MIGRATION-1`, currently `PLANNED` and requiring its
+  dedicated Class C migration contract before implementation.
+- Product direction after security: `PROD-BOOKING-CONFIG-ADMIN-1` — Booking
+  Configuration Administration. It is not activated for implementation.
+- P2 is `DONE`. P3 is partial: manual approval lifecycle is `DONE`, while
+  Booking Configuration Administration, reschedule/cancel, Operator manual
+  booking and Gate Ops remain.
+- Deployment/release and P4-P6 remain incomplete.

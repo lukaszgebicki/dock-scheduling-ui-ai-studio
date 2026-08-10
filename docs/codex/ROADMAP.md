@@ -78,46 +78,19 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | PROD-GOVERNANCE-SYNC-1 — reconcile production program governance | DONE; issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
 | Governance-state bootstrap | DONE; issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
 | PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion | DONE; issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
-| DEV-SEC-002-ACTIVATE — activate development dependency remediation | DONE after human merge of this activation pull request |
+| DEV-SEC-002-ACTIVATE — activate development dependency remediation | DONE; PR #149 squash-merged at `1396e74ac1d09ba357f8e14f1b754193208f334b` |
+| DEV-SEC-002-REMEDIATE — remediate development dependency advisories | DONE; issue #150 completed by squash-merged PR #151 at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8` |
+| PROD-OBSERVABILITY-FOUNDATION-1 — production telemetry foundation | DONE; production PR #48 squash-merged at `e5784e06b0500a1a50f0de8957742e25f75369e6` |
+| PROD-BOOKING-VERTICAL-SLICE-1 — Supplier booking to durable appointment | DONE; production PR #50 squash-merged at `7f2a87708ff38adb984a2f792cc414d7ecf52378` |
+| PROD-CAPACITY-TRANSACTION-1 — durable capacity reservation ledger | DONE; production PR #52 squash-merged at `592d86bf75337abf97268233d5a9caa9325da1c2` |
+| PROD-BASELINE-CI-UNBLOCK-1 — restore green production baseline | DONE; production PR #61 squash-merged at `5c60fa0b960d83b56a8cf17cc061510f8a2ed744` |
+| PROD-APPROVAL-LIFECYCLE-1 — transactional manual approval lifecycle | DONE; production issue #53 completed by squash-merged PR #54 at `dbe1127ae64c24e601828f38a0b88a749b79b858` |
 
 ## Active
 
-### DEV-SEC-002-REMEDIATE — development dependency remediation
-
-- State: `READY` after human merge of the `DEV-SEC-002-ACTIVATE` pull request.
-- Risk class: Class C.
-- Objective: remove the current development-only `postcss` and `nanoid`
-  advisory findings with the smallest targeted lockfile update while
-  preserving application, runtime and toolchain behavior.
-- Authorized path: `package-lock.json` only.
-- Protected paths: `package.json`, source code, tests, Vite/Vitest/TypeScript
-  configuration, workflows, repository configuration, product specifications,
-  and every other file.
-- Class C authorization: Product Authority explicitly approved the future
-  targeted lockfile remediation in the activation task on 2026-08-09. It does
-  not authorize an update before this activation pull request is human-merged.
-- Delivery: E4, `build_high`, separate `review_high` Reviewer, standard context,
-  quality-first token posture, complete validation, `publish_feature`, and
-  mandatory stop before merge.
-- Contract gate: after this activation change is human-merged, create a new
-  machine-readable GitHub issue contract bound to the resulting exact `main`
-  SHA, using branch `security/dev-sec-002-remediate` and a new external
-  worktree.
-- Acceptance: `npm audit` and `npm audit --omit=dev` report 0 vulnerabilities;
-  `npm ci`, typecheck, the complete test suite and build pass; the exact changed
-  inventory is only `package-lock.json`; `git diff --check`, the Simplification
-  Pass and independent read-only Reviewer PASS are recorded.
-- Prohibited shortcuts: no `npm audit fix`, `npm audit fix --force`, override,
-  suppression, broad dependency upgrade, test weakening, force push, direct
-  `main` write or autonomous merge.
-- Stop condition: if remediation requires `package.json`, a test,
-  configuration, workflow or any other protected path, stop and require a new
-  explicitly approved Class C contract.
-
-No other task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN`. The production
-`PROD-APPROVAL-LIFECYCLE-1` pull request #54 remains a separate project
-critical path and cannot expand `DEV-SEC-002` scope; the production repository
-is not authorized for access by this task.
+No implementation task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN` in
+this governance repository. Production issue #57 is the next planned security
+task, but this state record does not activate it or any product implementation.
 
 ## Production Foundation status
 
@@ -133,13 +106,19 @@ scoped production work has completed these foundation groups:
 - privileged role and user-status mutations with immutable audit evidence;
 - global System Administrator user directory and lifecycle administration;
 - one-time invitation issuance and atomic invitation acceptance;
-- immutable per-user reads for role, status, invitation and creation audit history.
+- immutable per-user reads for role, status, invitation and creation audit history;
+- request/database/future-job observability foundation;
+- Supplier booking with durable appointment, idempotency, transactional outbox
+  intent and server-authoritative scope;
+- database-enforced capacity reservation ownership and reconciliation;
+- transactional manual approval, rejection and information-request lifecycle.
 
 These completed groups are foundations, not a claim that Dock Scheduling is
-production-ready. Observability, final multi-instance rate limiting,
-deployment and environment promotion, backup/restore and runbooks, business
-configuration, transactional booking and capacity, and outbox/workers remain
-open.
+production-ready. The current production `main` is
+`dbe1127ae64c24e601828f38a0b88a749b79b858`. P2 is `DONE`; P3 is partial.
+Final multi-instance rate limiting, deployment/environment promotion,
+backup/restore, Booking Configuration Administration, reschedule/cancel,
+Operator manual booking, Gate Ops and outbox delivery workers remain open.
 
 ## Recommended next directions — not activated
 
@@ -147,8 +126,15 @@ The following are planning recommendations only and require a separate Product
 Authority decision, exact-SHA issue and task contract before they can become
 `READY`:
 
-1. `PROD-OBSERVABILITY-FOUNDATION-1` — complete logs, metrics, traces, alert ownership and operational runbooks.
-2. The first transactional booking vertical slice — durable Supplier booking with server-side validation, idempotency and oversubscription-safe capacity.
+1. Security next: production issue #57
+   `PROD-SEC-REACT-ROUTER-MIGRATION-1` — supported-line migration with focused
+   web regressions and zero advisory suppression.
+2. Product direction after security: `PROD-BOOKING-CONFIG-ADMIN-1` — minimum
+   Warehouse administration of the booking configuration already consumed by
+   the Supplier booking flow.
+
+Remaining P3 product work also includes reschedule/cancel lifecycle, Operator
+manual booking and Gate Ops. P4-P6 and deployment/release remain incomplete.
 
 ## Canonical sources of truth
 
