@@ -1,157 +1,170 @@
 # Verified current state
 
-Verified on 2026-08-10 at
-`27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
+Verified on 2026-08-12 from governance `main`
+`575f9a42b9ef13e306a1db582b0950646df5d777` and production `main`
+`d3824404113052c33b9feddf37a30aa4daa9d9b4`.
 
-## Repository and delivery state
+## Repository and source-of-truth split
 
-- Repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- Visibility: public.
-- The verified `origin/main` baseline is
-  `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`, the squash merge commit
-  for `DEV-SEC-002-REMEDIATE` pull request #151.
-- This repository is the frontend-only Dock Scheduling UI sandbox and
-  functional reference. It is not a production system and provides no
-  production persistence or production authorization enforcement.
+- Governance / functional-reference repository:
+  `lukaszgebicki/dock-scheduling-ui-ai-studio`.
+- Production repository:
+  `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
+- The governance repository remains the canonical source for Product Authority
+  decisions, roadmap/program governance, approved UI MVP reference material and
+  historical production assessment evidence.
+- The production repository is canonical for current production code, schema,
+  migrations, API behavior, implemented RBAC/security, tests, CI evidence and
+  current technical implementation status.
+- The UI repository is still a frontend-only demonstrational reference. Its
+  historical behavior is not automatically a production authorization rule.
 
-## Merged delivery milestones
+## Historical governance baseline
 
-| Milestone group | Evidence |
+- `PROD-REPO-ASSESSMENT-1` is `DONE` through issue #141 / PR #142.
+- Historical assessed production SHA remains
+  `c758e8403a4693fa7ba96081254072ad5d743aba`; it is historical evidence, not the
+  current implementation reference.
+- `PROD-GOVERNANCE-RECONCILE-2` is `DONE` through issue #152 / PR #153 at
+  governance merge `575f9a42b9ef13e306a1db582b0950646df5d777`.
+- `DEV-SEC-002-REMEDIATE` remains `DONE`; the governance repository dependency
+  audits were clean at its completion.
+
+## Current production main
+
+The verified production `main` is:
+
+`d3824404113052c33b9feddf37a30aa4daa9d9b4`
+
+This is the squash merge of production PR #72 implementing
+`PROD-NOTIFICATIONS-1`.
+
+## Production delivery milestones
+
+| Production task | Result |
 | --- | --- |
-| Repository, security and autonomy foundations | Completed tasks through PR #23, exact merge evidence in [ROADMAP.md](ROADMAP.md) |
-| UI MVP specification, shared role model and administration configuration | PRs #31, #37 and #42 |
-| Weekly-planning specification and optional-role routing | PRs #50 and #56 |
-| Scoped UI MVP delivery sequence | Task-specific activation and delivery PRs #62–#131, exact merge evidence in [ROADMAP.md](ROADMAP.md) |
-| Final scoped UI MVP completion review | PR #135, result `PASS` |
-| Production foundation charter and execution plan | PR #139 |
-| Authorized production-repository assessment | issue #141 completed by merged PR #142 |
-| Production program governance synchronization | issue #143 completed by squash-merged PR #144 at `8746888257a763f714a66c3948b53c4c1f636332` |
-| Governance-state bootstrap | issue #145 completed by squash-merged PR #146 at `3ecbe8b0d54552fd2a1ab987fd6a24d8c83279a2` |
-| Production governance synchronization state | issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
-| Development dependency remediation | issue #150 completed by squash-merged PR #151 at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8` |
+| `PROD-OBSERVABILITY-FOUNDATION-1` | DONE — PR #48, merge `e5784e06b0500a1a50f0de8957742e25f75369e6` |
+| `PROD-BOOKING-VERTICAL-SLICE-1` | DONE — PR #50, merge `7f2a87708ff38adb984a2f792cc414d7ecf52378` |
+| `PROD-CAPACITY-TRANSACTION-1` | DONE — PR #52, merge `592d86bf75337abf97268233d5a9caa9325da1c2` |
+| `PROD-BASELINE-CI-UNBLOCK-1` | DONE — PR #61, merge `5c60fa0b960d83b56a8cf17cc061510f8a2ed744` |
+| `PROD-APPROVAL-LIFECYCLE-1` | DONE — issue #53 / PR #54, merge `dbe1127ae64c24e601828f38a0b88a749b79b858` |
+| `PROD-SEC-REACT-ROUTER-MIGRATION-1` | DONE — issue #57 / PR #62, merge `f0d98f3cb97e8b2f1fa072c1eb49301f62e7dab6`; React Router 7.18.2, audits clean |
+| `PROD-BOOKING-CONFIG-ADMIN-1` | DONE — issue #63 / PR #64, merge `5e3533f36e54f2430257b08dbf6be76930def9d5` |
+| `PROD-APPOINTMENT-CHANGE-LIFECYCLE-1` | DONE — issue #65 / PR #66, merge `ea30def3ad266729a6fdd4815696c029cb2041cb` |
+| `PROD-WAREHOUSE-OPERATIONS-1` | DONE — issue #67 / PR #68, merge `9ba68b8725271b847e351883434e3b022bdd3758` |
+| `PROD-WAREHOUSE-ADMIN-BOOKING-DESK-1` | DONE — issue #69 / PR #70, merge `d27f6b9d8c46ca7ad054232d12a55011cdef78a7` |
+| `PROD-NOTIFICATIONS-1` | DONE — issue #71 / PR #72, merge `d3824404113052c33b9feddf37a30aa4daa9d9b4` |
 
-## Scoped UI MVP result
+## Current production capability
 
-The [UI MVP Product Completion Review v2](UI_MVP_PRODUCT_COMPLETION_REVIEW_V2.md)
-records `PASS` for the agreed frontend-only demonstrational scope. Its verified
-closure covers 29 BDP identifiers and 43 acceptance scenarios, including:
+The production application now has an evidence-backed transactional path for:
 
-- six role-scoped UI contexts and fail-closed route/action visibility;
-- warehouse and Supplier configuration;
-- weekly and standard Supplier booking plus Operator creation;
-- duration-aware composite capacity and deterministic final-capacity conflict;
-- approval, lifecycle, gate and optional-role routing through `RUN`, `SKIP`,
-  `DELEGATE` and `BLOCK`;
-- Friday import preview, exact PO/SKU enrichment, unmatched scheduling and
-  explicit transport reconciliation;
-- PO-level calendar views, SKU drill-down, reports and local exports;
-- dashboards, notifications, responsive views and standing-series preview.
+- scoped six-role server authorization and persisted access assignments;
+- secure Supplier booking against published Warehouse configuration;
+- pallet-based capacity with a hard system ceiling of 33 pallets per slot and
+  configurable actual slot capacity from 1 to 33;
+- durable capacity reservation/release lineage and bounded SERIALIZABLE
+  contention handling;
+- manual approval / rejection / information-request lifecycle;
+- transactional reschedule and cancellation with capacity swap/release safety;
+- Warehouse booking-configuration draft/publish/audit administration;
+- Warehouse Administrator assisted booking and planning using the same booking
+  engine as Supplier self-service;
+- Warehouse floor unloading execution with `START_UNLOADING` and
+  `COMPLETE_UNLOADING`;
+- immutable history, transactional outbox evidence and production notification
+  projection;
+- authenticated in-app notifications;
+- provider-neutral SMTP delivery code with mandatory encrypted transport,
+  bounded retry, leasing, crash recovery, recipient revalidation and
+  dead-letter administration.
 
-This completion result does not establish production readiness. The UI remains
-local and demonstrational: no production backend persistence, transactions,
-ERP/WMS/SAP integration, real notification delivery, attachment storage,
-deployment architecture or operational controls are supplied by this
-repository.
+The notification implementation does not mean real SMTP credentials or a
+production environment have been configured or deployed.
 
-## Product authority
+## Product Authority role correction
 
-- [Business Decision Pack UI MVP v0.3](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.3.md)
-  is the canonical approved UI MVP business source.
-- [UI MVP traceability](../product/UI_MVP_TRACEABILITY.md) and the
-  [implementation plan](UI_MVP_IMPLEMENTATION_PLAN.md) retain the controlled
-  requirement and delivery mapping.
-- [Scope Addendum v0.4](../product/UI_MVP_SCOPE_ADDENDUM_v0.4.md) defines the
-  final scoped closure, explicit deferrals and continuing exclusions.
-- BDP v0.2 remains historical evidence. Section 24 remains excluded.
-- `BDR-TRN-001` remains controlling: both Supplier transport registrations are
-  required at reservation; Administrator reconciliation is explicit and
-  auditable; Friday import never silently overwrites Supplier values.
+Production authorization supersedes the historical demonstrational UI MVP where
+there is a conflict.
 
-## Production program governance
+- Business term **Warehouse Manager** maps to the existing canonical role
+  `WAREHOUSE_ADMINISTRATOR`.
+- No `WAREHOUSE_MANAGER` role exists or is planned by this reconciliation.
+- `WAREHOUSE_OPERATOR` is a floor-operations role only.
+- `WAREHOUSE_OPERATOR` may read authorized Warehouse appointments and perform
+  `START_UNLOADING` / `COMPLETE_UNLOADING`.
+- `WAREHOUSE_OPERATOR` may not create bookings, approve, reject, request
+  information, reschedule, cancel or mutate booking configuration.
+- Assisted booking is authorized to `WAREHOUSE_ADMINISTRATOR` and
+  `SYSTEM_ADMINISTRATOR`, subject to their normal scope rules.
 
-- `PROD-REPO-ASSESSMENT-1` is `DONE` through issue #141 and merged PR #142.
-- The assessment conclusion recorded in the UI repository is to evolve the
-  existing production repository rather than replace it.
-- `PROD-GOVERNANCE-SYNC-1` is `DONE` through closed issue #143 and
-  squash-merged PR #144 at
-  `8746888257a763f714a66c3948b53c4c1f636332`.
-- The historical assessed production SHA remains
-  `c758e8403a4693fa7ba96081254072ad5d743aba`; it is not the current
-  implementation reference.
-- The verified current production `main` is
-  `dbe1127ae64c24e601828f38a0b88a749b79b858`.
-- Production observability, the Supplier booking vertical slice, capacity
-  transaction hardening and the manual approval lifecycle are `DONE` through
-  PRs #48, #50, #52 and #54 respectively.
-- Baseline CI unblock PR #61 resolved the Nano ID HIGH blocker and the
-  invitation-expiry fixture time bomb before PR #54 was integrated and merged.
-- These completed foundations do not establish production readiness.
-  Deployment/environment promotion, backup/restore, Booking Configuration
-  Administration, reschedule/cancel, Operator manual booking, Gate Ops,
-  outbox delivery workers and P4-P6 remain incomplete.
+The old UI MVP task named `UI-MVP-OPERATOR-MANUAL-BOOKING-1` remains historical
+proof of the demonstrational scope completed at that time. It must not be used
+as authorization evidence for the production system.
 
-### Canonical sources of truth
+## Phase status
 
-- `lukaszgebicki/dock-scheduling-app-ai-studio1707` is canonical for current
-  production code, schema and migrations, API behavior, implemented security
-  and RBAC, tests, technical implementation state, and production issues and
-  pull requests.
-- `lukaszgebicki/dock-scheduling-ui-ai-studio` is canonical for the approved
-  UI MVP functional reference, Product Authority decisions, product/program
-  governance and historical assessment material. It is not canonical for
-  current production code.
+- P0 — authorization/assessment: `DONE`.
+- P1 — platform foundation: substantially implemented for application-level
+  security, persistence, CI and observability, but deployment/environment,
+  backup/recovery and release infrastructure remain incomplete.
+- P2 — transactional booking vertical slice: `DONE`.
+- P3 — core operational workflows: approved booking/approval/change,
+  configuration, Warehouse Administrator assisted booking and unloading
+  execution scope is delivered. Broad Gate/Yard/driver/check-in workflows are
+  not implemented and remain outside the currently approved production scope.
+- P4 — planning/delivery services: `PARTIAL`; production notifications are
+  `DONE`, while weekly planning/import, files/attachments and production
+  reporting remain open.
+- P5 — hardening/migration: incomplete.
+- P6 — pilot/release: incomplete.
 
-This reconciliation used Product Authority-authorized read-only production
-repository evidence. It made no production repository write.
+These milestones do **not** establish production readiness or authorize a
+production deployment.
 
-## PR #144 validation evidence
+## Remaining major program areas
 
-Issue #143 records the final current-merge-ref CI run #257 for PR #144:
+Still incomplete or requiring separate Product Authority contracts:
 
-| Check | Verified result |
-| --- | --- |
-| Checkout | PASS |
-| Dependency installation | PASS |
-| `npm run typecheck` | PASS |
-| `npm test -- --reporter=verbose` | PASS; 72 files, 726 tests |
-| `npm run build` | PASS |
-| Runtime dependency audit | PASS; 0 vulnerabilities |
+- controlled environment promotion / deployment and rollback;
+- multi-instance rate/abuse hardening and final security review;
+- performance/load/reliability qualification;
+- backup, point-in-time recovery and restore rehearsal;
+- files/attachments and safe object-storage lifecycle;
+- weekly planning/import and reconciliation workflows;
+- production reporting / KPI and export services;
+- any required source-data migration;
+- production-like UAT/pilot;
+- final production release and hypercare.
 
-PR #144 changed exactly `docs/codex/ROADMAP.md`,
-`docs/codex/PRODUCTION_FOUNDATION_BACKLOG.md` and
-`docs/codex/PROD_REPO_ASSESSMENT_ACTIVATION_STATUS.md`. It made no application,
-dependency, lockfile, workflow or production-repository change.
+Broad Gate/Yard/driver/check-in functionality is not treated as an implicit next
+requirement; it needs an explicit Product Authority scope decision before work.
 
-## DEV-SEC-002 remediation result
+## Next controlled direction — not activated
 
-`DEV-SEC-002-REMEDIATE` is `DONE` through issue #150 and squash-merged PR #151
-at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
+No implementation task is activated by this reconciliation.
 
-- `postcss` moved from `8.5.21` to `8.5.26`.
-- `nanoid` moved from `3.3.16` to `3.3.18`.
-- The final diff changed only `package-lock.json`; no manifest, source, test,
-  configuration, workflow or production behavior changed.
-- Repeated local validation reported 72 test files and 726 passing tests;
-  typecheck and production build passed.
-- Full and runtime dependency audits report 0 vulnerabilities.
-- Exact-head CI run #265 and independent `review_high` passed with no findings.
+The recommended next major product direction is `PROD-FILES-1`, because safe
+attachment/object-storage capability is a reusable dependency for later import,
+operational evidence and export workflows. `PROD-WEEKLY-PLANNING-IMPORT-1` and
+`PROD-REPORTING-DASHBOARD-1` remain subsequent P4 candidates.
+
+Deployment/reliability hardening may be prioritized ahead of those product
+features by a separate Product Authority decision.
 
 ## Main branch governance
 
-- Active ruleset `Protect main` (ID `19850347`) targets `refs/heads/main`.
-- All changes to `main` require a pull request.
-- `Typecheck, test and build` is the required check.
+- Active ruleset `Protect main` (ID `19850347`) targets `refs/heads/main` in the
+  governance repository.
+- Governance changes to `main` require a pull request and the required
+  `Typecheck, test and build` check.
 - Force pushes and deletion of `main` are blocked.
-- Automated PASS never replaces human merge authorization.
+- Automated PASS does not replace Product Authority merge authorization where
+  the task contract reserves that gate.
 
-## Next controlled direction
+## Reconciliation boundary
 
-- Security next: production issue #57
-  `PROD-SEC-REACT-ROUTER-MIGRATION-1`, currently `PLANNED` and requiring its
-  dedicated Class C migration contract before implementation.
-- Product direction after security: `PROD-BOOKING-CONFIG-ADMIN-1` — Booking
-  Configuration Administration. It is not activated for implementation.
-- P2 is `DONE`. P3 is partial: manual approval lifecycle is `DONE`, while
-  Booking Configuration Administration, reschedule/cancel, Operator manual
-  booking and Gate Ops remain.
-- Deployment/release and P4-P6 remain incomplete.
+This status reconciliation reads production evidence but changes only the four
+approved governance documents in the UI/governance repository. It performs no
+production-code, dependency, workflow, deployment, cloud, data or secret
+change.
