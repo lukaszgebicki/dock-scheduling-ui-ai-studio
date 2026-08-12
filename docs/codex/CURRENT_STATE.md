@@ -30,6 +30,18 @@ Verified on 2026-08-12 from governance `main`
 - `DEV-SEC-002-REMEDIATE` remains `DONE`; the governance repository dependency
   audits were clean at its completion.
 
+## Historical UI MVP reference
+
+- [UI MVP Product Completion Review v2](UI_MVP_PRODUCT_COMPLETION_REVIEW_V2.md)
+  remains the canonical `PASS` record for the agreed frontend-only
+  demonstrational scope.
+- [Business Decision Pack UI MVP v0.3](../product/UI_MVP_BUSINESS_DECISION_PACK_v0.3.md),
+  [UI MVP traceability](../product/UI_MVP_TRACEABILITY.md) and
+  [Scope Addendum v0.4](../product/UI_MVP_SCOPE_ADDENDUM_v0.4.md) remain
+  historical functional/product reference material.
+- That historical closure is not a claim of production readiness and does not
+  override later Product Authority decisions for production authorization.
+
 ## Current production main
 
 The verified production `main` is:
