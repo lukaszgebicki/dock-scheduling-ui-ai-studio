@@ -3,89 +3,134 @@
 ## SPR-SEC-1 — React Router runtime advisories
 
 - Status: `RESOLVED`.
-- Prior condition: the React Router 6 runtime tree reported
-  `GHSA-wrjc-x8rr-h8h6` and `GHSA-337j-9hxr-rhxg`.
-- Resolution: PR #7 migrated `react-router-dom` and transitive
-  `react-router` to exactly 7.18.0.
-- Current evidence: `npm audit --omit=dev` reports 0 vulnerabilities at
-  the current baseline.
-- Runtime exposure: none from these resolved advisories.
+- Prior UI-repository condition: React Router 6 runtime advisories were removed
+  by migration to the supported 7.x line.
+- Current governance-repository runtime audit remained clean at the latest
+  dependency remediation gate.
 
 ## DEMO-DATA-001 — legacy demo user access duplication
 
 - Status: `OPEN`.
-- Current evidence: `src/users/demoAccessScope.ts` centralizes typed
-  stable warehouse IDs, supplier-organization IDs, and
-  organization-to-warehouse mappings for newer access-scope and
-  administration flows.
-- Remaining debt: `src/users/demoUsers.ts` duplicates organization
-  labels, warehouse labels, and supplier access presentation data, so
-  the repository does not yet have one complete source of truth for all
-  demo user and access presentation data.
-- Direction: new access-scope and administration work should use
-  `demoAccessScope`; existing source is unchanged by this governance
-  task.
-- Proposed follow-up: a dedicated future normalization task. Its design
-  and acceptance criteria are intentionally not specified here.
+- Current evidence: `src/users/demoAccessScope.ts` centralizes typed stable
+  warehouse IDs, Supplier-organization IDs and organization-to-warehouse
+  mappings for newer access-scope/admin flows.
+- Remaining debt: `src/users/demoUsers.ts` still duplicates organization labels,
+  warehouse labels and Supplier-access presentation data.
+- Boundary: this is demonstrational UI normalization debt and is not a
+  production authorization issue.
+- Proposed follow-up: dedicated future normalization only if continued work in
+  the UI sandbox justifies it.
 
 ## DEV-SEC-001 — development toolchain audit findings
 
 - Status: `RESOLVED`.
-- Prior condition: the development tree reported 4 vulnerable packages
-  — 2 moderate, 1 high, and 1 critical — through the Vite, Vitest,
-  Vite-node, and esbuild graph. The production-only audit remained at
-  zero vulnerabilities.
-- Resolution: PR #21 upgraded the approved development graph to
-  `@vitejs/plugin-react@4.7.0`, `vite@6.4.3`, `vitest@3.2.7`,
-  `vite-node@3.2.4`, and `esbuild@0.25.12`. The only test-file change
-  migrated the existing `MockInstance` annotation to Vitest's
-  function-signature generic form without changing assertions or
-  runtime behavior.
-- Current evidence at
-  `1190c6dbd63a82843487d3d78326d3695c794320`: `npm audit` and
-  `npm audit --omit=dev` both report 0 vulnerabilities; `npm ci`,
-  typecheck, all 17 test files and 287 tests, and the production build
-  pass.
-- Installed graph: the root, `@tailwindcss/vite@4.3.3`,
-  `@vitejs/plugin-react@4.7.0`, `vitest@3.2.7`,
-  `@vitest/mocker@3.2.7`, and `vite-node@3.2.4` share one deduplicated
-  `vite@6.4.3` node; Vite resolves `esbuild@0.25.12`.
-- The remediation used no dependency overrides, audit suppression,
-  `npm audit fix`, `npm audit fix --force`, force push, configuration
-  change, CI change, or production behavior change.
+- Resolution: PR #21 upgraded the approved development graph and restored clean
+  full/runtime audits without dependency overrides or audit suppression.
 
 ## DEV-SEC-002 — renewed development dependency audit findings
 
 - Status: `RESOLVED` through issue #150 and squash-merged PR #151 at
   `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
-- Resolution: the lockfile-only remediation moved `postcss 8.5.21 → 8.5.26`
-  and `nanoid 3.3.16 → 3.3.18`, including matching registry metadata and the
-  PostCSS dependency floor `^3.3.17`.
-- Current evidence: full and runtime audits report 0 vulnerabilities;
-  typecheck, 72 test files / 726 tests and production build pass.
-- Scope evidence: only `package-lock.json` changed. No manifest, override,
-  suppression, broad update, source, test, configuration or workflow change
-  was used.
+- Resolution: lockfile-only remediation moved `postcss 8.5.21 -> 8.5.26` and
+  `nanoid 3.3.16 -> 3.3.18`.
+- Full and runtime audits were clean; no manifest, source, workflow or
+  production-behavior change was used.
 
 ## PROD-BASELINE-CI-UNBLOCK-1 — production baseline blockers
 
 - Status: `RESOLVED` through production PR #61 at
   `5c60fa0b960d83b56a8cf17cc061510f8a2ed744`.
-- Resolution: `nanoid 3.3.16 → 3.3.17` removed the production HIGH audit
-  blocker, and the invitation audit fixture received a deterministic future
-  expiry date.
-- Boundary: production auth/session behavior, constraints and migrations were
-  unchanged. React Router advisories remained visible and unsuppressed.
+- Resolution: the Nano ID HIGH blocker and deterministic invitation-expiry
+  fixture failure were repaired without weakening auth/session semantics.
 
-## PROD-SEC-REACT-ROUTER-MIGRATION-1 — supported-line migration
+## PROD-SEC-REACT-ROUTER-MIGRATION-1 — production React Router advisories
 
-- Status: `PLANNED / SECURITY NEXT` in production issue #57.
-- Current evidence: production `apps/web` resolves `react-router-dom 6.30.4`
-  and nested `react-router 6.30.4`; two moderate advisories remain visible.
-- Required direction: migrate to a currently supported security-clean line
-  under a dedicated Class C contract with route, redirect, authenticated-shell
-  and complete web regression evidence.
-- Prohibited shortcuts: no advisory suppression, audit ignore, backend auth
-  change or unrelated dependency upgrade.
-- Product direction after this security task is Booking Configuration
-  Administration; that product feature is not activated here.
+- Status: `RESOLVED` through production issue #57 / PR #62 at
+  `f0d98f3cb97e8b2f1fa072c1eb49301f62e7dab6`.
+- Resolution: production web migrated from `react-router-dom 6.30.4` to
+  `react-router-dom 7.18.2` / `react-router 7.18.2`.
+- Final migration evidence: exact-head CI passed and both dependency audits
+  reported 0 vulnerabilities.
+- No advisory suppression, backend authorization change or unrelated dependency
+  migration was used.
+- This item must no longer be represented as `PLANNED / SECURITY NEXT`.
+
+## PROD-ROLE-DIVERGENCE-001 — UI demo Operator booking vs production role model
+
+- Status: `GOVERNANCE RESOLVED / HISTORICAL DIVERGENCE`.
+- Historical UI MVP included `UI-MVP-OPERATOR-MANUAL-BOOKING-1`, where the demo
+  Operator could create on behalf of Supplier.
+- Product Authority subsequently defined the production rule:
+  - business Warehouse Manager = existing `WAREHOUSE_ADMINISTRATOR`;
+  - `WAREHOUSE_OPERATOR` is read + `START_UNLOADING` + `COMPLETE_UNLOADING`
+    only;
+  - Operator cannot create bookings, approve/reject/request information,
+    reschedule/cancel or mutate booking configuration;
+  - assisted booking is a Warehouse Administrator/System Administrator
+    capability.
+- Direction: production implementation and this Product Authority decision are
+  controlling. The old UI demo remains historical evidence only and must not be
+  reused as authorization policy.
+
+## PROD-CAPACITY-SEMANTICS-001 — appointment-count vs pallet capacity
+
+- Status: `RESOLVED` through `PROD-BOOKING-CONFIG-ADMIN-1`, issue #63 / PR #64
+  at `5e3533f36e54f2430257b08dbf6be76930def9d5`.
+- Production capacity is now explicitly measured in pallets.
+- Slot capacity is configurable from 1 to 33 pallets with a hard system ceiling
+  of 33.
+- Reservation/release lineage and counters were migrated to pallet units with
+  fail-closed upgrade tests and no historical appointment rewrite.
+
+## PROD-NOTIFICATIONS-DELIVERY-001 — outbox without production delivery
+
+- Status: `RESOLVED AT APPLICATION LAYER` through issue #71 / PR #72 at
+  `d3824404113052c33b9feddf37a30aa4daa9d9b4`.
+- Delivered:
+  - post-cutover notification projection without historical flood;
+  - authenticated in-app notifications;
+  - provider-neutral SMTP transport;
+  - send-time recipient authorization revalidation;
+  - bounded leasing/retry/dead-letter/crash recovery;
+  - System Administrator delivery operations;
+  - deterministic Message-ID and explicit at-least-once external semantics.
+- Remaining boundary is operational/release work, not missing application
+  pipeline: real SMTP credentials/provider configuration and production
+  deployment remain separately governed.
+
+## PROD-SECURITY-HARDENING-001 — final multi-instance abuse protection
+
+- Status: `OPEN / P5`.
+- Existing application security and endpoint authorization are strong, but
+  final production hardening still requires a production-scale threat-model
+  refresh, multi-instance rate/abuse protection, privileged-access review and
+  independent security evidence before release.
+- Do not solve this with per-process limits presented as distributed
+  enforcement.
+
+## PROD-DEPLOYMENT-DR-001 — environment promotion and recovery evidence
+
+- Status: `OPEN`.
+- Application CI, migrations and local/integration reliability evidence do not
+  establish production environment readiness.
+- Remaining work includes controlled deployment/promotion/rollback, managed
+  database backup/PITR, restore rehearsal, measured RPO/RTO and operational
+  ownership.
+
+## PROD-P4-OPEN-001 — remaining planning/content/reporting services
+
+- Status: `OPEN / NOT ACTIVATED`.
+- Notifications are now delivered at application level, but production still
+  lacks the remaining P4 capabilities:
+  - secure files/attachments/object-storage lifecycle;
+  - durable weekly planning/import and reconciliation;
+  - scoped production reporting/KPI/export services.
+- Recommended next product candidate is `PROD-FILES-1`, subject to a separate
+  exact-SHA Product Authority contract.
+
+## Current security posture note
+
+At the final `PROD-NOTIFICATIONS-1` gate, production `npm audit` and
+`npm audit --omit=dev` both reported 0 vulnerabilities. This is point-in-time
+evidence, not a permanent guarantee; future dependency changes remain subject to
+normal security governance.

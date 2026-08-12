@@ -65,7 +65,7 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | UI-MVP-BOOKING-NONWEEKLY-1-ACTIVATE — activate standard Supplier booking | DONE; PR #117 squash-merged at `994e52658ff14aaf36369a69ca242b44703ececf` |
 | UI-MVP-BOOKING-NONWEEKLY-1 — five-step standard Supplier booking | DONE; PR #119 squash-merged at `e5ba6b4d5ddb8861bfb07ea75a8476484d297386` |
 | UI-MVP-OPERATOR-MANUAL-BOOKING-1-ACTIVATE — activate Operator manual booking | DONE; PR #121 squash-merged at `ea64365cc49bdb96ec090f0234183f6286dd9ba2` |
-| UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier | DONE; PR #123 squash-merged at `ea1e436bc563d68aecf15e9417fd9f627c432abf` |
+| UI-MVP-OPERATOR-MANUAL-BOOKING-1 — Operator creation on behalf of Supplier | DONE; historical UI-only scope, PR #123 squash-merged at `ea1e436bc563d68aecf15e9417fd9f627c432abf`; superseded for production authorization by Product Authority decision |
 | UI-MVP-CALENDAR-VIEWS-1-ACTIVATE — activate complete calendar views | DONE; PR #125 squash-merged at `3311ee07c4fb508ddcec0fb09a4b9ea4a0f8ab38` |
 | UI-MVP-CALENDAR-VIEWS-1 — complete six role-scoped calendar views | DONE; PR #127 squash-merged at `a9c6b04e9a4aaf70a0e3507e61b8091543d2a76f` |
 | UI-MVP-RESPONSIVE-COMPLETION-1-ACTIVATE — activate responsive completion | DONE; PR #129 squash-merged at `0fe3a4e0acbb9dea5c731d534dd64d2be737f6c6` |
@@ -80,45 +80,61 @@ Allowed roadmap states are `READY`, `BLOCKED`, `IN_PROGRESS`, `REVIEW`,
 | PROD-GOVERNANCE-SYNC-1-STATE — record governance synchronization completion | DONE; issue #147 completed by squash-merged PR #148 at `b94a123fb1bf3974e06f5c0526dc3b42878450a6` |
 | DEV-SEC-002-ACTIVATE — activate development dependency remediation | DONE; PR #149 squash-merged at `1396e74ac1d09ba357f8e14f1b754193208f334b` |
 | DEV-SEC-002-REMEDIATE — remediate development dependency advisories | DONE; issue #150 completed by squash-merged PR #151 at `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8` |
+| PROD-GOVERNANCE-RECONCILE-2 — reconcile roadmap after transactional lifecycle | DONE; issue #152 completed by squash-merged PR #153 at `575f9a42b9ef13e306a1db582b0950646df5d777` |
 | PROD-OBSERVABILITY-FOUNDATION-1 — production telemetry foundation | DONE; production PR #48 squash-merged at `e5784e06b0500a1a50f0de8957742e25f75369e6` |
 | PROD-BOOKING-VERTICAL-SLICE-1 — Supplier booking to durable appointment | DONE; production PR #50 squash-merged at `7f2a87708ff38adb984a2f792cc414d7ecf52378` |
 | PROD-CAPACITY-TRANSACTION-1 — durable capacity reservation ledger | DONE; production PR #52 squash-merged at `592d86bf75337abf97268233d5a9caa9325da1c2` |
 | PROD-BASELINE-CI-UNBLOCK-1 — restore green production baseline | DONE; production PR #61 squash-merged at `5c60fa0b960d83b56a8cf17cc061510f8a2ed744` |
 | PROD-APPROVAL-LIFECYCLE-1 — transactional manual approval lifecycle | DONE; production issue #53 completed by squash-merged PR #54 at `dbe1127ae64c24e601828f38a0b88a749b79b858` |
+| PROD-SEC-REACT-ROUTER-MIGRATION-1 — supported/security-clean React Router 7 line | DONE; production issue #57 completed by PR #62 at `f0d98f3cb97e8b2f1fa072c1eb49301f62e7dab6` |
+| PROD-BOOKING-CONFIG-ADMIN-1 — Warehouse booking configuration admin and pallet capacity | DONE; production issue #63 completed by PR #64 at `5e3533f36e54f2430257b08dbf6be76930def9d5` |
+| PROD-APPOINTMENT-CHANGE-LIFECYCLE-1 — transactional reschedule/cancellation | DONE; production issue #65 completed by PR #66 at `ea30def3ad266729a6fdd4815696c029cb2041cb` |
+| PROD-WAREHOUSE-OPERATIONS-1 — unloading execution lifecycle and Operator desk | DONE; production issue #67 completed by PR #68 at `9ba68b8725271b847e351883434e3b022bdd3758` |
+| PROD-WAREHOUSE-ADMIN-BOOKING-DESK-1 — Warehouse Administrator assisted booking/planning | DONE; production issue #69 completed by PR #70 at `d27f6b9d8c46ca7ad054232d12a55011cdef78a7` |
+| PROD-NOTIFICATIONS-1 — durable in-app and SMTP notification pipeline | DONE; production issue #71 completed by PR #72 at `d3824404113052c33b9feddf37a30aa4daa9d9b4` |
 
 ## Active
 
-No implementation task is `READY`, `IN_PROGRESS`, `REVIEW` or `PR_OPEN` in
-this governance repository. Production issue #57 is the next planned security
-task, but this state record does not activate it or any product implementation.
+No production implementation task is activated by this governance
+reconciliation. Issue #154 is documentation/governance work only.
 
 ## Production Foundation status
 
-The authorized assessment concluded that the production repository should be
-evolved rather than replaced. Since the historical assessed SHA, separately
-scoped production work has completed these foundation groups:
+The authorized assessment conclusion remains: evolve the existing production
+repository rather than replace it.
 
-- security and API baseline hardening;
-- critical/high dependency remediation and blocking audit evidence;
-- required PostgreSQL integration CI;
-- scoped six-role server RBAC and persisted scope assignments;
-- organization, Supplier organization, warehouse and participation identities;
-- privileged role and user-status mutations with immutable audit evidence;
-- global System Administrator user directory and lifecycle administration;
-- one-time invitation issuance and atomic invitation acceptance;
-- immutable per-user reads for role, status, invitation and creation audit history;
-- request/database/future-job observability foundation;
-- Supplier booking with durable appointment, idempotency, transactional outbox
-  intent and server-authoritative scope;
-- database-enforced capacity reservation ownership and reconciliation;
-- transactional manual approval, rejection and information-request lifecycle.
+Current production `main`:
 
-These completed groups are foundations, not a claim that Dock Scheduling is
-production-ready. The current production `main` is
-`dbe1127ae64c24e601828f38a0b88a749b79b858`. P2 is `DONE`; P3 is partial.
-Final multi-instance rate limiting, deployment/environment promotion,
-backup/restore, Booking Configuration Administration, reschedule/cancel,
-Operator manual booking, Gate Ops and outbox delivery workers remain open.
+`d3824404113052c33b9feddf37a30aa4daa9d9b4`
+
+Completed production capability now includes:
+
+- security/API and dependency baseline hardening;
+- PostgreSQL integration CI and scoped six-role RBAC;
+- durable Supplier booking;
+- pallet-based capacity with configurable 1..33 pallets per slot and a hard
+  ceiling of 33;
+- transactional approval / rejection / information-request lifecycle;
+- Warehouse booking-configuration draft/publish/audit;
+- transactional reschedule and cancellation;
+- Warehouse unloading execution;
+- Warehouse Administrator assisted booking and planning;
+- transactional outbox projection, in-app notifications and provider-neutral
+  SMTP delivery with retry/dead-letter and recipient revalidation.
+
+The Product Authority production role model is controlling:
+
+- Warehouse Manager = `WAREHOUSE_ADMINISTRATOR`;
+- `WAREHOUSE_OPERATOR` is read + `START_UNLOADING` + `COMPLETE_UNLOADING` only;
+- Operator cannot book, approve/reject/request information, reschedule/cancel or
+  mutate configuration.
+
+P2 is `DONE`. P3 is delivered for the approved booking/approval/change,
+configuration, assisted-booking and unloading scope. Broad Gate/Yard/driver
+workflows are not implemented and require a separate Product Authority decision.
+P4 is partial because notifications are `DONE`; weekly planning/import,
+files/attachments and reporting remain open. P5-P6 and deployment/release remain
+incomplete.
 
 ## Recommended next directions — not activated
 
@@ -126,15 +142,17 @@ The following are planning recommendations only and require a separate Product
 Authority decision, exact-SHA issue and task contract before they can become
 `READY`:
 
-1. Security next: production issue #57
-   `PROD-SEC-REACT-ROUTER-MIGRATION-1` — supported-line migration with focused
-   web regressions and zero advisory suppression.
-2. Product direction after security: `PROD-BOOKING-CONFIG-ADMIN-1` — minimum
-   Warehouse administration of the booking configuration already consumed by
-   the Supplier booking flow.
+1. `PROD-FILES-1` — secure attachment/object-storage lifecycle as a reusable P4
+   platform capability.
+2. `PROD-WEEKLY-PLANNING-IMPORT-1` — durable weekly planning/import and
+   reconciliation.
+3. `PROD-REPORTING-DASHBOARD-1` — scoped production KPI/reporting/export
+   services.
+4. P5/P6 readiness work — security/performance hardening, backup/DR, migration,
+   UAT/pilot and release.
 
-Remaining P3 product work also includes reschedule/cancel lifecycle, Operator
-manual booking and Gate Ops. P4-P6 and deployment/release remain incomplete.
+Deployment/reliability hardening may be prioritized ahead of product P4 work by
+Product Authority. Broad Gate/Yard scope is not implied by this roadmap.
 
 ## Canonical sources of truth
 

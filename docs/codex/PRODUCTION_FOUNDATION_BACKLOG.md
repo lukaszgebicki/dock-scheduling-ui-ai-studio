@@ -3,14 +3,14 @@
 ## Backlog identity
 
 - Program: Production Foundation.
-- Governance status date: 2026-08-10.
+- Governance status date: 2026-08-12.
 - Functional reference: UI MVP Product Review 2, result `PASS`.
 - Governance repository: `lukaszgebicki/dock-scheduling-ui-ai-studio`.
-- Governance baseline for this reconciliation: `27f15b6fed81e59e4ea8b38b1a99267c6c48b3c8`.
+- Governance baseline for this reconciliation: `575f9a42b9ef13e306a1db582b0950646df5d777`.
 - Production repository: `lukaszgebicki/dock-scheduling-app-ai-studio1707`.
 - Historical assessed production SHA: `c758e8403a4693fa7ba96081254072ad5d743aba`.
-- Current production reference SHA: `dbe1127ae64c24e601828f38a0b88a749b79b858`.
-- Current authorization: the production repository has Product Authority authorization for separately scoped exact-SHA assessment and implementation tasks. This governance task is read-only for the production repository and authorizes no production write.
+- Current production reference SHA: `d3824404113052c33b9feddf37a30aa4daa9d9b4`.
+- Current authorization: the production repository has Product Authority authorization only through separately scoped exact-SHA implementation tasks. This reconciliation is read-only for production and authorizes no production write.
 
 ## Canonical sources of truth
 
@@ -36,7 +36,7 @@
 - program planning and governance;
 - historical production-repository assessment material.
 
-The UI repository is not the canonical source for current production code.
+The UI repository is not the canonical source for current production code or for production authorization where later Product Authority decisions supersede demo behavior.
 
 ## Operating rules
 
@@ -45,9 +45,22 @@ The UI repository is not the canonical source for current production code.
 - Production-repository work requires a separately scoped exact-SHA task and explicit authorization.
 - Architecture decisions must be reconciled with actual repository evidence before implementation.
 - The UI MVP is a functional reference, not a production code-completeness or production-readiness claim.
-- No task may weaken six-role scope, Supplier organization isolation, transactional capacity, approval safety, audit evidence or fail-closed validation.
+- No task may weaken six-role scope, Supplier organization isolation, transactional pallet capacity, lifecycle safety, audit evidence or fail-closed validation.
 - Production deployment, cloud resources, production data and secrets require separate explicit authorization.
 - No new production task is activated by this backlog update.
+
+## Product Authority role correction
+
+The current production decision is controlling:
+
+- business `Warehouse Manager` maps to the existing canonical role `WAREHOUSE_ADMINISTRATOR`;
+- no seventh `WAREHOUSE_MANAGER` role is required;
+- `WAREHOUSE_OPERATOR` is a floor-operations role only;
+- Operator may read authorized Warehouse appointments and execute `START_UNLOADING` / `COMPLETE_UNLOADING`;
+- Operator may not create bookings, approve, reject, request information, reschedule, cancel or mutate booking configuration;
+- assisted booking belongs to `WAREHOUSE_ADMINISTRATOR` / `SYSTEM_ADMINISTRATOR` under their normal scope rules.
+
+Historical `UI-MVP-OPERATOR-MANUAL-BOOKING-1` remains valid only as evidence of the demonstrational UI MVP completed at that time. It must not be reused as production authorization policy.
 
 ## Phase overview
 
@@ -55,8 +68,8 @@ The UI repository is not the canonical source for current production code.
 | --- | --- | --- |
 | P0 — Authorization and assessment | Understand the named production repository and reconcile the plan with reality. | Approved reuse/replace/retire map, risk register and implementation baseline. |
 | P1 — Platform foundation | Establish deployable, secure, durable technical foundations. | Environments, API, database, migrations, CI/CD, auth skeleton and observability foundation. |
-| P2 — Transactional vertical slice | Prove one secure end-to-end booking journey. | Supplier booking persists durably and cannot oversubscribe capacity. |
-| P3 — Core operational workflows | Add approval, lifecycle, gate and operator workflows. | Core warehouse operation works against durable data. |
+| P2 — Transactional vertical slice | Prove one secure end-to-end booking journey. | Supplier booking persists durably and cannot oversubscribe pallet capacity. |
+| P3 — Core operational workflows | Add approval, change, configuration, administrator and Warehouse execution workflows. | Approved core warehouse operation works against durable data. |
 | P4 — Planning and delivery services | Add weekly planning/import, files, notifications and reporting. | Principal supporting workflows are durable, idempotent and observable. |
 | P5 — Hardening and migration | Prove performance, security, recovery and data transition. | Production-readiness gates G4–G5 pass. |
 | P6 — Pilot and release | Controlled launch with rollback and support. | Product Authority signs off production release. |
@@ -64,26 +77,15 @@ The UI repository is not the canonical source for current production code.
 ## Current status overlay
 
 - P0 is `DONE` through issue #141 and merged PR #142.
-- P1 is partial: security/API hardening, critical/high dependency remediation,
-  PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged
-  mutation audit, global System Administrator lifecycle, invitation
-  issuance/acceptance, immutable per-user audit reads and the observability
-  foundation are implemented in the production repository.
-- P2 is `DONE` through Supplier booking PR #50 and capacity hardening PR #52.
-- P3 is partial: the manual approval lifecycle is `DONE` through PR #54;
-  Booking Configuration Administration, reschedule/cancel, Operator manual
-  booking and Gate Ops remain.
-- P4-P6 are incomplete.
+- P1 is partial: security/API hardening, critical/high dependency remediation, PostgreSQL integration CI, scoped six-role RBAC, scope identities, privileged mutation audit, global System Administrator lifecycle, invitation issuance/acceptance, immutable per-user audit reads, observability and the supported React Router line are implemented. Environment promotion, backup/recovery and final release infrastructure remain open.
+- P2 is `DONE` through Supplier booking PR #50 and capacity hardening PR #52; pallet semantics were later upgraded by PR #64 to durable pallet units with configurable slot capacity `1..33` and hard ceiling 33.
+- P3 is substantially delivered for the approved production scope: manual approval, booking configuration, reschedule/cancel, Warehouse Administrator assisted booking/planning and unloading execution are `DONE`. Broad Gate/Yard/driver/check-in work is not implemented and requires a separate Product Authority decision.
+- P4 is partial: `PROD-NOTIFICATIONS-1` is `DONE`; weekly planning/import, files and reporting remain open.
+- P5-P6 are incomplete.
 - The implemented foundations do not make Dock Scheduling production-ready.
-- `PROD-SEC-REACT-ROUTER-MIGRATION-1` / production issue #57 is the next
-  planned security task.
-- Final multi-instance rate limiting remains an open security-hardening concern within the approved P5 security work.
-- Deployment and environment promotion remain open within the approved CI/CD, performance/reliability and release work.
-- Booking Configuration Administration remains the next product direction
-  after security; it is not activated by this reconciliation.
-- Transactional outbox and workers remain open within the approved notification-delivery contract.
-- Deployment/environment promotion, backup/restore, outbox delivery workers,
-  release and the remaining P3-P6 scopes require separate tasks.
+- Final multi-instance rate limiting remains an open P5 security-hardening concern.
+- Deployment and environment promotion remain open within CI/CD, performance/reliability and release work.
+- Real SMTP/provider configuration was not deployed by `PROD-NOTIFICATIONS-1`; the application delivery pipeline is implemented but production activation remains release/configuration work.
 
 ## P0 — Authorization and assessment
 
@@ -127,28 +129,31 @@ Exit criteria result:
 
 ## Completed Production Foundation groups
 
-The following groups are implemented in the production repository at current
-reference SHA `dbe1127ae64c24e601828f38a0b88a749b79b858`:
+The following groups are implemented in the production repository at current reference SHA `d3824404113052c33b9feddf37a30aa4daa9d9b4`:
 
 | Foundation group | Implemented result | Boundary that remains |
 | --- | --- | --- |
-| Security/API baseline | Diagnostic error route removed; 5xx responses redacted; correlation IDs bounded; readiness fails closed in production; graceful shutdown and truthful environment documentation added. | Does not provide full observability, deployment or business functionality. |
-| Dependency remediation | Critical/high runtime and complete-tree advisories remediated and blocking audit gates established; remaining moderate findings stay visible. | Future upgrades and accepted moderate risk still require normal dependency governance. |
-| PostgreSQL integration CI | Disposable PostgreSQL, migration deployment and database integration/E2E tests are required in CI. | This is test infrastructure, not production database operations or backup/recovery. |
-| Scoped six-role RBAC | Exactly six server roles, scoped authorization, persisted assignments, fail-closed guards and administrative mutation/read paths implemented. | Delegated administration and full business-endpoint policy coverage remain future work. |
-| Scope identity persistence | Root organizations, Supplier organizations, warehouses and Supplier–warehouse participation persisted with active-state and integrity constraints. | Business configuration and booking/capacity entities remain open. |
-| Privileged mutation audit | Role-assignment and user-status changes are atomic, idempotent and recorded in immutable audit ledgers with administrator-continuity protection. | Global audit search/export/retention and broader business audit remain open. |
-| Global System Administrator user lifecycle | Protected user directory, assignment reads, inactive user provisioning and status administration implemented. | Delegated administration, UI integration and broader identity operations remain open. |
-| Invitation lifecycle | One-time invitation issuance, atomic acceptance/activation and security cleanup implemented. | Notification delivery, reissue/revocation product workflows and UI remain open. |
+| Security/API baseline | Diagnostic error route removed; 5xx responses redacted; correlation IDs bounded; readiness fails closed in production; graceful shutdown and truthful environment documentation added. | Does not provide production deployment or complete release readiness. |
+| Dependency remediation | Critical/high runtime and complete-tree advisories remediated and blocking audit gates established. React Router was migrated to supported 7.18.2 in PR #62. Final PR #72 audits were 0 vulnerabilities. | Future upgrades remain subject to normal dependency governance. |
+| PostgreSQL integration CI | Disposable PostgreSQL, migration deployment and database integration/E2E tests are required in CI. | Test infrastructure is not production database operations or backup/recovery. |
+| Scoped six-role RBAC | Exactly six server roles, scoped authorization, persisted assignments, fail-closed guards and administrative mutation/read paths implemented. | Every future endpoint still requires explicit policy coverage. |
+| Scope identity persistence | Root organizations, Supplier organizations, warehouses and Supplier–warehouse participation persisted with active-state and integrity constraints. | External master-data integration remains future work. |
+| Privileged mutation audit | Role-assignment and user-status changes are atomic, idempotent and recorded in immutable audit ledgers with administrator-continuity protection. | Global audit retention/export remains future work. |
+| Global System Administrator user lifecycle | Protected user directory, assignment reads, inactive user provisioning and status administration implemented. | Broader identity lifecycle remains separately governed. |
+| Invitation lifecycle | One-time invitation issuance, atomic acceptance/activation and security cleanup implemented. | Reissue/revocation product workflows remain separate. |
 | Immutable per-user audit reads | Protected reads for role, status, invitation issuance/acceptance and user-creation histories implemented. | Cross-user audit search/export/retention remains open. |
 | Observability foundation | W3C trace propagation, redacted structured telemetry, bounded metrics and operational runbook delivered by PR #48. | Production exporters, approved SLO thresholds and deployment integration remain open. |
-| Supplier booking vertical slice | Server-authoritative published configuration reads, idempotent durable booking, capacity-safe appointment creation, immutable history and transactional outbox intent delivered by PR #50. | Configuration administration and later operational lifecycles remain open. |
-| Capacity transaction hardening | Immutable reservation ownership and database reconciliation prevent committed counter/ledger/appointment drift through PR #52. | Release/reschedule lifecycle beyond the delivered approval rejection path remains open. |
-| Green production baseline | PR #61 resolved the Nano ID HIGH blocker and deterministic invitation-expiry fixture without masking React Router debt. | Production issue #57 remains planned security debt. |
-| Manual approval lifecycle | PR #54 delivered approve, reject, request-information and respond-information with versioning, authorization, atomic history/outbox and exact-once rejection release. | Reschedule/cancel, Operator manual booking and Gate Ops remain open P3 work. |
+| Supplier booking vertical slice | Server-authoritative published configuration reads, idempotent durable booking, capacity-safe appointment creation, immutable history and transactional outbox intent delivered by PR #50. | Supporting P4 services and release readiness remain open. |
+| Capacity transaction hardening | Immutable reservation ownership and database reconciliation prevent committed counter/ledger/appointment drift through PR #52; PR #64 migrated capacity semantics to pallets. | Production load qualification remains P5. |
+| Green production baseline | PR #61 resolved the Nano ID HIGH blocker and deterministic invitation-expiry fixture. | Normal dependency governance continues. |
+| Manual approval lifecycle | PR #54 delivered approve, reject, request-information and respond-information with versioning, authorization, atomic history/outbox and exact-once rejection release. | DONE for its contract. |
+| Booking configuration / pallet capacity | PR #64 delivered draft/publish/audit configuration, working hours/blocks, version-coherent slots and 1..33 pallet capacity with hard ceiling 33. | DONE for its contract; operational tuning remains product configuration. |
+| Appointment change lifecycle | PR #66 delivered transactional reschedule/cancel and multi-allocation capacity lineage. | DONE for its contract. |
+| Warehouse unloading operations | PR #68 delivered independent unloading lifecycle and Operator desk with corrected least-privilege role semantics. | Broad Gate/Yard scope is separate. |
+| Warehouse Administrator assisted booking/planning | PR #70 delivered shared-engine assisted booking and planning desk with immutable origin. | DONE for its contract. |
+| Transactional notifications | PR #72 delivered post-cutover projection, in-app inbox, SMTP adapter, authorization revalidation, leasing/retry/dead-letter and System Admin operations. | Real provider credentials/deployment are release configuration, not completed here. |
 
-The repository was developed in place; it was not replaced. These completed
-foundation groups do not establish complete production readiness.
+The repository was developed in place; it was not replaced. These completed foundation groups do not establish complete production readiness.
 
 ## P1 — Platform foundation
 
@@ -166,6 +171,8 @@ Exit criteria:
 
 ### PROD-CI-CD-FOUNDATION-1 — controlled delivery pipeline
 
+**State:** `PARTIAL`.
+
 Scope:
 
 - reproducible install/build/test;
@@ -182,7 +189,11 @@ Exit criteria:
 - production deployment cannot occur from an unreviewed branch;
 - release version is observable.
 
+Application PR validation is mature; environment promotion, production deployment and rollback evidence remain open.
+
 ### PROD-DATA-FOUNDATION-1 — PostgreSQL schema and migrations
+
+**State:** `PARTIAL`.
 
 Scope:
 
@@ -199,7 +210,11 @@ Exit criteria:
 - tenant and warehouse constraints are represented;
 - audit records are append-only by contract.
 
+Application schema/migrations and PostgreSQL integration are mature; managed production backup/PITR and restore evidence remain open.
+
 ### PROD-AUTH-RBAC-1 — production identity and server authorization
+
+**State:** `SUBSTANTIALLY DELIVERED` for current production endpoints.
 
 Scope:
 
@@ -218,10 +233,11 @@ Exit criteria:
 - all protected endpoints require authenticated scope;
 - privileged actions are audited.
 
+The canonical role set remains six roles. Warehouse Manager maps to `WAREHOUSE_ADMINISTRATOR`; Operator least privilege is controlling.
+
 ### PROD-OBSERVABILITY-FOUNDATION-1 — logs, metrics and traces
 
-**State:** `DONE` through production PR #48 at
-`e5784e06b0500a1a50f0de8957742e25f75369e6`.
+**State:** `DONE` through production PR #48 at `e5784e06b0500a1a50f0de8957742e25f75369e6`.
 
 Scope:
 
@@ -243,8 +259,7 @@ Exit criteria:
 
 ### PROD-BOOKING-VERTICAL-SLICE-1 — Supplier booking to durable appointment
 
-**State:** `DONE` through production PR #50 at
-`7f2a87708ff38adb984a2f792cc414d7ecf52378`.
+**State:** `DONE` through production PR #50 at `7f2a87708ff38adb984a2f792cc414d7ecf52378`.
 
 Dependencies:
 
@@ -268,7 +283,7 @@ Scope:
 
 Exit criteria:
 
-- two concurrent attempts for the last unit yield exactly one success;
+- two concurrent attempts for the last capacity yield exactly one success where both cannot fit;
 - retry with the same idempotency key returns the original result;
 - Supplier cannot access another organization’s record;
 - database state, audit and response are consistent after failure injection;
@@ -276,10 +291,7 @@ Exit criteria:
 
 ### PROD-CAPACITY-TRANSACTION-1 — capacity model hardening
 
-**State:** `DONE` through production PR #52 at
-`592d86bf75337abf97268233d5a9caa9325da1c2`.
-
-May be part of the vertical slice or a focused follow-up.
+**State:** `DONE` through production PR #52 at `592d86bf75337abf97268233d5a9caa9325da1c2`; pallet semantics subsequently upgraded by PR #64.
 
 Scope:
 
@@ -288,77 +300,107 @@ Scope:
 - blocks and working hours;
 - reservation lifecycle and release;
 - alternatives;
-- reasoned authorized override;
 - contention/performance tests.
 
-Exit criteria:
+Current controlling semantics:
 
-- database constraints/locking prevent oversubscription;
-- deadlock/retry behavior is bounded and observable;
-- override is audited and alerted;
-- representative load meets approved latency targets.
+- capacity is measured in pallets;
+- slot capacity is configurable `1..33` pallets;
+- hard system ceiling is 33 pallets per slot;
+- reservation/release lineage and counters use pallet units;
+- committed state cannot oversubscribe configured pallet capacity.
 
 ## P3 — Core operational workflows
 
 ### PROD-APPROVAL-LIFECYCLE-1
 
-**State:** manual approve/reject/request-information/respond-information scope
-is `DONE` through production issue #53 and PR #54 at
-`dbe1127ae64c24e601828f38a0b88a749b79b858`.
+**State:** `DONE` through production issue #53 and PR #54 at `dbe1127ae64c24e601828f38a0b88a749b79b858`.
 
-Reschedule/cancel was not delivered by that task and remains separate P3 scope.
+Delivered scope:
 
-Scope:
+- manual approval/rejection;
+- request information / Supplier response;
+- optimistic lifecycle versioning;
+- authorization and active-entity revalidation;
+- immutable history/outbox;
+- exact rejection capacity release.
 
-- auto/manual/rule approval;
-- routed authorized work queues;
-- request data, approve and reject;
-- reschedule/cancel with cut-offs and capacity revalidation;
-- independent planning/change/operational states;
-- immutable history and notifications intent.
+### PROD-BOOKING-CONFIG-ADMIN-1
 
-Exit criteria:
+**State:** `DONE` through production issue #63 and PR #64 at `5e3533f36e54f2430257b08dbf6be76930def9d5`.
 
-- transition matrix tests pass server-side;
-- missing actor/rule/configuration fails closed;
-- concurrent updates use expected version and reject lost writes.
+Scope delivered:
 
-### PROD-OPERATOR-MANUAL-BOOKING-1
+- effective configuration plus one bounded draft per Warehouse;
+- save/preview/publish with optimistic concurrency and idempotency;
+- working hours, one-off blocks and explicit future slots;
+- version-coherent Supplier admission;
+- immutable configuration audit;
+- pallet-based capacity and 33-pallet hard ceiling;
+- grandfathering of existing appointments;
+- bounded publication independent of accumulated retired-slot history.
 
-Scope:
+### PROD-APPOINTMENT-CHANGE-LIFECYCLE-1
 
-- Warehouse Operator creates for assigned active Supplier;
-- same configuration, validation, capacity and approval services as Supplier booking;
-- actor-on-behalf-of evidence;
-- durable `ADMIN_ADDED` origin.
+**State:** `DONE` through production issue #65 and PR #66 at `ea30def3ad266729a6fdd4815696c029cb2041cb`.
 
-Exit criteria:
+Scope delivered:
 
-- no duplicate booking engine or weakened scope;
-- all actions are attributable to the Operator and Supplier context.
+- transactional reschedule;
+- terminal cancellation;
+- multi-allocation capacity lineage;
+- atomic old-allocation release / target allocation reservation;
+- lifecycle-version concurrency and idempotency;
+- rollback-safe history/outbox.
+
+### PROD-WAREHOUSE-OPERATIONS-1
+
+**State:** `DONE` through production issue #67 and PR #68 at `9ba68b8725271b847e351883434e3b022bdd3758`.
+
+Approved physical execution scope:
+
+- Warehouse operations desk;
+- independent unloading state `NOT_STARTED -> IN_PROGRESS -> COMPLETED`;
+- `START_UNLOADING` and `COMPLETE_UNLOADING`;
+- immutable operational evidence and outbox;
+- cross-lifecycle guards against reschedule/cancel after unloading starts;
+- corrected Operator least privilege.
+
+This does not implement truck arrival, driver identity, gate check-in, yard state, dock-door assignment, no-show or departure.
+
+### PROD-WAREHOUSE-ADMIN-BOOKING-DESK-1
+
+**State:** `DONE` through production issue #69 and PR #70 at `d27f6b9d8c46ca7ad054232d12a55011cdef78a7`.
+
+Scope delivered:
+
+- Warehouse Administrator planning desk;
+- active assigned Supplier discovery;
+- assisted booking on behalf of Supplier;
+- same canonical booking/capacity engine as Supplier self-service;
+- immutable booking origin/provenance;
+- no admin capacity or approval bypass;
+- `WAREHOUSE_OPERATOR` denied assisted booking.
 
 ### PROD-GATE-OPS-1
 
-Scope:
+**State:** `NOT IMPLEMENTED / NOT ACTIVATED`.
 
-- scoped search;
-- arrival/driver evidence;
+Potential scope remains a separate Product Authority decision:
+
+- scoped arrival/driver/vehicle evidence;
 - check-in/out;
-- waiting, dock, unloading and completion;
-- registration correction;
-- No Show;
-- unannounced visit;
-- degraded/offline operating decision.
+- waiting/yard/dock assignment;
+- No Show / unannounced visit;
+- degraded/offline operation.
 
-Exit criteria:
-
-- role and warehouse scope enforced by API;
-- dock/capacity compatibility preserved;
-- all transitions and corrections are audited.
+The delivered unloading lifecycle does not implicitly activate this broader scope.
 
 ## P4 — Planning and delivery services
 
 ### PROD-WEEKLY-PLANNING-IMPORT-1
+
+**State:** `OPEN / NOT ACTIVATED`.
 
 Scope:
 
@@ -378,13 +420,16 @@ Exit criteria:
 
 ### PROD-FILES-1
 
+**State:** `OPEN / NOT ACTIVATED`.
+
 Scope:
 
 - object storage;
 - signed upload/download;
 - metadata, checksums and authorization;
 - scan/quarantine;
-- retention and deletion.
+- retention and deletion;
+- durable attachment linkage.
 
 Exit criteria:
 
@@ -392,24 +437,37 @@ Exit criteria:
 - unsafe/unscanned files are unavailable;
 - signed URLs are short-lived and not logged.
 
+This is the recommended next major P4 product candidate, but this reconciliation does not activate it.
+
 ### PROD-NOTIFICATIONS-1
 
-Scope:
+**State:** `DONE` through production issue #71 and PR #72 at `d3824404113052c33b9feddf37a30aa4daa9d9b4`.
 
-- transactional outbox;
-- worker and provider adapter;
-- recipient resolution and preferences;
-- retries/dead letter;
-- delivery evidence;
-- templates and localization decision.
+Delivered scope:
 
-Exit criteria:
+- reuse of the existing transactional outbox;
+- notification-specific post-cutover projection with no historical flood;
+- logically idempotent per-recipient in-app notifications;
+- authenticated inbox/unread/read flows;
+- provider-neutral SMTP transport with required encrypted transport;
+- current recipient authorization at projection and immediately before send;
+- bounded multi-worker leasing/retry/backoff/dead-letter;
+- deterministic Message-ID and explicit at-least-once external delivery semantics;
+- immutable attempt evidence and System Administrator requeue operations;
+- notification telemetry and graceful worker shutdown.
 
-- domain commit is independent from provider availability;
-- retries cannot duplicate user-visible notification beyond defined semantics;
-- failure is observable and replayable.
+Exit criteria result:
+
+- domain commit remains independent from SMTP/provider availability;
+- duplicate projector/worker execution is bounded by durable idempotency/lease invariants;
+- failure is observable and replayable;
+- real SMTP credentials/provider activation were intentionally not deployed.
+
+Notification preferences and marketing communication were explicitly outside v1 and remain separate Product Authority decisions.
 
 ### PROD-REPORTING-DASHBOARD-1
+
+**State:** `OPEN / NOT ACTIVATED`.
 
 Scope:
 
@@ -429,12 +487,14 @@ Exit criteria:
 
 ### PROD-SECURITY-HARDENING-1
 
+**State:** `OPEN`.
+
 Scope:
 
-- threat model;
+- current-surface threat model;
 - secure configuration review;
-- SAST/dependency/container/IaC scans;
-- rate and abuse protection;
+- SAST/dependency/container/IaC scans where applicable;
+- distributed rate and abuse protection;
 - privileged access review;
 - penetration test or independent security review;
 - remediation.
@@ -444,7 +504,11 @@ Exit criteria:
 - zero unresolved critical/high findings;
 - accepted residual risks have owner and expiry.
 
+The former React Router issue #57 is resolved and must not be treated as remaining security debt.
+
 ### PROD-PERFORMANCE-RELIABILITY-1
+
+**State:** `OPEN`.
 
 Scope:
 
@@ -463,6 +527,8 @@ Exit criteria:
 
 ### PROD-BACKUP-DR-1
 
+**State:** `OPEN`.
+
 Scope:
 
 - backup policy;
@@ -480,7 +546,9 @@ Exit criteria:
 
 ### PROD-DATA-MIGRATION-1
 
-Scope depends on assessment and data sources.
+**State:** `OPEN / SOURCE-DEPENDENT`.
+
+Scope depends on assessment and actual source systems.
 
 Required pattern:
 
@@ -501,10 +569,12 @@ Exit criteria:
 
 ### PROD-UAT-PILOT-1
 
+**State:** `OPEN`.
+
 Scope:
 
 - representative users for all required roles;
-- limited warehouse/Supplier cohort;
+- limited Warehouse/Supplier cohort;
 - production-like environment and support;
 - success metrics, stop conditions and feedback triage;
 - migration and rollback rehearsal.
@@ -516,6 +586,8 @@ Exit criteria:
 - Product Authority approves pilot result.
 
 ### PROD-RELEASE-1
+
+**State:** `OPEN`.
 
 Scope:
 
@@ -536,29 +608,26 @@ Exit criteria:
 
 ```text
 PROD-REPO-ASSESSMENT-1
-  -> PROD-ARCH-ADR-1
-  -> PROD-CI-CD-FOUNDATION-1
-  -> PROD-DATA-FOUNDATION-1
-  -> PROD-AUTH-RBAC-1
-  -> PROD-OBSERVABILITY-FOUNDATION-1
-  -> PROD-BOOKING-VERTICAL-SLICE-1
-  -> core operational workflows
-  -> planning/delivery services
+  -> application platform foundations
+  -> PROD-BOOKING-VERTICAL-SLICE-1 / capacity
+  -> approval/configuration/change/admin-booking/unloading
+  -> PROD-NOTIFICATIONS-1
+  -> remaining P4 files / planning-import / reporting
   -> security/performance/recovery/migration
   -> UAT pilot
   -> production release
 ```
 
-Some P1 tasks may run in controlled parallel after assessment, but the booking vertical slice cannot start until identity, authorization, persistence, delivery and observability foundations are usable.
+Deployment/reliability hardening may be prioritized before remaining P4 product work by a separate Product Authority decision.
 
 ## Current program state
 
 - `PROD-REPO-ASSESSMENT-1`: `DONE` through issue #141 and merged PR #142.
 - Historical issue #140: superseded and closed as not planned.
-- `PROD-GOVERNANCE-SYNC-1`: `DONE` through issue #143 and PR #144.
-- Current production reference SHA: `dbe1127ae64c24e601828f38a0b88a749b79b858`.
-- P2 is `DONE`; P3 is partially implemented through the manual approval
-  lifecycle. P4-P6 and deployment/release remain incomplete.
-- Production issue #57 is `PLANNED / SECURITY NEXT`.
-- `PROD-BOOKING-CONFIG-ADMIN-1` is the recommended product direction after
-  security and is not activated for implementation.
+- Prior governance reconciliations remain historical evidence.
+- Current production reference SHA: `d3824404113052c33b9feddf37a30aa4daa9d9b4`.
+- P2 is `DONE`.
+- P3 is substantially delivered for the approved booking/approval/configuration/change/assisted-booking/unloading scope. Broad Gate/Yard functionality remains a separate decision, not an implicit blocker.
+- P4 is partial: `PROD-NOTIFICATIONS-1` is `DONE`; files, weekly planning/import and reporting remain open.
+- P5-P6 and deployment/release remain incomplete.
+- `PROD-FILES-1` is the recommended next major product candidate and is **not activated** by this reconciliation.
